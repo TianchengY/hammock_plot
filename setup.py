@@ -5,14 +5,14 @@ with open("README.md", "r", encoding="utf8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="hammock_plot",
+    name="hammock",
     # version=versioneer.get_version(),
     author="Tiancheng Yang",
     author_email="t77yang@uwaterloo.ca",
     description="Hammock - visualization of categorical or mixed categorical/continuous data",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://git.uwaterloo.ca/t77yang/hammock_python",
+    url="https://github.com/TianchengY/hammock",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
