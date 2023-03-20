@@ -40,7 +40,7 @@ pip install hammock
 We import the diabetes dataset:
 
 ```python
-import hammock_plot
+import hammock
 import pandas as pd
 df = pd.read_csv('../examples/asthma/asth_all3_for_python.csv')
 ```
@@ -82,7 +82,7 @@ ax = hammock.plot(var=var, value_order=value_order ,hi_var="comorbidities", hi_v
 We import the diabetes dataset:
 
 ```python
-import hammock_plot
+import hammock
 import pandas as pd
 df = pd.read_csv('../examples/diabetes_outlier/diabetes_for_python.csv')
 ```
@@ -90,7 +90,7 @@ df = pd.read_csv('../examples/diabetes_outlier/diabetes_for_python.csv')
 The three variables represent different ordinal scales for satisfaction. We are checking for missing values: 
 ```python
 var = ["sataces","satcomm","satrate"]
-hammock = hammock_plot.Hammock(data_df = df)
+hammock = hammock.Hammock(data_df = df)
 ax = hammock.plot(var=var,  default_color="blue", missing=True) 
 ```
 
@@ -104,7 +104,7 @@ satisfied respondents simply choose the highest value.
 ## API Reference
 
 ```
-  hammock_plot()
+  hammock()
 ```
 
 | Category | Parameter | Type     | Description                |
