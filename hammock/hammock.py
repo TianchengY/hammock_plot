@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod
 from typing import List,Dict
+import warnings
 
 
 class Figure(ABC):
@@ -197,9 +198,9 @@ class Hammock:
                 f'the variables: {error_values} in var_lst is not in data.'
             )
 
-        if hi_var and not hi_value:
+        if hi_var and not (hi_value or missing):
             raise ValueError(
-                f'hi_value must be speicified is hi_var is given.'
+                f'hi_value must be speicified as hi_var is given.'
             )
 
         self.var_lst = self._label_same_varname(var_lst)
@@ -220,6 +221,14 @@ class Hammock:
         colors = ["red", "green", "yellow", "lightblue","orange", "gray", "brown", "olive", "pink", "cyan", "magenta"]
         self.color_lst = [color for color in color_lst] if color_lst else (
             colors[:len(self.hi_value)] if hi_var else None)
+        if hi_var:
+            if hi_value and len(self.color_lst) < len(hi_value):
+                for i in range(len(hi_value)-len(self.color_lst)):
+                    for c in colors:
+                        if c not in self.color_lst:
+                            self.color_lst.append(c)
+                            break
+                warnings.warn(f"Warning: The length of color is less than the total number of (high values and missing), color was automatically extended to {self.color_lst}")
         if hi_var and default_color in self.color_lst:
             raise ValueError(
                 f'The current highlight colors {self.color_lst} conflict with the default color {default_color}. Please choose another default color or other highlight colors'
