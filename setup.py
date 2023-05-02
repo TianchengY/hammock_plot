@@ -12,7 +12,7 @@ setuptools.setup(
     description="Hammock - visualization of categorical or mixed categorical/continuous data",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/TianchengY/hammock",
+    url="https://github.com/TianchengY/hammock_plot",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
