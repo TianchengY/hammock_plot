@@ -27,11 +27,11 @@
 You can install hammock from `conda` or `pip`:
 
 ```shell
-conda install hammock -c conda-forge
+conda install hammock_plot -c conda-forge
 ```
 
 ```shell
-pip install hammock
+pip install hammock_plot
 ```
 
 
@@ -40,7 +40,7 @@ pip install hammock
 We import the diabetes dataset:
 
 ```python
-import hammock
+import hammock_plot
 import pandas as pd
 df = pd.read_csv('../examples/asthma/asth_all3_for_python.csv')
 ```
@@ -48,7 +48,7 @@ df = pd.read_csv('../examples/asthma/asth_all3_for_python.csv')
 Minimal example of a hammock plot: 
 ```python
 var = ["hospitalizations","group","gender","comorbidities"]
-hammock = hammock.Hammock(data_df = df)
+hammock = hammock_plot.Hammock(data_df = df)
 ax = hammock.plot(var=var)
 ```
 <img src="image/asthma_minimal.png" alt="Minimal example for a Hammock plot" width="600"/>
@@ -59,13 +59,13 @@ The ordering of the child-adolescent-adult variable is not in the desired order;
 var = ["hospitalizations","group","gender","comorbidities"]
 group_dict= {1: "child", 2: "adolescent",3: "adult"}
 value_order = {"group": group_dict}
-hammock = hammock.Hammock(data_df = df)
+hammock = hammock_plot.Hammock(data_df = df)
 ax = hammock.plot(var=var, value_order=value_order )
 ```
 
 <!--- to restrict image size, I am using a an html command, rather than the standard ![](image.png) --->
 <!---    ![Hammock plot ](image/asthma1.png)   --->
-<img src="image/asthma1.png" alt="Hammock plot" width="600"/>
+<img src="image/asthma_value_order.png" alt="Hammock plot" width="600"/>
 
 We highlight observations with comorbidities=0  in red:
 
@@ -82,7 +82,7 @@ ax = hammock.plot(var=var, value_order=value_order ,hi_var="comorbidities", hi_v
 We import the diabetes dataset:
 
 ```python
-import hammock
+import hammock_plot
 import pandas as pd
 df = pd.read_csv('../examples/diabetes_outlier/diabetes_for_python.csv')
 ```
@@ -90,7 +90,7 @@ df = pd.read_csv('../examples/diabetes_outlier/diabetes_for_python.csv')
 The three variables represent different ordinal scales for satisfaction. We are checking for missing values: 
 ```python
 var = ["sataces","satcomm","satrate"]
-hammock = hammock.Hammock(data_df = df)
+hammock = hammock_plot.Hammock(data_df = df)
 ax = hammock.plot(var=var,  default_color="blue", missing=True) 
 ```
 
@@ -111,19 +111,19 @@ satisfied respondents simply choose the highest value.
 | --- | :-------- | :------- | :-------------------------  |
 | General |     `var` | `List[str]` | List of variables to display. |
 | |             `value_order` | `Dict[str, Dict[int, str]]`  |  If specified, the order of the values in the plot follows the order of values in the list supplied in the dictionary. A specific value order is useful, for example, for ordered variables. The integer values affect spacing: for example the values 4,5,6 imply equal spacing between 4,5 and 5,6. The values 4,5,7 implies twice as much space between 5,7 as between 4,5. 
-| |             `missing` | `bool` | Whether or not to add a category for missing values at the bottom of the plot.  Default is False. |
+| |             `missing` | `bool` | Whether or not to add a category for missing values at the bottom of the plot.  If False, observations that have a missing value for any variable in the data frame (even those not used in the hammock plot) are removed.  Default is False. |
 | |             `label` | `bool` | Whether or not to display labels between the plotting segments |
 | Highlighting | `hi_var` | `str` |  Variable to be highlighted. Default is none. |
 | | `hi_value` | `List[str or int]` | List of values of `hi_var` to be highlighted. You can highlighted one or multiple values. |
 | | `hi_missing` | `bool` | Whether or not missing values for `hi_var` should be highlighted. |
 | | `color` | `List[str]` | List of colors corresponding to the list of values to be highlighted. Default highlight color list is ["red", "green", "yellow", "lightblue", "orange", "gray", "brown", "olive", "pink", "cyan", "magenta"] |
-| | `default_color` | `str` |  Default color of plotting elements. Default is "blue" |
+| | `default_color` | `str` |  Default color of plotting elements for boxes that are not highlighted. Default is "blue" |
 | Manipulating Spacing and Layout |   `bar_width` | `float`  | Factor by which the default width is  increased or reduced. This allows reducing visual clutter. Default is 1.0. | 
 | |              `space` |  `float`  | Space left for the labels between the plotting elements. Default is 0.5 | 
 | |              `label_options` |  `Dict[str, Dict[str, Any]]`  | Manipulates the size and look of the labels. Args following the options in the website: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.text.html Example:{"ExampleVarname":{"fontsize":12,"fontstyle":"italic","fontweight":"black","color":"b"}}  Default is None. | 
 | |              `height` |  `float`  | Height of the plot in inches. Default is 10. | 
 | |              `width` |  `float`  |  Width of the plot in inches. Default is 15. Caution: Width too narrow may distort the plot. | 
-| Other options |              `shape` |  `str`  | Shape of the boxes. "rectangle" (default) or parallelogram". | 
+| Other options |              `shape` |  `str`  | Shape of the boxes. "rectangle" (default) or "parallelogram". | 
 | |              `same_scale` |  `List[str]`  | List of variables that have the same scale. Default is None. | 
 | |              `display_figure` |  `bool`  | Whether or not to display the figure. This can be useful if you just want to save the plots. Default is 'True'. | 
 | |              `save_path` |  `str`  |   If it is not None, the figure will be saved to the given path with given name and format. Default is None. | 
