@@ -24,11 +24,7 @@
 
 ## Getting started
 
-You can install hammock from `conda` or `pip`:
-
-```shell
-conda install hammock_plot -c conda-forge
-```
+You can install hammock from `pip`:
 
 ```shell
 pip install hammock_plot
