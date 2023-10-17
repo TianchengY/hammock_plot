@@ -133,6 +133,7 @@ class Hammock:
              default_color="blue",
              # Manipulating Spacing and Layout
              bar_width: float = 1.,
+             min_bar_width: float = .05,
              space: float = .5,
              label_options: Dict = None,
              height: float = 10.,
@@ -235,6 +236,7 @@ class Hammock:
             )
         # Manipulating Spacing and Layout
         self.bar_width = bar_width
+        self.min_bar_width = min_bar_width
         self.space = space
         self.label_options = label_options
         self.height = height
@@ -314,6 +316,8 @@ class Hammock:
                 left_label = k[0]
                 right_label = k[1]
                 width = bar * v
+                if self.min_bar_width and width <= self.min_bar_width:
+                    width = self.min_bar_width
                 left_coordinate = (coordinates_dict[left_label][0] + space, coordinates_dict[left_label][1])
                 right_coordinate = (coordinates_dict[right_label][0] - space, coordinates_dict[right_label][1])
                 widths.append(width)
@@ -335,6 +339,8 @@ class Hammock:
                         right_label = k[1]
                         if v.get(color):
                             width_temp = bar * v.get(color)
+                            if self.min_bar_width and width_temp <= self.min_bar_width:
+                                width_temp = self.min_bar_width
                         else:
                             width_temp = 0
 
