@@ -3,7 +3,7 @@
 
 ## Description
 
-    hammock draws a graph to visualize categorical data - though it also does fine with continuous data.
+    The hammock plot draws a graph to visualize categorical or mixed categorical / continuous data.
     Variables are lined up parallel to the vertical axis. Categories within a variable are spread out along a
     vertical line. Categories of adjacent variables are connected by boxes. (The boxes are parallelograms; we
     use boxes for brevity). The "width" of a box is proportional to the number of observations that correspond
