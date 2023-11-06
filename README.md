@@ -136,7 +136,8 @@ In 2003, Schonlau proposed the hammock plot. This was the first plot to visualiz
 
 In 2010, Rosvall proposed alluvial plots to visualize network variables over time. Rather than using bars to connect axes, alluvial plots use rounded curves. Alluvial plots are now also used to visualize categorical data.
 
-There are several additional variations that also visualize categorical data including Parallel Set plots (Bendix et al, 2005) and Right Angle plots (Hofmann and Vendettuoli, 2013).
+There are several additional variations that also visualize categorical data including Parallel Set plots (Bendix et al, 2005), Right Angle plots (Hofmann and Vendettuoli, 2013),
+and generalized parallel coordinate plots (GPCPs) (popularized by VanderPlas et al., 2023). 
 
 ### References 
 Bendix, F., Kosara, R., & Hauser, H. (2005). Parallel sets: visual analysis of categorical data. In IEEE Symposium on Information Visualization, 2005. INFOVIS 2005. 133-140. 
@@ -157,7 +158,9 @@ Schonlau M.
 *[Visualizing Categorical Data Arising in the Health Sciences Using Hammock Plots.](http://www.schonlau.net/publication/03jsm_hammockplot.pdf)* 
 In Proceedings of the Section on Statistical Graphics, American Statistical Association; 2003
 
-
+VanderPlas, S., Ge, Y., Unwin, A., & Hofmann, H. (2023). 
+Penguins Go Parallel: a grammar of graphics framework for generalized parallel coordinate plots. 
+Journal of Computational and Graphical Statistics, 1-16. (online first)
 
 ### Other implementations of the hammock plot 
 There is also a Stata implementation `hammock` (available from the Stata archive SSC) and an R implementation as part of the package `ggparallel`.
