@@ -119,6 +119,7 @@ satisfied respondents simply choose the highest value.
 | |              `label_options` |  `Dict[str, Dict[str, Any]]`  | Manipulates the size and look of the labels. Args following the options in the website: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.text.html Example:{"ExampleVarname":{"fontsize":12,"fontstyle":"italic","fontweight":"black","color":"b"}}  Default is None. | 
 | |              `height` |  `float`  | Height of the plot in inches. Default is 10. | 
 | |              `width` |  `float`  |  Width of the plot in inches. Default is 15. Caution: Width too narrow may distort the plot. | 
+| |              `min_bar_width` | `float` | Minimal bar width. Bars representing only a tiny fraction of the data may be so narrow, that they are invivisible in a plot. The default value tries to ensure this does not happen.  Default is 0.07.
 | Other options |              `shape` |  `str`  | Shape of the boxes. "rectangle" (default) or "parallelogram". | 
 | |              `same_scale` |  `List[str]`  | List of variables that have the same scale. Default is None. | 
 | |              `display_figure` |  `bool`  | Whether or not to display the figure. This can be useful if you just want to save the plots. Default is 'True'. | 
