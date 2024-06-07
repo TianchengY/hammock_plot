@@ -46,29 +46,31 @@ The order of variables in varlist determines the order of variables in the graph
 must be numerical. String variables should be converted to numerical variables first, e.g. using encode or
 destring.
 
+TODO:add a summary of Python implementations
+
 # Statement of need
 
-`Gala` is an Astropy-affiliated Python package for galactic dynamics. Python
-enables wrapping low-level languages (e.g., C) for speed without losing
-flexibility or ease-of-use in the user-interface. The API for `Gala` was
-designed to provide a class-based and user-friendly interface to fast (C or
-Cython-optimized) implementations of common operations such as gravitational
-potential and force evaluation, orbit integration, dynamical transformations,
-and chaos indicators for nonlinear dynamics. `Gala` also relies heavily on and
-interfaces well with the implementations of physical units and astronomical
-coordinate systems in the `Astropy` package [@astropy] (`astropy.units` and
-`astropy.coordinates`).
-
-`Gala` was designed to be used by both astronomical researchers and by
-students in courses on gravitational dynamics or astronomy. It has already been
-used in a number of scientific publications [@Pearson:2017] and has also been
-used in graduate courses on Galactic dynamics to, e.g., provide interactive
-visualizations of textbook material [@Binney:2008]. The combination of speed,
-design, and support for Astropy functionality in `Gala` will enable exciting
-scientific explorations of forthcoming data releases from the *Gaia* mission
-[@gaia] by students and experts alike.
+TODO: "Neither Mosaic plots, scatter plot matrices nor parallel coordinate plots are well
+suited for data that have both categorical and continuous variables. In Trellis displays one
+specific plot (e.g. scatter plot or a box plot) is displayed for different subsets of
+conditioning variables. These plots are then arranged as a panel. For example, one might
+display two continuous and one categorical variable as a panel of scatter plots – one for
+2
+each category of the categorical variables. Therefore Trellis displays are suitable for
+displaying mixed continuous / categorical data.
+For survey researchers missing data are very important. Most plots do not to
+accommodate missing data, presumably because the researchers who conceived these
+plots did not work with surveys. Mosaic plots are an exception: missing values have
+sometimes been added as an extra category. A similar approach is possible with scatter
+plot matrices or parallel coordinate plots, but I have never seen this being done.
+I introduce a new plot for the visualization of categorical data that also handles
+interval data and mixed categorical /continuous data. I introduce the hammock plot in the
+next section. The following section gives several examples. The paper concludes with a
+brief discussion." Via Schonlau M. Visualizing Categorical Data Arising in the Health Sciences Using Hammock Plots. In Proceedings of the Section on Statistical Graphics, American Statistical Association; 2003
 
 # Mathematics
+
+TODO: Skip this part or add mathematics for calculating distance of parallelogram and rectangles
 
 Single dollars ($) are required for inline mathematics e.g. $f(x) = e^{\pi/x}$
 
