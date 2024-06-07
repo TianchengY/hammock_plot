@@ -1,5 +1,5 @@
 ---
-title: 'Gala: A Python package for galactic dynamics'
+title: 'Hammock_plot: A Python package for visualizing categorical data'
 tags:
   - Python
   - plot
