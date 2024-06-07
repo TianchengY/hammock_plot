@@ -2,33 +2,24 @@
 title: 'Gala: A Python package for galactic dynamics'
 tags:
   - Python
-  - astronomy
-  - dynamics
-  - galactic dynamics
-  - milky way
+  - plot
+  - hammock plot
 authors:
-  - name: Adrian M. Price-Whelan
-    orcid: 0000-0000-0000-0000
+  - name: Tiancheng Yang
+    orcid: 0009-0009-1009-8826
     equal-contrib: true
     affiliation: "1, 2" # (Multiple affiliations must be quoted)
   - name: Author Without ORCID
     equal-contrib: true # (This is how you can denote equal contributions between multiple authors)
     affiliation: 2
-  - name: Author with no affiliation
-    corresponding: true # (This is how to denote the corresponding author)
-    affiliation: 3
-  - given-names: Ludwig
-    dropping-particle: van
-    surname: Beethoven
-    affiliation: 3
 affiliations:
- - name: Lyman Spitzer, Jr. Fellow, Princeton University, USA
+ - name: Tiancheng Yang, University of Waterloo, Canada
    index: 1
  - name: Institution Name, Country
    index: 2
  - name: Independent Researcher, Country
    index: 3
-date: 13 August 2017
+date: 7 June 2024
 bibliography: paper.bib
 
 # Optional fields if submitting to a AAS journal too, see this blog post:
@@ -39,15 +30,21 @@ aas-journal: Astrophysical Journal <- The name of the AAS journal.
 
 # Summary
 
-The forces on stars, galaxies, and dark matter under external gravitational
-fields lead to the dynamical evolution of structures in the universe. The orbits
-of these bodies are therefore key to understanding the formation, history, and
-future state of galaxies. The field of "galactic dynamics," which aims to model
-the gravitating components of galaxies to study their structure and evolution,
-is now well-established, commonly taught, and frequently used in astronomy.
-Aside from toy problems and demonstrations, the majority of problems require
-efficient numerical tools, many of which require the same base code (e.g., for
-performing numerical orbit integration).
+The hammock plot draws a graph to visualize categorical or mixed categorical / continuous data.
+Variables are lined up parallel to the vertical axis. Categories within a variable are spread out along a
+vertical line. Categories of adjacent variables are connected by boxes. (The boxes are parallelograms; we
+use boxes for brevity). The "width" of a box is proportional to the number of observations that correspond
+to that box (i.e. have the same values/categories for the two variables). The "width" of a box refers to the
+distance between the longer set of parallel lines rather than the vertical distance.
+
+If the boxes degenerate to a single line, and no labels or missing values are used the hammock plot
+corresponds to a parallel coordinate plot. Boxes degenerate into a single line if barwidth is so small that
+the boxes for categorical variables appear to be a single line. For continuous variables boxes will usually
+appear to be a single line because each category typically only contains one observation.
+
+The order of variables in varlist determines the order of variables in the graph.  All variables in varlist
+must be numerical. String variables should be converted to numerical variables first, e.g. using encode or
+destring.
 
 # Statement of need
 
