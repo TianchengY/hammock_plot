@@ -8,17 +8,14 @@ authors:
   - name: Tiancheng Yang
     orcid: 0009-0009-1009-8826
     equal-contrib: true
-    affiliation: "1, 2" # (Multiple affiliations must be quoted)
-  - name: Author Without ORCID
+    affiliation: 1
+  - name: Matthias Schonlau
     equal-contrib: true # (This is how you can denote equal contributions between multiple authors)
-    affiliation: 2
+    affiliation: 1
 affiliations:
- - name: Tiancheng Yang, University of Waterloo, Canada
+ - name: The Department of Statistics and Actuarial Science, University of Waterloo, Canada
    index: 1
- - name: Institution Name, Country
-   index: 2
- - name: Independent Researcher, Country
-   index: 3
+   
 date: 7 June 2024
 bibliography: paper.bib
 
