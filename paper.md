@@ -39,6 +39,13 @@ When the boxes collapse into a single line, and no labels or missing values are 
 The sequence of variables in the varlist decides their order in the graph. All variables in the varlist have to be numerical so that string variables should first be converted to numerical format using methods such as encode or destring.
 
 ```
+The hammock plot draws a graph to visualize categorical or mixed categorical / continuous data.
+Variables are lined up parallel to the vertical axis. Categories within a variable are spread out along a
+vertical line. Categories of adjacent variables are connected by boxes. (The boxes are parallelograms; we
+use boxes for brevity). The "width" of a box is proportional to the number of observations that correspond
+to that box (i.e. have the same values/categories for the two variables). The "width" of a box refers to the
+distance between the longer set of parallel lines rather than the vertical distance.
+
 If the boxes degenerate to a single line, and no labels or missing values are used the hammock plot
 corresponds to a parallel coordinate plot. Boxes degenerate into a single line if barwidth is so small that
 the boxes for categorical variables appear to be a single line. For continuous variables boxes will usually
