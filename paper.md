@@ -37,35 +37,19 @@ The sequence of variables in the varlist decides their order in the graph. All v
 
 An illustrative example can be found in \autoref{fig:highlight_asthma}. The asthma dataset includes essential patient information with both numeric and categorical data types. In this figure, we present a Hammock plot with four variables, highlighting the data for the variable "comorbidities" with a value of 0. This highlighting feature tracks the relationships between specific values of certain variables and all other variables. The thickness of each rectangle indicates the relative number of observations for each value pair which provides a clear visual representation of the data distribution and relationships.
 
-![Example for Asthma data with highlighting. \label{fig:highlight_asthma}](image/asthma_highlighting.png){ width=20% }
+<figure>
+  <img src="image/asthma_value_order.png" alt="Hammock plot" width="600"/>
+  <figcaption>An illustrative example of a Hammock plot highlighting asthma data with the variable "comorbidities" set to 0. </figcaption>
+</figure>
 
-{:.image-caption}
-*The caption for my image*
 
-The Python implementation of the Hammock plot involves two primary stages: data processing and figure plotting. The data processing stage employs pandas [ref] and numpy [ref] libraries, while the figure plotting stage utilizes matplotlib library [ref]. In the data processing stage, multiple assertion checks are implemented to ensure the validity of the input data. Following this, the necessary data attributes such as the width of each parallelogram/rectangle and their corresponding colors are computed based on the inputs provided. This processed data is then passed to the plotting functions which performs further calculations to determine the coordinates of each component. During the plotting stage, trigonometric calculations are used to compute the width and height of different types of figures, and more details could be found in section [Mathematics]. Finally, the plot is rendered using matplotlib, generating the final Hammock plot.
+
+The Python implementation of the Hammock plot involves two primary stages: data processing and figure plotting. The data processing stage employs pandas [ref] and numpy [ref] libraries, while the figure plotting stage utilizes matplotlib library [ref]. In the data processing stage, multiple assertion checks are implemented to ensure the validity of the input data. Following this, the necessary data attributes such as the width of each parallelogram/rectangle and their corresponding colors are computed based on the inputs provided. This processed data is then passed to the plotting functions which performs further calculations to determine the coordinates of each component. During the plotting stage, trigonometric calculations are used to compute the width and height of different types of figures. Finally, the plot is rendered using matplotlib, generating the final Hammock plot.
 
 # Statement of need
 
 The Hammock plot was first introduced in 2003 to handle mixed categorical and numerical data in survey research [Schonlau, 2003]. Despite the appearance of various plotting techniques over the past 20 years such as generalized parallel coordinate plots and alluvial plots, the Hammock plot has its own distinct advantages [Schonlau, 2024]. Initially, the Hammock plot software was released in a Stata version [ref]. However, with the development of Python in the field of data science, there is a growing need to implement this useful tool in the Python language. The Python package for the Hammock plot can be easily installed and integrated with existing Python projects through its APIs.
 
-# Mathematics
-
-TODO: Skip this part or add mathematics for calculating distance of parallelogram and rectangles
-
-Single dollars ($) are required for inline mathematics e.g. $f(x) = e^{\pi/x}$
-
-Double dollars make self-standing equations:
-
-$$\Theta(x) = \left\{\begin{array}{l}
-0\textrm{ if } x < 0\cr
-1\textrm{ else}
-\end{array}\right.$$
-
-You can also use plain \LaTeX for equations
-\begin{equation}\label{eq:fourier}
-\hat f(\omega) = \int_{-\infty}^{\infty} f(x) e^{i\omega x} dx
-\end{equation}
-and refer to \autoref{eq:fourier} from text.
 
 # Citations
 
