@@ -46,23 +46,7 @@ The Python implementation of the Hammock plot involves two primary stages: data 
 
 # Statement of need
 
-TODO: "Neither Mosaic plots, scatter plot matrices nor parallel coordinate plots are well
-suited for data that have both categorical and continuous variables. In Trellis displays one
-specific plot (e.g. scatter plot or a box plot) is displayed for different subsets of
-conditioning variables. These plots are then arranged as a panel. For example, one might
-display two continuous and one categorical variable as a panel of scatter plots – one for
-2
-each category of the categorical variables. Therefore Trellis displays are suitable for
-displaying mixed continuous / categorical data.
-For survey researchers missing data are very important. Most plots do not to
-accommodate missing data, presumably because the researchers who conceived these
-plots did not work with surveys. Mosaic plots are an exception: missing values have
-sometimes been added as an extra category. A similar approach is possible with scatter
-plot matrices or parallel coordinate plots, but I have never seen this being done.
-I introduce a new plot for the visualization of categorical data that also handles
-interval data and mixed categorical /continuous data. I introduce the hammock plot in the
-next section. The following section gives several examples. The paper concludes with a
-brief discussion." Via Schonlau M. Visualizing Categorical Data Arising in the Health Sciences Using Hammock Plots. In Proceedings of the Section on Statistical Graphics, American Statistical Association; 2003
+The Hammock plot was first introduced in 2003 to handle mixed categorical and numerical data in survey research [Schonlau, 2003]. Despite the appearance of various plotting techniques over the past 20 years such as generalized parallel coordinate plots and alluvial plots, the Hammock plot has its own distinct advantages [Schonlau, 2024]. Initially, the Hammock plot software was released in a Stata version [ref]. However, with the development of Python in the field of data science, there is a growing need to implement this useful tool in the Python language. The Python package for the Hammock plot can be easily installed and integrated with existing Python projects through its APIs.
 
 # Mathematics
 
