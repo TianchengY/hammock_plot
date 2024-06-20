@@ -35,27 +35,14 @@ When the boxes collapse into a single line, and no labels or missing values are 
 
 The sequence of variables in the varlist decides their order in the graph. All variables in the varlist have to be numerical so that string variables should first be converted to numerical format using methods such as encode or destring.
 
-```
-The hammock plot draws a graph to visualize categorical or mixed categorical / continuous data.
-Variables are lined up parallel to the vertical axis. Categories within a variable are spread out along a
-vertical line. Categories of adjacent variables are connected by boxes. (The boxes are parallelograms; we
-use boxes for brevity). The "width" of a box is proportional to the number of observations that correspond
-to that box (i.e. have the same values/categories for the two variables). The "width" of a box refers to the
-distance between the longer set of parallel lines rather than the vertical distance.
+An illustrative example can be found in \autoref{fig:highlight_asthma}. The asthma dataset includes essential patient information with both numeric and categorical data types. In this figure, we present a Hammock plot with four variables, highlighting the data for the variable "comorbidities" with a value of 0. This highlighting feature tracks the relationships between specific values of certain variables and all other variables. The thickness of each rectangle indicates the relative number of observations for each value pair which provides a clear visual representation of the data distribution and relationships.
 
-If the boxes degenerate to a single line, and no labels or missing values are used the hammock plot
-corresponds to a parallel coordinate plot. Boxes degenerate into a single line if barwidth is so small that
-the boxes for categorical variables appear to be a single line. For continuous variables boxes will usually
-appear to be a single line because each category typically only contains one observation.
+![Example for Asthma data with highlighting. \label{fig:highlight_asthma}](image/asthma_highlighting.png){ width=20% }
 
-The order of variables in varlist determines the order of variables in the graph.  All variables in varlist
-must be numerical. String variables should be converted to numerical variables first, e.g. using encode or
-destring.
-```
+{:.image-caption}
+*The caption for my image*
 
-
-
-TODO:add a summary of Python implementations
+The Python implementation of the Hammock plot involves two primary stages: data processing and figure plotting. The data processing stage employs pandas [ref] and numpy [ref] libraries, while the figure plotting stage utilizes matplotlib library [ref]. In the data processing stage, multiple assertion checks are implemented to ensure the validity of the input data. Following this, the necessary data attributes such as the width of each parallelogram/rectangle and their corresponding colors are computed based on the inputs provided. This processed data is then passed to the plotting functions which performs further calculations to determine the coordinates of each component. During the plotting stage, trigonometric calculations are used to compute the width and height of different types of figures, and more details could be found in section [Mathematics]. Finally, the plot is rendered using matplotlib, generating the final Hammock plot.
 
 # Statement of need
 
