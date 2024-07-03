@@ -38,7 +38,7 @@ The sequence of variables in the varlist decides their order in the graph. All v
 An illustrative example can be found in \autoref{fig:highlight_asthma}. The asthma dataset includes essential patient information with both numeric and categorical data types. In this figure, we present a Hammock plot with four variables, highlighting the data for the variable "comorbidities" with a value of 0. This highlighting feature tracks the relationships between specific values of certain variables and all other variables. The thickness of each rectangle indicates the relative number of observations for each value pair which provides a clear visual representation of the data distribution and relationships.
 
 <figure>
-  <img src="image/asthma_value_order.png" alt="Hammock plot" width="600"/>
+  <img src="image/asthma_highlighting.png" alt="Hammock plot" width="600"/>
   <figcaption>An illustrative example of a Hammock plot highlighting asthma data with the variable "comorbidities" set to 0. </figcaption>
 </figure>
 
