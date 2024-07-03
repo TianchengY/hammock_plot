@@ -48,7 +48,7 @@ The Python implementation of the Hammock plot involves two primary stages: data 
 
 # Statement of need
 
-The Hammock plot was first introduced in 2003 to handle mixed categorical and numerical data in survey research [Schonlau, 2003]. Despite the appearance of various plotting techniques over the past 20 years such as generalized parallel coordinate plots and alluvial plots, the Hammock plot has its own distinct advantages [Schonlau, 2024]. Initially, the Hammock plot software was released in a Stata version [ref]. However, with the development of Python in the field of data science, there is a growing need to implement this useful tool in the Python language. The Python package for the Hammock plot can be easily installed and integrated with existing Python projects through its APIs.
+The Hammock plot was first introduced in 2003 to handle mixed categorical and numerical data in survey research [@Schonlau2003]. Despite the appearance of various plotting techniques over the past 20 years such as generalized parallel coordinate plots and alluvial plots, the Hammock plot has its own distinct advantages [Schonlau, 2024]. Initially, the Hammock plot software was released in a Stata version [ref]. However, with the development of Python in the field of data science, there is a growing need to implement this useful tool in the Python language. The Python package for the Hammock plot can be easily installed and integrated with existing Python projects through its APIs.
 
 
 # Citations
