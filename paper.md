@@ -63,7 +63,7 @@ where:
 
 #### 2. Height of Parallelograms
 
-The height $H$ of each parallelogram is determined based on the spacing between the categories along the vertical axis. For example, if the vertical axis ranges from 0 to 100, a variable with three categories might be plotted at 0, 50, and 100. If a parallelogram goes from the bottom of the previous variable to the middle category of this variable, then $H$ = 50.
+The height $H$ of each parallelogram is determined based on the spacing between the categories along the vertical axis. For example, if the vertical axis ranges from 0 to 100, a variable with three categories might be plotted at 0, 50, and 100. If a parallelogram goes from the bottom of the previous variable to the middle category of this variable, then $H = 50$.
 
 
 #### 3. Angle for Parallelograms
