@@ -1,82 +1,92 @@
 ---
-title: 'Hammock_plot: A Python package for visualizing categorical data'
+title: "Hammock_plot: A Python package for visualizing mixed categorical/numerical
+  data"
 tags:
   - Python
   - plot
   - hammock plot
+  - categorical data
+  - numerical data
+  - data visualization
 authors:
   - name: Tiancheng Yang
-    orcid: 0009-0009-1009-8826
-    equal-contrib: true
+    orcid: "0009-0009-1009-8826"
+    equal-contrib: yes
     affiliation: 1
   - name: Matthias Schonlau
-    equal-contrib: true # (This is how you can denote equal contributions between multiple authors)
+    equal-contrib: yes
     affiliation: 1
-affiliations:
- - name: The Department of Statistics and Actuarial Science, University of Waterloo, Canada
-   index: 1
-   
-date: 7 June 2024
 bibliography: paper.bib
-
-# Optional fields if submitting to a AAS journal too, see this blog post:
-# https://blog.joss.theoj.org/2018/12/a-new-collaboration-with-aas-publishing
-aas-doi: 10.3847/xxxxx <- update this with the DOI from AAS once you know it.
-aas-journal: Astrophysical Journal <- The name of the AAS journal.
+affiliations:
+  - name: The Department of Statistics and Actuarial Science, University of Waterloo,
+      Canada
+    index: 1
+date: 3 September 2024
 ---
 
 # Summary
 
-Categorical data plays a pivotal role and has been widely used in a variety of domains, including finance, business analysis, and artificial intelligence. The analysis and interpretation of categorical data are crucial for inspiring meaningful insights. Visualization is important in this process since effective visualization techniques can greatly enhance exploratory data analysis and data pre-processing by making complex relationships more understandable. The Hammock plot is such an innovative tool that represents the clear relationships between different labels, including missing values and continuous data. 
+Effective visualization techniques can greatly enhance exploratory data analysis and data pre-processing by making complex relationships more understandable. Most data sets contain both categorical and numerical variables. The Hammock plot [@Schonlau2003] was the first plot to visualize a mixture of categorical and numerical variables in a single plot. A number of related plots have been developed since then, including alluvial plots [@alluvial], Common angle plots [@hofmann2013common] and Generalized parallel coordinate plots [@doi:10.1080/10618600.2023.2195462; @DBLP:journals/corr/abs-2009-12933]. @Schonlau2024 gives an overview over such plots.
 
-The Hammock plot is a graphical tool designed to visualize categorical or mixed categorical/continuous data. In this visualization, variables are arranged parallel to the vertical axis, with categories within each variable distributed along a vertical line. The connections between categories of adjacent variables are represented by either rectangles or parallelograms (and for simplicity just called it box). The width of each box is proportional to the number of observations, and this width is measured by the distance between the longer set of parallel lines rather than the vertical distance.
+For continuous data, the parallel coordinate plots [@inselberg1985plane; @Wegman] uses parallel axes to visualize multiple variables. The hammock plot also uses this parallel axis but the connections between categories of adjacent variables are represented by either rectangles or parallelograms (for simplicity often called boxes). The width of each box is proportional to the number of observations.  Often, categories and values are labeled and, optionally, one category at the bottom of the plot is reserved for missing values. 
 
-When the boxes collapse into a single line, and no labels or missing values are present, the Hammock plot will be transformed into a parallel coordinate plot. Boxes become single lines if the barwidth is sufficiently small. For continuous variables, boxes typically appear as single lines because each category usually contains only one observation.
+\autoref{fig:fig1} shows a Hammock plot for the Palmer Penguins dataset [@RJ-2022-020]. This data set contains both numeric (flipper length) and categorical (species, island, sex) data types. The Hammock plot highlights the values of the variable “species” with three colors, so that we can trace different penguin species throughout the graph.  The graph shows, for example, Adelie is the only species present on the island Torgensen. The species Adelie is present on all islands in roughly equal numbers. The species Adelie tends to have a smaller flipper length than other species. Flipper length and sex have a few missing values.  
 
-The sequence of variables in the varlist decides their order in the graph. All variables in the varlist have to be numerical so that string variables should first be converted to numerical format using methods such as encode or destring.
+Hammock plots offer several customizations that enhance visualization. As shown in \autoref{fig:fig1}, one key feature is the ability to highlight specific categories with user-selected or pre-defined colors, making it easy to trace specific categories through the entire plot. Optionally, hammock plots can also show missing values by reserving a space at the bottom of the plot (\autoref{fig:fig1}).  Additionally, users can customize the order of variables and the order of categories within each variable.  When two or more variables have the same categories, a given category appears in the same position on each parallel axis.  This is true even if some categories are missing for a subset of such variables (use “same_scale” option). 
 
-An illustrative example can be found in \autoref{fig:highlight_asthma}. The asthma dataset includes essential patient information with both numeric and categorical data types. In this figure, we present a Hammock plot with four variables, highlighting the data for the variable "comorbidities" with a value of 0. This highlighting feature tracks the relationships between specific values of certain variables and all other variables. The thickness of each rectangle indicates the relative number of observations for each value pair which provides a clear visual representation of the data distribution and relationships.
-
-<figure>
-  <img src="image/asthma_highlighting.png" alt="Hammock plot" width="600"/>
-  <figcaption>An illustrative example of a Hammock plot highlighting asthma data with the variable "comorbidities" set to 0. </figcaption>
-</figure>
+![A Hammock plot of the Palmer Penguins Dataset. \label{fig:fig1}](image/figure1.png)
 
 
 
-The Python implementation of the Hammock plot involves two primary stages: data processing and figure plotting. The data processing stage employs pandas [@pandas] and numpy [@numpy] libraries, while the figure plotting stage utilizes matplotlib library [@matplotlib]. In the data processing stage, multiple assertion checks are implemented to ensure the validity of the input data. Following this, the necessary data attributes such as the width of each parallelogram/rectangle and their corresponding colors are computed based on the inputs provided. This processed data is then passed to the plotting functions which performs further calculations to determine the coordinates of each component. During the plotting stage, trigonometric calculations are used to compute the width and height of different types of figures. Finally, the plot is rendered using matplotlib, generating the final Hammock plot.
+The Python implementation of the Hammock plot consists of two primary stages: data processing and figure plotting. The data processing stage employs pandas [@pandas] and numpy [@numpy] libraries, while the figure plotting stage utilizes the matplotlib library [@matplotlib]. In the data processing stage, multiple assertion checks are implemented to ensure the validity of the input data. Next, necessary data attributes such as the width of each parallelogram/rectangle and their corresponding colors are computed based on the inputs provided. These processed data are then passed to the plotting functions which performs further calculations to determine the coordinates of each component. During the plotting stage, width and height of all boxes are computed (see “Hammock Plot Formulas” below). Finally, the plot is rendered using matplotlib, generating the final Hammock plot.
 
 # Statement of need
 
-The Hammock plot was first introduced in 2003 to handle mixed categorical and numerical data in survey research [@Schonlau2003]. Despite the appearance of various plotting techniques over the past 20 years such as generalized parallel coordinate plots and alluvial plots, the Hammock plot has its own distinct advantages [@Schonlau2024]. Initially, the Hammock plot software was released in a Stata version [ref]. However, with the development of Python in the field of data science, there is a growing need to implement this useful tool in the Python language. The Python package for the Hammock plot can be easily installed and integrated with existing Python projects through its APIs.
+The Hammock plot was first introduced in 2003 to handle mixed categorical and numerical data [@Schonlau2003]. The Hammock plot was released as a Stata package. However, with the development of Python in the field of data science, there is a growing need to implement this useful tool in the Python language. The Python packag e for the Hammock plot can be easily installed and integrated with existing Python projects through its APIs.
 
 
-# Citations
+# Hammock Plot Formulas
 
-Citations to entries in paper.bib should be in
-[rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
-format.
+The Hammock plot uses several key formulas to calculate the dimensions and positions of the parallelograms (or rectangle) representing the relationships between categories as shown in \autoref{fig:fig2}. Below are the primary formulas used in the implementation:
 
-If you want to cite a software repository URL (e.g. something on GitHub without a preferred
-citation) then you can do it with the example BibTeX entry below for @fidgit.
+![A parallelogram with the notation used in the formulas. The parallelogram connects two adjacent variables. Specifically, the parallelogram connects category i of the left variable to category j of the right variable. \label{fig:fig2}](image/figure2.png)
 
-For a quick reference, the following citation commands can be used:
-- `@author:2001`  ->  "Author et al. (2001)"
-- `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
+#### 1. Width of Parallelograms
 
-# Figures
+The width of each parallelogram is proportional to the number of observations that take both category \( i \) of the first variable and category \( j \) of the adjacent second variable.  The width \( W \) is calculated as follows:
 
-Figures can be included like this:
-![Caption for example figure.\label{fig:example}](figure.png)
-and referenced from text using \autoref{fig:example}.
+\[ W = \frac{n_{ij}}{N} \]
 
-Figure sizes can be customized by adding an optional second parameter:
-![Caption for example figure.](figure.png){ width=20% }
+where:
+- \( n_{ij} \) is the number of observations for the value pair \( (i, j) \).
+- \( N \) is the total number of observations.
 
-# Acknowledgements
+#### 2. Height of Parallelograms
 
-We acknowledge contributions from Brigitta Sipocz, Syrtis Major, and Semyeong
-Oh, and support from Kathryn Johnston during the genesis of this project.
+The height \( H \) of each parallelogram is determined based on the spacing between the categories along the vertical axis. For example, if the vertical axis ranges from 0 to 100, a variable with three categories might be plotted at 0, 50, and 100. If a parallelogram goes from the bottom of the previous variable to the middle category of this variable, then \( H \) = 50.
+
+
+#### 3. Angle for Parallelograms
+
+The angle \( \theta \) of the parallelogram can be calculated using arctan functions based on the horizontal and vertical distances between the categories:
+
+\[ \theta = \arctan\left(\frac{H}{\Delta x}\right) \]
+
+where:
+- \( H\) is the height of each parallelogra.
+- \( \Delta x \) is the horizontal distance between the categories.
+
+#### 4. Vertical Width of Parallelograms
+
+The vertical width \( W_v \) of a parallelogram, which represents the side length of the parallelogram, can be calculated using the width \( W \) and the angle \( \alpha \):
+
+\[ W_v = \frac{W}{\cos(\theta)} \]
+
+where:
+- \( W \) is the width of the parallelogram.
+- \( \theta \) is the angle between the angle for parallelograms calculated above.
+
+Additional formulas are given in the online Appendix in [@Schonlau2024].
+
 
 # References
