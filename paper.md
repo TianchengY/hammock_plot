@@ -53,38 +53,38 @@ The Hammock plot uses several key formulas to calculate the dimensions and posit
 
 #### 1. Width of Parallelograms
 
-The width of each parallelogram is proportional to the number of observations that take both category \( i \) of the first variable and category \( j \) of the adjacent second variable.  The width \( W \) is calculated as follows:
+The width of each parallelogram is proportional to the number of observations that take both category $i$ of the first variable and category $j$ of the adjacent second variable.  The width $W$ is calculated as follows:
 
-\[ W = \frac{n_{ij}}{N} \]
+$$W = \frac{n_{ij}}{N}$$
 
 where:
-- \( n_{ij} \) is the number of observations for the value pair \( (i, j) \).
-- \( N \) is the total number of observations.
+- $n_{ij}$ is the number of observations for the value pair $(i, j)$.
+- $N$ is the total number of observations.
 
 #### 2. Height of Parallelograms
 
-The height \( H \) of each parallelogram is determined based on the spacing between the categories along the vertical axis. For example, if the vertical axis ranges from 0 to 100, a variable with three categories might be plotted at 0, 50, and 100. If a parallelogram goes from the bottom of the previous variable to the middle category of this variable, then \( H \) = 50.
+The height $H$ of each parallelogram is determined based on the spacing between the categories along the vertical axis. For example, if the vertical axis ranges from 0 to 100, a variable with three categories might be plotted at 0, 50, and 100. If a parallelogram goes from the bottom of the previous variable to the middle category of this variable, then $H$ = 50.
 
 
 #### 3. Angle for Parallelograms
 
-The angle \( \theta \) of the parallelogram can be calculated using arctan functions based on the horizontal and vertical distances between the categories:
+The angle $\theta$ of the parallelogram can be calculated using arctan functions based on the horizontal and vertical distances between the categories:
 
-\[ \theta = \arctan\left(\frac{H}{\Delta x}\right) \]
+$$\theta = \arctan\left(\frac{H}{\Delta x}\right)$$
 
 where:
-- \( H\) is the height of each parallelogra.
-- \( \Delta x \) is the horizontal distance between the categories.
+- $H\) is the height of each parallelogra.
+- $\Delta x$ is the horizontal distance between the categories.
 
 #### 4. Vertical Width of Parallelograms
 
-The vertical width \( W_v \) of a parallelogram, which represents the side length of the parallelogram, can be calculated using the width \( W \) and the angle \( \alpha \):
+The vertical width $W_v$ of a parallelogram, which represents the side length of the parallelogram, can be calculated using the width $W$ and the angle $\alpha$:
 
-\[ W_v = \frac{W}{\cos(\theta)} \]
+$$W_v = \frac{W}{\cos(\theta)}$$
 
 where:
-- \( W \) is the width of the parallelogram.
-- \( \theta \) is the angle between the angle for parallelograms calculated above.
+- $W$ is the width of the parallelogram.
+- $\theta$ is the angle between the angle for parallelograms calculated above.
 
 Additional formulas are given in the online Appendix in [@Schonlau2024].
 
