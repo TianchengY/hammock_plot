@@ -11,10 +11,9 @@ tags:
 authors:
   - name: Tiancheng Yang
     orcid: "0009-0009-1009-8826"
-    equal-contrib: yes
+    corresponding: true
     affiliation: 1
   - name: Matthias Schonlau
-    equal-contrib: yes
     affiliation: 1
 bibliography: paper.bib
 affiliations:
