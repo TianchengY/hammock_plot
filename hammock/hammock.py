@@ -333,13 +333,6 @@ class Hammock:
             label_rectangle_painter = Rectangle()
             label_rectangle_left_center_pts, label_rectangle_right_center_pts = [],[]
             for k,v in coordinates_dict.items():
-                # get left and right coordinates for label rectangles
-                label_rectangle_left_coordinate = (v[0]-space*0.8, v[1])
-                label_rectangle_right_coordinate = (v[0] + space * 0.8, v[1])
-
-                label_rectangle_left_center_pts.append(label_rectangle_left_coordinate)
-                label_rectangle_right_center_pts.append(label_rectangle_right_coordinate)
-
 
                 # get width for label rectangles by counting the number of observations for each value
 
@@ -349,6 +342,26 @@ class Hammock:
                 label_rectangle_width = bar * num_obv
                 if self.min_bar_width and label_rectangle_width <= self.min_bar_width:
                     label_rectangle_width = self.min_bar_width
+
+                # get left and right coordinates for label rectangles
+                # add space for very thick label rectangles 
+                half_label_rectangle_width = label_rectangle_width/2
+                if v[1] - half_label_rectangle_width < 0:
+                    adjust_value = half_label_rectangle_width - v[1]
+                    label_rectangle_left_coordinate= (v[0]-space*0.8, v[1]+adjust_value)
+                    label_rectangle_right_coordinate = (v[0] + space * 0.8, v[1]+adjust_value)
+                elif v[1] + half_label_rectangle_width > self.max_y_range:
+                    adjust_value = half_label_rectangle_width + v[1] - self.max_y_range
+                    label_rectangle_left_coordinate= (v[0]-space*0.8, v[1]-adjust_value)
+                    label_rectangle_right_coordinate = (v[0] + space * 0.8, v[1]-adjust_value)
+                else:
+                    label_rectangle_left_coordinate = (v[0]-space*0.8, v[1])
+                    label_rectangle_right_coordinate = (v[0] + space * 0.8, v[1])
+
+                label_rectangle_left_center_pts.append(label_rectangle_left_coordinate)
+                label_rectangle_right_center_pts.append(label_rectangle_right_coordinate)
+
+                
                 
                 label_rectangle_widths.append(label_rectangle_width)
 
@@ -501,6 +514,7 @@ class Hammock:
         edge_scale = 10
         y_range = scale * figsize_y - self.missing_label_space * scale if self.missing else scale * figsize_y
         x_range = scale * figsize_x
+        self.max_y_range, self.max_x_range = scale * figsize_y, scale * figsize_x
         edge_x_range = x_range / edge_scale
         edge_y_range = y_range / edge_scale
         y_start = edge_y_range + self.missing_label_space * scale if self.missing else edge_y_range
