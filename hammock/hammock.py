@@ -130,7 +130,7 @@ class Hammock:
              hi_var: str = None,
              hi_value: List[str] = None,
              color: List[str] = None,
-             default_color="blue",
+             default_color="lightskyblue",
              # Manipulating Spacing and Layout
              bar_width: float = 1.,
              min_bar_width: float = .05,
@@ -218,7 +218,7 @@ class Hammock:
                 self.hi_value.append(self.missing_data_placeholder)
             else:
                 self.hi_value = [self.missing_data_placeholder]
-        colors = ["red", "green", "yellow", "lightblue", "orange", "gray", "brown", "olive", "pink", "cyan", "magenta"]
+        colors = ["red", "green", "yellow", "purple", "orange", "gray", "brown", "olive", "pink", "cyan", "magenta"]
         self.color_lst = [color for color in color_lst] if color_lst else (
             colors[:len(self.hi_value)] if hi_var else None)
         if hi_var:
@@ -325,8 +325,8 @@ class Hammock:
                 left_center_pts.append(left_coordinate)
                 right_center_pts.append(right_coordinate)
 
-        label_rectangle = True
-        label_rectangle_default_color = 'lightgreen'
+        label_rectangle = True if self.label else False
+        label_rectangle_default_color = default_color
         label_rectangle_widths = []
         label_rectangle_total_obvs = {}
         if label_rectangle:
