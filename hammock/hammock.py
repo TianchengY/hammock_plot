@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from abc import ABC, abstractmethod
-from typing import List,Dict
+from typing import List, Dict
 import warnings
 
 
@@ -121,7 +121,7 @@ class Hammock:
 
     def plot(self,
              var: List[str] = None,
-             value_order: Dict[str, Dict[int,str]] = None,
+             value_order: Dict[str, Dict[int, str]] = None,
              missing: bool = False,
              hi_missing: bool = False,
              missing_label_space: float = 1.,
@@ -130,7 +130,7 @@ class Hammock:
              hi_var: str = None,
              hi_value: List[str] = None,
              color: List[str] = None,
-             default_color="blue",
+             default_color="lightskyblue",
              # Manipulating Spacing and Layout
              bar_width: float = 1.,
              min_bar_width: float = .05,
@@ -152,7 +152,7 @@ class Hammock:
             if self.data_df[col].dtype.name == "category":
                 self.data_df[col] = self.data_df[col].cat.add_categories(self.missing_data_placeholder)
             elif "float" in self.data_df[col].dtype.name:
-                self.data_df[col] = self.data_df[col].apply(lambda x: np.round(x,2))
+                self.data_df[col] = self.data_df[col].apply(lambda x: np.round(x, 2))
         self.data_df_columns = self.data_df.columns.tolist()
 
         if not var_lst:
@@ -161,7 +161,6 @@ class Hammock:
             )
 
         if color and type(color) != type([]):
-
             raise ValueError(
                 f'Argument "color" must be a list os str.'
             )
@@ -179,9 +178,9 @@ class Hammock:
             )
 
         if value_order:
-            for k,v_ori in value_order.items():
+            for k, v_ori in value_order.items():
                 uni_val_set = set(self.data_df[k].dropna().unique())
-                v = [value_name for order,value_name in v_ori.items()]
+                v = [value_name for order, value_name in v_ori.items()]
                 if not set(v) >= uni_val_set:
                     error_values = (set(v) ^ uni_val_set) & set(v)
                     raise ValueError(
@@ -219,17 +218,18 @@ class Hammock:
                 self.hi_value.append(self.missing_data_placeholder)
             else:
                 self.hi_value = [self.missing_data_placeholder]
-        colors = ["red", "green", "yellow", "lightblue","orange", "gray", "brown", "olive", "pink", "cyan", "magenta"]
+        colors = ["red", "green", "yellow", "purple", "orange", "gray", "brown", "olive", "pink", "cyan", "magenta"]
         self.color_lst = [color for color in color_lst] if color_lst else (
             colors[:len(self.hi_value)] if hi_var else None)
         if hi_var:
             if hi_value and len(self.color_lst) < len(hi_value):
-                for i in range(len(hi_value)-len(self.color_lst)):
+                for i in range(len(hi_value) - len(self.color_lst)):
                     for c in colors:
                         if c not in self.color_lst:
                             self.color_lst.append(c)
                             break
-                warnings.warn(f"Warning: The length of color is less than the total number of (high values and missing), color was automatically extended to {self.color_lst}")
+                warnings.warn(
+                    f"Warning: The length of color is less than the total number of (high values and missing), color was automatically extended to {self.color_lst}")
         if hi_var and default_color in self.color_lst:
             raise ValueError(
                 f'The current highlight colors {self.color_lst} conflict with the default color {default_color}. Please choose another default color or other highlight colors'
@@ -259,7 +259,7 @@ class Hammock:
                 raise ValueError(
                     f'the values: {error_values} in highlight value is not in data.'
                 )
-            
+
             value_color_dict = dict(zip(self.hi_value, self.color_lst))
 
             self.data_df[self.color_coloumn_placeholder] = self.data_df[hi_var].apply(
@@ -303,7 +303,7 @@ class Hammock:
         ax, coordinates_dict = self._list_labels(ax, self.height, self.width, self.label)
 
         space = self.space * 10 if label else 0
-        bar = self.bar_width*3.5/max(data_point_numbers)
+        bar = self.bar_width * 3.5 / max(data_point_numbers)
 
         if self.shape == "parallelogram":
             figure_type = Parallelogram()
@@ -325,10 +325,54 @@ class Hammock:
                 left_center_pts.append(left_coordinate)
                 right_center_pts.append(right_coordinate)
 
+        label_rectangle = True if self.label else False
+        label_rectangle_default_color = default_color
+        label_rectangle_widths = []
+        label_rectangle_total_obvs = {}
+        if label_rectangle:
+            label_rectangle_painter = Rectangle()
+            label_rectangle_left_center_pts, label_rectangle_right_center_pts = [],[]
+            for k,v in coordinates_dict.items():
+
+                # get width for label rectangles by counting the number of observations for each value
+
+                col_name = k[0].split(self.same_var_placeholder)[0]
+                num_obv = self.data_df[col_name].value_counts().get(k[1], 0)
+                label_rectangle_total_obvs[k] = num_obv
+                label_rectangle_width = bar * num_obv
+                if self.min_bar_width and label_rectangle_width <= self.min_bar_width:
+                    label_rectangle_width = self.min_bar_width
+
+                # get left and right coordinates for label rectangles
+                # add space for very thick label rectangles 
+                half_label_rectangle_width = label_rectangle_width/2
+                edge_adjust = self.max_y_range * 0.01
+                if v[1] - half_label_rectangle_width < 0:
+                    adjust_value = half_label_rectangle_width - v[1] + edge_adjust
+                    label_rectangle_left_coordinate= (v[0]-space*0.8, v[1]+adjust_value)
+                    label_rectangle_right_coordinate = (v[0] + space * 0.8, v[1]+adjust_value)
+                elif v[1] + half_label_rectangle_width > self.max_y_range:
+                    adjust_value = half_label_rectangle_width + v[1] - self.max_y_range + edge_adjust
+                    label_rectangle_left_coordinate= (v[0]-space*0.8, v[1]-adjust_value)
+                    label_rectangle_right_coordinate = (v[0] + space * 0.8, v[1]-adjust_value)
+                else:
+                    label_rectangle_left_coordinate = (v[0]-space*0.8, v[1])
+                    label_rectangle_right_coordinate = (v[0] + space * 0.8, v[1])
+
+                label_rectangle_left_center_pts.append(label_rectangle_left_coordinate)
+                label_rectangle_right_center_pts.append(label_rectangle_right_coordinate)
+
+                
+                
+                label_rectangle_widths.append(label_rectangle_width)
+
         if not hi_var:
             ax = figure_type.plot(ax, left_center_pts, right_center_pts, widths, default_color)
+            if label_rectangle:
+                ax = label_rectangle_painter.plot(ax, label_rectangle_left_center_pts, label_rectangle_right_center_pts, label_rectangle_widths,label_rectangle_default_color)
         else:
             width_color_total = [0] * len(widths)
+            label_rectangle_width_color_total = [0] * len(coordinates_dict)
             xs, ys = figure_type.get_coordinates(left_center_pts, right_center_pts, widths)
             for color in self.color_lst:
                 widths_color, ratio_color_centers = [], []
@@ -353,6 +397,39 @@ class Hammock:
                                                                                                  ratio_color_centers)
                 ax = figure_type.plot(ax, color_left_center_pts, color_right_center_pts, widths_color, color)
 
+            # always remember that color list was reversed, so the first color is the default color
+            if label_rectangle:
+                label_rectangle_total_obvs_color = label_rectangle_total_obvs.copy()
+                for i,color in enumerate(reversed(self.color_lst)):
+                    the_hi_value = self.hi_value[i] if i != len(self.color_lst)-1 else None
+                    label_rectangle_widths_color, label_rectangle_ratio_color_centers = [], []
+                    idx=0
+                    for k,v in coordinates_dict.items():
+                        col_name = k[0].split(self.same_var_placeholder)[0]
+                        if k[1] == the_hi_value and self.hi_var == col_name:
+                            label_rectangle_width_temp = label_rectangle_widths[idx]
+                            label_rectangle_total_obvs_color[k] = 0
+                        elif the_hi_value:
+                            num_obv = self.data_df.groupby([self.hi_var, col_name]).size().get((the_hi_value, k[1]), 0)
+                            label_rectangle_width_temp = bar * num_obv
+                            if self.min_bar_width and label_rectangle_width_temp <= self.min_bar_width and label_rectangle_width_temp != 0:
+                                label_rectangle_width_temp = self.min_bar_width
+                            label_rectangle_total_obvs_color[k] -= num_obv
+                        else:
+                            label_rectangle_width_temp = bar * label_rectangle_total_obvs_color[k]
+                            if self.min_bar_width and label_rectangle_width_temp <= self.min_bar_width and label_rectangle_width_temp != 0:
+                                label_rectangle_width_temp = self.min_bar_width
+                        label_rectangle_widths_color.append(label_rectangle_width_temp)
+                        label_rectangle_ratio_color_centers.append((label_rectangle_width_color_total[idx] + label_rectangle_width_temp / 2) / label_rectangle_widths[idx])
+                        label_rectangle_width_color_total[idx] += label_rectangle_width_temp
+                        idx+=1
+                    
+                    xs, ys = label_rectangle_painter.get_coordinates(label_rectangle_left_center_pts, label_rectangle_right_center_pts, label_rectangle_widths)
+                    color_left_center_pts, color_right_center_pts = label_rectangle_painter.get_center_highlight(xs, ys,
+                                                                                                 label_rectangle_ratio_color_centers)
+                    ax = label_rectangle_painter.plot(ax, color_left_center_pts, color_right_center_pts, label_rectangle_widths_color, color)
+                    # ax = label_rectangle_painter.plot(ax, label_rectangle_left_center_pts, label_rectangle_right_center_pts, label_rectangle_widths,'green')
+
         if display_figure:
             ax.get_figure()
         else:
@@ -365,7 +442,7 @@ class Hammock:
 
     def _get_varname(self, x):
         return x.split(self.same_var_placeholder)[:-1][0]
-    
+
     def is_float(self, element: any) -> bool:
         if element is None:
             return False
@@ -396,10 +473,10 @@ class Hammock:
 
         return var_pair_lst
 
-    def _gen_coordinate(self, start, n, edge, spacing, total_range,val_type="str"):
+    def _gen_coordinate(self, start, n, edge, spacing, total_range, val_type="str"):
         coor_lst = []
-        
-        if val_type=="str":
+
+        if val_type == "str":
             for i in range(n):
                 coor_lst.append(start + i * spacing)
 
@@ -411,17 +488,17 @@ class Hammock:
             coor_lst.append(total_range + (start - edge) - edge)
         return coor_lst
 
-    def _get_same_scale_minmax(self,original_unique_value):
-        min,max = 0,0
-        for i,varname in enumerate(self.same_scale):
+    def _get_same_scale_minmax(self, original_unique_value):
+        min, max = 0, 0
+        for i, varname in enumerate(self.same_scale):
             var_type = str(self.data_df_origin[varname].dtype.name)
             if "int" in var_type or "float" in var_type:
                 min_val, max_val = original_unique_value[varname][0], original_unique_value[varname][-1]
                 if i == 0:
-                    min,max = min_val, max_val
+                    min, max = min_val, max_val
                 else:
-                    min = min_val if min_val<min else min
-                    max = max_val if max_val>max else max
+                    min = min_val if min_val < min else min
+                    max = max_val if max_val > max else max
 
             else:
                 min_val, max_val = 1, len(original_unique_value[varname])
@@ -430,7 +507,7 @@ class Hammock:
                 else:
                     min = min_val if min_val < min else min
                     max = max_val if max_val > max else max
-        return (min,max)
+        return (min, max)
 
     def _list_labels(self, ax, figsize_y, figsize_x, label):
 
@@ -438,32 +515,36 @@ class Hammock:
         edge_scale = 10
         y_range = scale * figsize_y - self.missing_label_space * scale if self.missing else scale * figsize_y
         x_range = scale * figsize_x
+        self.max_y_range, self.max_x_range = scale * figsize_y, scale * figsize_x
         edge_x_range = x_range / edge_scale
         edge_y_range = y_range / edge_scale
+        # self.edge_y_range, self.edge_x_range = edge_y_range, edge_x_range
         y_start = edge_y_range + self.missing_label_space * scale if self.missing else edge_y_range
         coordinates_dict = {}
 
         unique_value = []
         original_unique_value = {}
         varname_lst = [self._get_varname(var) for var in self.var_lst]
-        
+
         for var, varname in zip(self.var_lst, varname_lst):
             unique_valnames = self.data_df[varname].dropna().unique().tolist()
             sorted_unique_valnames = []
             if self.value_order and varname in self.value_order:
                 varname_value_order_dict = self.value_order[varname]
                 sorted_unique_valnames_temp = [v for k, v in
-                                          sorted(varname_value_order_dict.items(), key=lambda item: item[0])]
+                                               sorted(varname_value_order_dict.items(), key=lambda item: item[0])]
                 for v in sorted_unique_valnames_temp:
                     if v in unique_valnames:
                         sorted_unique_valnames.append(v)
             if self.missing_data_placeholder in unique_valnames:
                 unique_valnames.remove(self.missing_data_placeholder)
-                sorted_unique_valnames = sorted(unique_valnames) if not sorted_unique_valnames else sorted_unique_valnames
+                sorted_unique_valnames = sorted(
+                    unique_valnames) if not sorted_unique_valnames else sorted_unique_valnames
                 original_unique_value[varname] = sorted_unique_valnames.copy()
                 sorted_unique_valnames.append(self.missing_data_placeholder)
             else:
-                sorted_unique_valnames = sorted(unique_valnames) if not sorted_unique_valnames else sorted_unique_valnames
+                sorted_unique_valnames = sorted(
+                    unique_valnames) if not sorted_unique_valnames else sorted_unique_valnames
                 original_unique_value[varname] = sorted_unique_valnames.copy()
             unique_value.append([(var, x) for x in sorted_unique_valnames])
 
@@ -478,11 +559,11 @@ class Hammock:
 
         # prepare for same_scale variabels
         if self.same_scale:
-            same_scale_min,same_scale_max = self._get_same_scale_minmax(original_unique_value)
-            same_scale_range = same_scale_max-same_scale_min
+            same_scale_min, same_scale_max = self._get_same_scale_minmax(original_unique_value)
+            same_scale_range = same_scale_max - same_scale_min
 
         # plot labels for each variables
-        for var_i,(x, uni_val) in enumerate(zip(label_coordinates, unique_value)):
+        for var_i, (x, uni_val) in enumerate(zip(label_coordinates, unique_value)):
             label_num = len(uni_val) - 2 if (uni_val[0][0], self.missing_data_placeholder) in uni_val else len(
                 uni_val) - 1
             varname = varname_lst[var_i]
@@ -493,21 +574,22 @@ class Hammock:
                 temp_value_range = (y_range - 2 * edge_y_range)
                 # handle the variables in same_scale
                 if self.same_scale and varname in self.same_scale:
-                    min_val, max_val = same_scale_min,same_scale_max
+                    min_val, max_val = same_scale_min, same_scale_max
                 else:
-                    min_val,max_val = original_unique_value[varname][0],original_unique_value[varname][-1]
-                value_interval = [temp_value_range*(x_val-min_val)/(max_val-min_val) for x_val in original_unique_value[varname]]
+                    min_val, max_val = original_unique_value[varname][0], original_unique_value[varname][-1]
+                value_interval = [temp_value_range * (x_val - min_val) / (max_val - min_val) for x_val in
+                                  original_unique_value[varname]]
                 uni_val_coordinates = self._gen_coordinate(y_start, label_num, edge_y_range,
-                                                       value_interval, y_range,val_type = "number")
+                                                           value_interval, y_range, val_type="number")
             else:
                 # handle the variables in same_scale
                 if self.same_scale and varname in self.same_scale:
                     temp_value_range = (y_range - 2 * edge_y_range)
-                    quant_val = list(range(1,len(original_unique_value[varname])+1))
+                    quant_val = list(range(1, len(original_unique_value[varname]) + 1))
                     min_val, max_val = same_scale_min, same_scale_max
                     value_interval = [temp_value_range * (x_val - min_val) / (max_val - min_val) for x_val in quant_val]
                     uni_val_coordinates = self._gen_coordinate(y_start, label_num, edge_y_range,
-                                                        value_interval, y_range, val_type = "number")
+                                                               value_interval, y_range, val_type="number")
                 else:
                     value_interval = (y_range - 2 * edge_y_range) / (label_num)
                     uni_val_coordinates = self._gen_coordinate(y_start, label_num, edge_y_range,
@@ -530,9 +612,6 @@ class Hammock:
                     else:
                         ax.text(x, y, val[1], ha='center', va='center')
                 coordinates_dict[val] = (x, y)
-
-
         return ax, coordinates_dict
-
 
 
