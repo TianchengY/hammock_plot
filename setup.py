@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="hammock",
+    name="hammock_plot",
     version='0.0',
     author="Tiancheng Yang",
     author_email="t77yang@uwaterloo.ca",
