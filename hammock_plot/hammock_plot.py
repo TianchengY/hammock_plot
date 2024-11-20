@@ -245,6 +245,11 @@ class Hammock:
         self.shape = shape
         self.same_scale = same_scale
 
+        if self.label and self.space == 0:
+            raise ValueError(
+                f'space must not be 0 if label = True.'
+            )
+
         if self.missing:
             self.data_df = self.data_df.fillna(self.missing_data_placeholder)
         else:
