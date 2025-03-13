@@ -112,7 +112,7 @@ satisfied respondents simply choose the highest value.
 | Highlighting | `hi_var` | `str` |  Variable to be highlighted. Default is none. |
 | | `hi_value` | `List[str or int]` | List of values of `hi_var` to be highlighted. You can highlighted one or multiple values. |
 | | `hi_missing` | `bool` | Whether or not missing values for `hi_var` should be highlighted. |
-| | `color` | `List[str]` | List of colors corresponding to the list of values to be highlighted. Default highlight color list is ["red", "green", "yellow", "lightblue", "orange", "gray", "brown", "olive", "pink", "cyan", "magenta"] |
+| | `color` | `List[str]` | List of colors corresponding to the list of values to be highlighted. Each color can be specified as a plain color name (e.g., `"red"`, `"yellow"`) or in the format `"color=alpha"` (e.g., `"red=0.5"`) to control transparency/intensity, where `alpha` is a decimal between 0 and 1. The default highlight color list is `["red", "green", "yellow", "lightblue", "orange", "gray", "brown", "olive", "pink", "cyan", "magenta"]`. |
 | | `default_color` | `str` |  Default color of plotting elements for boxes that are not highlighted. Default is "blue" |
 | Manipulating Spacing and Layout |   `bar_width` | `float`  | Factor by which the default width is  increased or reduced. This allows reducing visual clutter. Default is 1.0. | 
 | |              `space` |  `float`  | Space left for the labels between the plotting elements. Default is 0.5 | 
