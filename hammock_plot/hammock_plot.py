@@ -308,6 +308,8 @@ class Hammock:
         ax, coordinates_dict = self._list_labels(ax, self.height, self.width, self.label)
 
         space = self.space * 10 if label else 0
+        # when space set to 1, change to univariate mode
+        space_univar = True if space == 10 else False
         bar = self.bar_width * 3.5 / max(data_point_numbers)
 
         if self.shape == "parallelogram":
@@ -372,35 +374,37 @@ class Hammock:
                 label_rectangle_widths.append(label_rectangle_width)
 
         if not hi_var:
-            ax = figure_type.plot(ax, left_center_pts, right_center_pts, widths, default_color)
+            if not space_univar:
+                ax = figure_type.plot(ax, left_center_pts, right_center_pts, widths, default_color)
             if label_rectangle:
                 ax = label_rectangle_painter.plot(ax, label_rectangle_left_center_pts, label_rectangle_right_center_pts, label_rectangle_widths,label_rectangle_default_color)
         else:
             width_color_total = [0] * len(widths)
             label_rectangle_width_color_total = [0] * len(coordinates_dict)
             xs, ys = figure_type.get_coordinates(left_center_pts, right_center_pts, widths)
-            for color in self.color_lst:
-                widths_color, ratio_color_centers = [], []
-                index = 0
-                for col in pair_dict_lst_color:
-                    for k, v in col.items():
-                        left_label = k[0]
-                        right_label = k[1]
-                        if v.get(color):
-                            width_temp = bar * v.get(color)
-                            if self.min_bar_width and width_temp <= self.min_bar_width:
-                                width_temp = self.min_bar_width
-                        else:
-                            width_temp = 0
+            if not space_univar:
+                for color in self.color_lst:
+                    widths_color, ratio_color_centers = [], []
+                    index = 0
+                    for col in pair_dict_lst_color:
+                        for k, v in col.items():
+                            left_label = k[0]
+                            right_label = k[1]
+                            if v.get(color):
+                                width_temp = bar * v.get(color)
+                                if self.min_bar_width and width_temp <= self.min_bar_width:
+                                    width_temp = self.min_bar_width
+                            else:
+                                width_temp = 0
 
-                        widths_color.append(width_temp)
-                        ratio_color_centers.append((width_color_total[index] + width_temp / 2) / widths[index])
-                        width_color_total[index] += width_temp
-                        index += 1
+                            widths_color.append(width_temp)
+                            ratio_color_centers.append((width_color_total[index] + width_temp / 2) / widths[index])
+                            width_color_total[index] += width_temp
+                            index += 1
 
-                color_left_center_pts, color_right_center_pts = figure_type.get_center_highlight(xs, ys,
-                                                                                                 ratio_color_centers)
-                ax = figure_type.plot(ax, color_left_center_pts, color_right_center_pts, widths_color, color)
+                    color_left_center_pts, color_right_center_pts = figure_type.get_center_highlight(xs, ys,
+                                                                                                    ratio_color_centers)
+                    ax = figure_type.plot(ax, color_left_center_pts, color_right_center_pts, widths_color, color)
 
             # always remember that color list was reversed, so the first color is the default color
             if label_rectangle:
