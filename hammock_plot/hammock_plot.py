@@ -146,7 +146,8 @@ class Hammock:
              ):
 
         var_lst = var
-        color_lst = color
+        # parse the color input to enable intensity feature
+        color_lst = color_lst = self._parse_colors(color)
         self.data_df = self.data_df_origin.copy()
         for col in self.data_df:
             if self.data_df[col].dtype.name == "category":
@@ -622,5 +623,28 @@ class Hammock:
                         ax.text(x, y, val[1], ha='center', va='center')
                 coordinates_dict[val] = (x, y)
         return ax, coordinates_dict
+
+    def _parse_colors(self, color_list):
+        """Parses a list of colors, converting 'color=alpha' format to hex with transparency."""
+        parsed_colors = []
+        
+        if color_list is None:
+            return None
+
+        for color in color_list:
+            if "=" in color:  # Handle colors with alpha values
+                try:
+                    color_name, alpha_str = color.split("=")  # Split color and alpha
+                    alpha = float(alpha_str)  # Convert alpha to float
+                    rgba = mcolors.to_rgba(color_name, alpha=alpha)  # Convert to RGBA
+                    hex_color = mcolors.to_hex(rgba, keep_alpha=True)  # Convert to Hex
+                    parsed_colors.append(hex_color)
+                except Exception as e:
+                    print(f"Warning: Invalid color format '{color}', using default color.")
+                    parsed_colors.append(color_name)  # Fallback to default color
+            else:
+                parsed_colors.append(color)  # Add standard color names directly
+
+        return parsed_colors
 
 
