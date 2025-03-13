@@ -1,8 +1,10 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 from abc import ABC, abstractmethod
 from typing import List, Dict
+import math
 import warnings
 
 
@@ -52,7 +54,7 @@ class Parallelogram(Figure):
         xs, ys = [], []
         for l, r, w in zip(left_center_pts, right_center_pts, widths):
             x, y = np.zeros(4), np.zeros(4)
-            alpha = np.arctan(abs(l[1] - r[1]) / abs(l[0] - r[0]))
+            alpha = np.arctan(abs(l[1] - r[1]) / abs(l[0] - r[0])) if l[0] != r[0] else np.arctan(np.inf)
             vertical_w = w / np.cos(alpha)
 
             x[0:2], x[2:4] = l[0], r[0]
@@ -73,7 +75,7 @@ class Rectangle(Figure):
         xs, ys = [], []
         for l, r, w in zip(left_center_pts, right_center_pts, widths):
             x, y = np.zeros(4), np.zeros(4)
-            alpha = np.arctan(abs(l[1] - r[1]) / abs(l[0] - r[0]))
+            alpha = np.arctan(abs(l[1] - r[1]) / abs(l[0] - r[0])) if l[0] != r[0] else np.arctan(np.inf)
             vertical_w = w / np.cos(alpha)
 
             ax, ay = l[0], l[1] + vertical_w / 2
@@ -91,7 +93,7 @@ class Rectangle(Figure):
             new_cy = cy + l[1] - ey
 
             x[0], x[1] = new_ax, new_cx
-            y[0], y[1] = (new_ay, new_cy) if l[1] < r[1] else (new_cy, new_ay)
+            y[0], y[1] = (new_ay, new_cy) if l[1] <= r[1] else (new_cy, new_ay)
 
             x[2], x[3] = x[0] + r[0] - l[0], x[1] + r[0] - l[0]
             y[2], y[3] = y[0] + r[1] - l[1], y[1] + r[1] - l[1]
@@ -129,6 +131,7 @@ class Hammock:
              # Highlighting
              hi_var: str = None,
              hi_value: List[str] = None,
+             hi_box: str = "vertical",
              color: List[str] = None,
              default_color="lightskyblue",
              # Manipulating Spacing and Layout
@@ -147,7 +150,7 @@ class Hammock:
 
         var_lst = var
         # parse the color input to enable intensity feature
-        color_lst = color_lst = self._parse_colors(color)
+        color_lst = self._parse_colors(color)
         self.data_df = self.data_df_origin.copy()
         for col in self.data_df:
             if self.data_df[col].dtype.name == "category":
@@ -337,6 +340,9 @@ class Hammock:
         label_rectangle_default_color = default_color
         label_rectangle_widths = []
         label_rectangle_total_obvs = {}
+        
+        label_rectangle_vertical = True if hi_box == "vertical" else False
+
         if label_rectangle:
             label_rectangle_painter = Rectangle()
             label_rectangle_left_center_pts, label_rectangle_right_center_pts = [],[]
@@ -384,6 +390,7 @@ class Hammock:
             label_rectangle_width_color_total = [0] * len(coordinates_dict)
             xs, ys = figure_type.get_coordinates(left_center_pts, right_center_pts, widths)
             if not space_univar:
+                
                 for color in self.color_lst:
                     widths_color, ratio_color_centers = [], []
                     index = 0
@@ -409,6 +416,7 @@ class Hammock:
 
             # always remember that color list was reversed, so the first color is the default color
             if label_rectangle:
+                # if not label_rectangle_vertical:
                 label_rectangle_total_obvs_color = label_rectangle_total_obvs.copy()
                 for i,color in enumerate(reversed(self.color_lst)):
                     the_hi_value = self.hi_value[i] if i != len(self.color_lst)-1 else None
@@ -416,15 +424,18 @@ class Hammock:
                     idx=0
                     for k,v in coordinates_dict.items():
                         col_name = k[0].split(self.same_var_placeholder)[0]
+                        # case1: hi_value and hi_var
                         if k[1] == the_hi_value and self.hi_var == col_name:
                             label_rectangle_width_temp = label_rectangle_widths[idx]
                             label_rectangle_total_obvs_color[k] = 0
+                        # case2: for other colors
                         elif the_hi_value:
                             num_obv = self.data_df.groupby([self.hi_var, col_name]).size().get((the_hi_value, k[1]), 0)
                             label_rectangle_width_temp = bar * num_obv
                             if self.min_bar_width and label_rectangle_width_temp <= self.min_bar_width and label_rectangle_width_temp != 0:
                                 label_rectangle_width_temp = self.min_bar_width
                             label_rectangle_total_obvs_color[k] -= num_obv
+                        # case3: for the last default color
                         else:
                             label_rectangle_width_temp = bar * label_rectangle_total_obvs_color[k]
                             if self.min_bar_width and label_rectangle_width_temp <= self.min_bar_width and label_rectangle_width_temp != 0:
@@ -434,11 +445,37 @@ class Hammock:
                         label_rectangle_width_color_total[idx] += label_rectangle_width_temp
                         idx+=1
                     
-                    xs, ys = label_rectangle_painter.get_coordinates(label_rectangle_left_center_pts, label_rectangle_right_center_pts, label_rectangle_widths)
-                    color_left_center_pts, color_right_center_pts = label_rectangle_painter.get_center_highlight(xs, ys,
-                                                                                                 label_rectangle_ratio_color_centers)
-                    ax = label_rectangle_painter.plot(ax, color_left_center_pts, color_right_center_pts, label_rectangle_widths_color, color)
-                    # ax = label_rectangle_painter.plot(ax, label_rectangle_left_center_pts, label_rectangle_right_center_pts, label_rectangle_widths,'green')
+                    if not label_rectangle_vertical:
+                        xs, ys = label_rectangle_painter.get_coordinates(label_rectangle_left_center_pts, label_rectangle_right_center_pts, label_rectangle_widths)
+                        color_left_center_pts, color_right_center_pts = label_rectangle_painter.get_center_highlight(xs, ys,
+                                                                                                    label_rectangle_ratio_color_centers)
+                        ax = label_rectangle_painter.plot(ax, color_left_center_pts, color_right_center_pts, label_rectangle_widths_color, color)
+                        # ax = label_rectangle_painter.plot(ax, label_rectangle_left_center_pts, label_rectangle_right_center_pts, label_rectangle_widths,'green')
+                    else:
+                        xs, ys = label_rectangle_painter.get_coordinates(label_rectangle_left_center_pts, label_rectangle_right_center_pts, label_rectangle_widths)
+
+                        # switch the order of xs and ys temporarily for calculating the vertical coordinates
+                        vertical_xs = [np.array([x[1],x[3],x[0],x[2]]) for x in xs]
+                        vertical_ys = [np.array([y[1],y[3],y[0],y[2]]) for y in ys]
+
+                        vertical_color_left_center_pts, vertical_color_right_center_pts = label_rectangle_painter.get_center_highlight(vertical_xs, vertical_ys,
+                                                                                                    label_rectangle_ratio_color_centers)
+                        # switch back to normal coordinates
+                        vertical_label_rectangle_widths_color = [space*0.8*2*(w_color/w) for w_color,w in zip (label_rectangle_widths_color, label_rectangle_widths)]
+                        vertical_color_left_center_pts, vertical_color_right_center_pts, vertical_label_rectangle_widths_color = self._compute_left_right_centers(
+                            vertical_color_left_center_pts, vertical_color_right_center_pts, vertical_label_rectangle_widths_color
+                        )
+
+
+                        ax = label_rectangle_painter.plot(ax, vertical_color_left_center_pts, vertical_color_right_center_pts,vertical_label_rectangle_widths_color, color)
+
+
+                # else:
+                #     vertical_label_rectangle_left_center_pts = [(pt2[0],pt1[0]) for pt1, pt2 in zip(label_rectangle_left_center_pts,label_rectangle_right_center_pts)]
+                #     vertical_label_rectangle_right_center_pts = [(pt1[1],pt2[0]) for pt1, pt2 in zip(label_rectangle_left_center_pts,label_rectangle_right_center_pts)]
+
+                #     label_rectangle_total_obvs_color = label_rectangle_total_obvs.copy()
+                #     for i,color in enumerate(reversed(self.color_lst)):
 
         if display_figure:
             ax.get_figure()
@@ -646,5 +683,65 @@ class Hammock:
                 parsed_colors.append(color)  # Add standard color names directly
 
         return parsed_colors
+
+    def _compute_left_right_centers(self, midpoints_top, midpoints_bottom, lengths):
+        """
+        Given the top and bottom midpoints of one or more aligned rectangles, along with their width,
+        compute the midpoints and lengths of the left and right centers.
+        
+        Parameters:
+        --------
+        midpoints_top : list of (float, float)
+            List of top edge midpoints (Tx, Ty)
+        midpoints_bottom : list of (float, float)
+            List of bottom edge midpoints (Bx, By)
+        length : float
+            The width of the rectangles (assumed to be the same for all)
+            
+        Returns:
+        --------
+        left_midpoints : list of (float, float)
+            Midpoints of the left edges
+        right_midpoints : list of (float, float)
+            Midpoints of the right edges
+        edge_length : float
+            The height of the rectangles (same for both left and right edges)
+        """
+        n = len(midpoints_top)
+        
+        left_midpoints = []
+        right_midpoints = []
+        edge_lengths = []
+        
+        for i in range(n):
+            Tx, Ty = midpoints_top[i]
+            Bx, By = midpoints_bottom[i]
+
+            Ty, By = (By, Ty) if Ty < By else (Ty, By)
+
+            length = lengths[i]
+            
+            # Compute the vertical edge length
+            edge_length = abs(By - Ty)
+            
+            if length != 0:
+                # Compute left and right edge midpoints
+                Lmx = Tx - length / 2
+                Lmy = Ty - edge_length / 2
+                Rmx = Tx + length / 2
+                Rmy = By + edge_length / 2
+            else:
+                Lmx = Tx - length / 2
+                Lmy = Ty - edge_length / 2
+                Rmx = Lmx
+                Rmy = By + edge_length / 2
+                edge_length = 0
+            
+            left_midpoints.append((Lmx, Lmy))
+            right_midpoints.append((Rmx, Rmy))
+            edge_lengths.append(edge_length)
+        
+        return left_midpoints, right_midpoints, edge_lengths
+
 
 
