@@ -121,6 +121,9 @@ class Hammock:
         self.color_coloumn_placeholder = "value_color_col_placeholder_VCCP"
         self.same_var_placeholder = "_same_var_placeholder_SVP_"
 
+        # to resolve same_scale and value_order alignment issue
+        self.same_scale_placeholder = "_same_scale_placeholder_SSP_"
+
     def plot(self,
              var: List[str] = None,
              value_order: Dict[str, Dict[int, str]] = None,
@@ -136,7 +139,7 @@ class Hammock:
              default_color="lightskyblue",
              # Manipulating Spacing and Layout
              bar_width: float = 1.,
-             min_bar_width: float = .05,
+             min_bar_width: float = .1,
              space: float = .5,
              label_options: Dict = None,
              height: float = 10.,
@@ -249,11 +252,6 @@ class Hammock:
         self.shape = shape
         self.same_scale = same_scale
 
-        if self.label and self.space == 0:
-            raise ValueError(
-                f'space must not be 0 if label = True.'
-            )
-
         if self.missing:
             self.data_df = self.data_df.fillna(self.missing_data_placeholder)
         else:
@@ -284,7 +282,7 @@ class Hammock:
         data_point_numbers = []
         for p in var_pairs:
             varname_p = [self._get_varname(var) for var in p]
-            pair_dict_temp = self.data_df.groupby(varname_p).size().to_dict()
+            pair_dict_temp = self.data_df.groupby(varname_p, observed=True).size().to_dict()
             pair_dict = {}
             for k, v in pair_dict_temp.items():
                 if v == 0:
@@ -298,7 +296,7 @@ class Hammock:
             for p in var_pairs:
                 varname_p = [self._get_varname(var) for var in p]
                 varname_p.append(self.color_coloumn_placeholder)
-                color_dict_temp = self.data_df.groupby(varname_p).size().to_dict()
+                color_dict_temp = self.data_df.groupby(varname_p, observed=True).size().to_dict()
                 color_dict = {}
                 for k, v in color_dict_temp.items():
                     if v == 0:
@@ -428,23 +426,22 @@ class Hammock:
                         if k[1] == the_hi_value and self.hi_var == col_name:
                             label_rectangle_width_temp = label_rectangle_widths[idx]
                             label_rectangle_total_obvs_color[k] = 0
-                        # case2: for other colors
-                        elif the_hi_value:
-                            num_obv = self.data_df.groupby([self.hi_var, col_name]).size().get((the_hi_value, k[1]), 0)
+                        # case2: for other variables
+                        elif the_hi_value != None:
+                            num_obv = self.data_df.groupby([self.hi_var, col_name], observed=True).size().get((the_hi_value, k[1]), 0)
                             label_rectangle_width_temp = bar * num_obv
-                            if self.min_bar_width and label_rectangle_width_temp <= self.min_bar_width and label_rectangle_width_temp != 0:
-                                label_rectangle_width_temp = self.min_bar_width
+                            # if self.min_bar_width and label_rectangle_width_temp <= self.min_bar_width and label_rectangle_width_temp != 0:
+                            #     label_rectangle_width_temp = self.min_bar_width
                             label_rectangle_total_obvs_color[k] -= num_obv
                         # case3: for the last default color
                         else:
                             label_rectangle_width_temp = bar * label_rectangle_total_obvs_color[k]
-                            if self.min_bar_width and label_rectangle_width_temp <= self.min_bar_width and label_rectangle_width_temp != 0:
-                                label_rectangle_width_temp = self.min_bar_width
+                            # if self.min_bar_width and label_rectangle_width_temp <= self.min_bar_width and label_rectangle_width_temp != 0:
+                            #     label_rectangle_width_temp = self.min_bar_width
                         label_rectangle_widths_color.append(label_rectangle_width_temp)
                         label_rectangle_ratio_color_centers.append((label_rectangle_width_color_total[idx] + label_rectangle_width_temp / 2) / label_rectangle_widths[idx])
                         label_rectangle_width_color_total[idx] += label_rectangle_width_temp
                         idx+=1
-                    
                     if not label_rectangle_vertical:
                         xs, ys = label_rectangle_painter.get_coordinates(label_rectangle_left_center_pts, label_rectangle_right_center_pts, label_rectangle_widths)
                         color_left_center_pts, color_right_center_pts = label_rectangle_painter.get_center_highlight(xs, ys,
@@ -535,6 +532,7 @@ class Hammock:
             coor_lst.append(total_range + (start - edge) - edge)
         return coor_lst
 
+    # using the variable with the largest number of values as the criteria for same_scale
     def _get_same_scale_minmax(self, original_unique_value):
         min, max = 0, 0
         for i, varname in enumerate(self.same_scale):
@@ -583,6 +581,8 @@ class Hammock:
                 for v in sorted_unique_valnames_temp:
                     if v in unique_valnames:
                         sorted_unique_valnames.append(v)
+                    else:
+                        sorted_unique_valnames.append(self.same_scale_placeholder)
             if self.missing_data_placeholder in unique_valnames:
                 unique_valnames.remove(self.missing_data_placeholder)
                 sorted_unique_valnames = sorted(
@@ -649,6 +649,8 @@ class Hammock:
 
             # plot labels
             for i, (val, y) in enumerate(zip(uni_val, uni_val_coordinates)):
+                if val[1] == self.same_scale_placeholder:
+                    continue
                 if label:
                     if self.missing and val[1] == self.missing_data_placeholder:
                         ax.text(x, y, "missing", ha='center', va='center')
@@ -683,6 +685,8 @@ class Hammock:
                 parsed_colors.append(color)  # Add standard color names directly
 
         return parsed_colors
+
+    import math
 
     def _compute_left_right_centers(self, midpoints_top, midpoints_bottom, lengths):
         """
