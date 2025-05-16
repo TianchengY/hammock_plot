@@ -87,7 +87,7 @@ The three variables represent different ordinal scales for satisfaction. We are 
 ```python
 var = ["sataces","satcomm","satrate"]
 hammock = hammock_plot.Hammock(data_df = df)
-ax = hammock.plot(var=var,  default_color="blue", missing=True) 
+ax = hammock.plot(var=var, missing=True) 
 ```
 
 <img src="image/diabetes.png" alt="Hammock plot for the Diabetes Data" width="600"/>
