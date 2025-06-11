@@ -38,7 +38,7 @@ We import the diabetes dataset:
 ```python
 import hammock_plot
 import pandas as pd
-df = pd.read_csv('../examples/asthma/asth_all3_for_python.csv')
+df = pd.read_csv('./data/data_asthma.csv')
 ```
 
 Minimal example of a hammock plot: 
@@ -80,7 +80,7 @@ We import the diabetes dataset:
 ```python
 import hammock_plot
 import pandas as pd
-df = pd.read_csv('../examples/diabetes_outlier/diabetes_for_python.csv')
+df = pd.read_csv('./data/data_diabetes.csv')
 ```
 
 The three variables represent different ordinal scales for satisfaction. We are checking for missing values: 
@@ -94,6 +94,31 @@ ax = hammock.plot(var=var, missing=True)
 
 The missing value category is shown at the bottom for each variable. We find missing values for all 3 variables, but fewest for the last one. We also see a phenomenon called "top coding", where 
 satisfied respondents simply choose the highest value.
+
+### Example value_order for the Shakespeare data
+
+We import the Shakespeare dataset:
+
+```python
+import hammock_plot
+import pandas as pd
+df = pd.read_csv('./data/data_shakespeare.csv')
+```
+
+We use `speaker_dict` to map the values of the variables `speaker1` and `speaker2` according to the social class hierarchy.
+```python
+var_lst = ["type","speaker1","speaker2","sex1"]
+color_lst = ["red","yellow","green"]
+hi_value = ["Beggars","Citizens","Gentry"]
+
+speaker_dict={0:"Beggars",1:"Royalty",2:"Nobility",3:"Gentry",4:"Citizens",5:"Yeomanry"}
+
+hammock = hammock_plot.Hammock(data_df = data_df)
+ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,color=color_lst, bar_width=0.6,missing=True,
+                value_order ={"speaker1":speaker_dict,"speaker2":speaker_dict} )
+```
+
+<img src="image/shakespeare.png" alt="Hammock plot for the Diabetes Data" width="600"/>
 
 
 
