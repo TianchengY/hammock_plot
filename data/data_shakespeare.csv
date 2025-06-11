@@ -1,0 +1,39 @@
+type,speaker1,speaker2,sex1,sex2,play_name
+tragedy,Yeomanry,Yeomanry,M,M,Romeo & Juliet
+history,Nobility,Nobility,M,M,Richard III
+history,Royalty,Nobility,M,M,Richard II
+comedy,Royalty,Nobility,M,M,Pericles
+tragedy,Gentry,Gentry,M,M,Othello
+comedy,Nobility,Yeomanry,M,M,Much Ado
+comedy,Nobility,Royalty,M,F,Midsummer
+comedy,Gentry,Gentry,M,M,Merry Wives
+comedy,Citizens,Gentry,M,M,Merchant
+comedy,Nobility,Nobility,M,M,Measure
+comedy,Royalty,Nobility,M,M,Love
+history,Royalty,Nobility,M,M,King John
+tragedy,Gentry,Citizens,M,M,Julius Caesar
+history,Nobility,Nobility,M,M,Henry VI(1)
+history,Nobility,Royalty,M,M,Henry VI(2)
+history,Nobility,Nobility,M,M,Henry VI(3)
+history,Royalty,Nobility,M,M,Henry IV(1)
+history,Nobility,Yeomanry,M,M,Henry IV(2)
+history,Gentry,Gentry,M,M,Henry V
+history,Nobility,Nobility,M,M,Henry VIII
+tragedy,Gentry,Gentry,M,M,Cymbeline
+tragedy,Citizens,Citizens,M,M,Coriolanus
+comedy,Citizens,Nobility,M,M,Comedy
+comedy,Yeomanry,Yeomanry,M,M,"As,You,Like"
+tragedy,Gentry,Gentry,M,M,Antony
+comedy,Nobility,Nobility,F,M,All's Well
+tragedy,Citizens,Citizens,M,M,Timon
+tragedy,Royalty,Nobility,M,M,Titus
+tragedy,Nobility,Citizens,M,M,Troilus
+comedy,Nobility,Gentry,M,M,Twelfth
+comedy,Gentry,Gentry,M,M,Two Gentlemen
+comedy,Nobility,Nobility,M,M,Winter Tale
+comedy,Citizens,Yeomanry,M,M,Tempest
+comedy,Beggars,Yeomanry,M,F,Shrew
+tragedy,Nobility,Nobility,M,M,Macbeth
+tragedy,,,F,F,Macbeth
+tragedy,Yeomanry,Yeomanry,M,M,Hamlet
+tragedy,Nobility,Nobility,M,M,King Lear
