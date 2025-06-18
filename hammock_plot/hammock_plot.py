@@ -416,6 +416,33 @@ class Hammock:
             if label_rectangle:
                 # if not label_rectangle_vertical:
                 label_rectangle_total_obvs_color = label_rectangle_total_obvs.copy()
+                # Here I use double loop to first calculate the total width of the hi_box, then calculate the proportion of each
+                #       color to the total hi_box width in order to address the min_bar_width cannot match the total hi_box width issue
+                for i,color in enumerate(reversed(self.color_lst)):
+                    the_hi_value = self.hi_value[i] if i != len(self.color_lst)-1 else None
+                    idx=0
+                    for k,v in coordinates_dict.items():
+                        col_name = k[0].split(self.same_var_placeholder)[0]
+                        # case1: hi_value and hi_var
+                        if k[1] == the_hi_value and self.hi_var == col_name:
+                            label_rectangle_width_temp = label_rectangle_widths[idx]
+                            label_rectangle_total_obvs_color[k] = 0
+                        # case2: for other variables
+                        elif the_hi_value != None:
+                            num_obv = self.data_df.groupby([self.hi_var, col_name], observed=True).size().get((the_hi_value, k[1]), 0)
+                            label_rectangle_width_temp = bar * num_obv
+                            if self.min_bar_width and label_rectangle_width_temp <= self.min_bar_width and label_rectangle_width_temp != 0:
+                                label_rectangle_width_temp = self.min_bar_width
+                            label_rectangle_total_obvs_color[k] -= num_obv 
+                        # case3: for the last default color
+                        else:
+                            label_rectangle_width_temp = bar * label_rectangle_total_obvs_color[k] if label_rectangle_total_obvs_color[k] > 0 else 0
+                            if self.min_bar_width and label_rectangle_width_temp <= self.min_bar_width and label_rectangle_width_temp != 0:
+                                label_rectangle_width_temp = self.min_bar_width
+                        label_rectangle_width_color_total[idx] += label_rectangle_width_temp
+                        idx+=1
+                label_rectangle_total_obvs_color = label_rectangle_total_obvs.copy()
+                label_rectangle_width_color_total_temp = [0] * len(coordinates_dict)
                 for i,color in enumerate(reversed(self.color_lst)):
                     the_hi_value = self.hi_value[i] if i != len(self.color_lst)-1 else None
                     label_rectangle_widths_color, label_rectangle_ratio_color_centers = [], []
@@ -430,20 +457,20 @@ class Hammock:
                         elif the_hi_value != None:
                             num_obv = self.data_df.groupby([self.hi_var, col_name], observed=True).size().get((the_hi_value, k[1]), 0)
                             label_rectangle_width_temp = bar * num_obv
-                            # if self.min_bar_width and label_rectangle_width_temp <= self.min_bar_width and label_rectangle_width_temp != 0:
-                            #     label_rectangle_width_temp = self.min_bar_width
-                            label_rectangle_total_obvs_color[k] -= num_obv
+                            if self.min_bar_width and label_rectangle_width_temp <= self.min_bar_width and label_rectangle_width_temp != 0:
+                                label_rectangle_width_temp = self.min_bar_width
+                            label_rectangle_total_obvs_color[k] -= num_obv 
                         # case3: for the last default color
                         else:
-                            label_rectangle_width_temp = bar * label_rectangle_total_obvs_color[k]
-                            # if self.min_bar_width and label_rectangle_width_temp <= self.min_bar_width and label_rectangle_width_temp != 0:
-                            #     label_rectangle_width_temp = self.min_bar_width
+                            label_rectangle_width_temp = bar * label_rectangle_total_obvs_color[k] if label_rectangle_total_obvs_color[k] > 0 else 0
+                            if self.min_bar_width and label_rectangle_width_temp <= self.min_bar_width and label_rectangle_width_temp != 0:
+                                label_rectangle_width_temp = self.min_bar_width
                         label_rectangle_widths_color.append(label_rectangle_width_temp)
-                        label_rectangle_ratio_color_centers.append((label_rectangle_width_color_total[idx] + label_rectangle_width_temp / 2) / label_rectangle_widths[idx])
-                        label_rectangle_width_color_total[idx] += label_rectangle_width_temp
+                        label_rectangle_ratio_color_centers.append((label_rectangle_width_color_total_temp[idx] + label_rectangle_width_temp / 2) / label_rectangle_width_color_total[idx])
+                        label_rectangle_width_color_total_temp[idx] += label_rectangle_width_temp
                         idx+=1
                     if not label_rectangle_vertical:
-                        xs, ys = label_rectangle_painter.get_coordinates(label_rectangle_left_center_pts, label_rectangle_right_center_pts, label_rectangle_widths)
+                        xs, ys = label_rectangle_painter.get_coordinates(label_rectangle_left_center_pts, label_rectangle_right_center_pts, label_rectangle_width_color_total)
                         color_left_center_pts, color_right_center_pts = label_rectangle_painter.get_center_highlight(xs, ys,
                                                                                                     label_rectangle_ratio_color_centers)
                         ax = label_rectangle_painter.plot(ax, color_left_center_pts, color_right_center_pts, label_rectangle_widths_color, color)
@@ -458,7 +485,7 @@ class Hammock:
                         vertical_color_left_center_pts, vertical_color_right_center_pts = label_rectangle_painter.get_center_highlight(vertical_xs, vertical_ys,
                                                                                                     label_rectangle_ratio_color_centers)
                         # switch back to normal coordinates
-                        vertical_label_rectangle_widths_color = [space*0.8*2*(w_color/w) for w_color,w in zip (label_rectangle_widths_color, label_rectangle_widths)]
+                        vertical_label_rectangle_widths_color = [space*0.8*2*(w_color/w) for w_color,w in zip (label_rectangle_widths_color, label_rectangle_width_color_total)]
                         vertical_color_left_center_pts, vertical_color_right_center_pts, vertical_label_rectangle_widths_color = self._compute_left_right_centers(
                             vertical_color_left_center_pts, vertical_color_right_center_pts, vertical_label_rectangle_widths_color
                         )
