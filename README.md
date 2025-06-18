@@ -45,7 +45,7 @@ Minimal example of a hammock plot:
 ```python
 var = ["hospitalizations","group","gender","comorbidities"]
 hammock = hammock_plot.Hammock(data_df = df)
-ax = hammock.plot(var=var)
+ax = hammock.plot(var=var, min_bar_width=0.11)
 ```
 <img src="image/asthma_minimal.png" alt="Minimal example for a Hammock plot" width="600"/>
 
@@ -56,7 +56,7 @@ var = ["hospitalizations","group","gender","comorbidities"]
 group_dict= {1: "child", 2: "adolescent",3: "adult"}
 value_order = {"group": group_dict}
 hammock = hammock_plot.Hammock(data_df = df)
-ax = hammock.plot(var=var, value_order=value_order )
+ax = hammock.plot(var=var, value_order=value_order, min_bar_width=0.11)
 ```
 
 <!--- to restrict image size, I am using a an html command, rather than the standard ![](image.png) --->
@@ -66,7 +66,7 @@ ax = hammock.plot(var=var, value_order=value_order )
 We highlight observations with comorbidities=0  in red:
 
 ```python
-ax = hammock.plot(var=var, value_order=value_order ,hi_var="comorbidities", hi_value=[0], color=["red"])
+ax = hammock.plot(var=var, value_order=value_order ,hi_var="comorbidities", hi_value=[0], color=["red"], min_bar_width=0.11)
 ```
 
 <!---   ![Hammock plot with highlighting](image/asthma_highlighting.png)    --->
@@ -87,7 +87,7 @@ The three variables represent different ordinal scales for satisfaction. We are 
 ```python
 var = ["sataces","satcomm","satrate"]
 hammock = hammock_plot.Hammock(data_df = df)
-ax = hammock.plot(var=var, missing=True) 
+ax = hammock.plot(var=var, missing=True, min_bar_width=0.15) 
 ```
 
 <img src="image/diabetes.png" alt="Hammock plot for the Diabetes Data" width="600"/>
