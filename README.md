@@ -17,7 +17,7 @@
 
     The order of variables in varlist determines the order of variables in the graph.  All variables in varlist
     must be numerical. String variables should be converted to numerical variables first, e.g. using encode or
-    destring.
+    destring. 
 
 
 
