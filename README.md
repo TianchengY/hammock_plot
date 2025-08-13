@@ -135,7 +135,7 @@ ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,color=color
 | |             `missing` | `bool` | Whether or not to add a category for missing values at the bottom of the plot.  If False, observations that have a missing value for any variable in the data frame (even those not used in the hammock plot) are removed.  Default is False. |
 | |             `label` | `bool` | Whether or not to display labels between the plotting segments |
 | Highlighting | `hi_var` | `str` |  Variable to be highlighted. Default is none. |
-| | `hi_value` | `List[str or int]` | List of values of `hi_var` to be highlighted. You can highlighted one or multiple values. |
+| | `hi_value` | `List[str or int] or str or int` | Value(s) of `hi_var` to be highlighted. You can highlighted one or multiple values. You can also pass an expression (e.g. "x>1 and (x>5 or x<4)") in string when you want to specify a range for a numeric hi_var.|
 | | `hi_box` | `str` | Controls how highlighted values are displayed within category labels. Options are "vertical" for vertically stacked color segments or "horizontal" for horizontally split color segments. Default is "vertical".|
 | | `hi_missing` | `bool` | Whether or not missing values for `hi_var` should be highlighted. |
 | | `color` | `List[str]` | List of colors corresponding to the list of values to be highlighted. Each color can be specified as a plain color name (e.g., `"red"`, `"yellow"`) or in the format `"color=alpha"` (e.g., `"red=0.5"`) to control transparency/intensity, where `alpha` is a decimal between 0 and 1. The default highlight color list is `["red", "green", "yellow", "lightblue", "orange", "gray", "brown", "olive", "pink", "cyan", "magenta"]`. |

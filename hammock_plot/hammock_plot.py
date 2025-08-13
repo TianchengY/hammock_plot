@@ -3,9 +3,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from abc import ABC, abstractmethod
-from typing import List, Dict
+from typing import List, Dict, Union, Optional
 import math
 import warnings
+import re
+from typing import Callable
 
 
 class Figure(ABC):
@@ -135,7 +137,7 @@ class Hammock:
              hi_var: str = None,
              hi_value: List[str] = None,
              hi_box: str = "vertical",
-             color: List[str] = None,
+             color: Optional[Union[str, List[str]]] = None,
              default_color="lightskyblue",
              # Manipulating Spacing and Layout
              bar_width: float = 1.,
@@ -155,11 +157,6 @@ class Hammock:
         # parse the color input to enable intensity feature
         color_lst = self._parse_colors(color)
         self.data_df = self.data_df_origin.copy()
-        for col in self.data_df:
-            if self.data_df[col].dtype.name == "category":
-                self.data_df[col] = self.data_df[col].cat.add_categories(self.missing_data_placeholder)
-            elif "float" in self.data_df[col].dtype.name:
-                self.data_df[col] = self.data_df[col].apply(lambda x: np.round(x, 2))
         self.data_df_columns = self.data_df.columns.tolist()
 
         if not var_lst:
@@ -207,8 +204,40 @@ class Hammock:
 
         if hi_var and not (hi_value or missing):
             raise ValueError(
-                f'hi_value must be speicified as hi_var is given.'
+                f'hi_value or hi_missing must be speicified as hi_var is given.'
             )
+
+
+        if missing:
+            # 1) Round float columns first (using your original float detection logic)
+            for col in self.data_df:
+                if "float" in self.data_df[col].dtype.name:
+                    self.data_df[col] = self.data_df[col].apply(lambda x: np.round(x, 2))
+
+            # 2) Ensure categorical columns include the placeholder
+            for col in self.data_df:
+                if self.data_df[col].dtype.name == "category":
+                    if self.missing_data_placeholder not in self.data_df[col].cat.categories:
+                        self.data_df[col] = self.data_df[col].cat.add_categories([self.missing_data_placeholder])
+
+            # 3) Convert all non-categorical columns to string so they can hold the placeholder
+            non_cat_cols = self.data_df.columns.difference(
+                self.data_df.select_dtypes(include=['category']).columns
+            )
+            self.data_df[non_cat_cols] = self.data_df[non_cat_cols].astype('string')
+
+            # 4) Fill NaN in ALL columns with the placeholder
+            self.data_df = self.data_df.fillna(self.missing_data_placeholder)
+
+            # 5) Convert non-categorical columns to category
+            self.data_df[non_cat_cols] = self.data_df[non_cat_cols].astype('category')
+
+        else:
+            self.data_df = self.data_df.dropna()
+
+        # 6) Cache the updated column list
+        self.data_df_columns = self.data_df.columns.tolist()
+
 
         self.var_lst = self._label_same_varname(var_lst)
         self.value_order = value_order
@@ -218,29 +247,86 @@ class Hammock:
         self.label = label
         # Highlighting
         self.hi_var = hi_var
-        self.hi_value = hi_value
+        self.hi_value = hi_value if type(hi_value) == list else [hi_value]
+        self.hi_value = [str(v) for v in self.hi_value]
+
+        def safe_numeric(val):
+            """Try to convert to float, return float if possible, else return original value."""
+            try:
+                return float(val)
+            except (ValueError, TypeError):
+                return val
+
+        # check if hi_value is valid
+        if hi_var != None and hi_value != None:
+            hi_var_unique_set = set(self.data_df[hi_var].unique())
+            hi_value_set = set(self.hi_value)
+            hi_var_unique_set = {safe_numeric(v) for v in hi_var_unique_set}
+            hi_value_set = {safe_numeric(v) for v in hi_value_set}
+            # check if hi_value is not a subset of all values of hi_var in the dataset
+            if not hi_value_set <= hi_var_unique_set:
+                error_values = (set(self.hi_value) ^ hi_var_unique_set) & set(self.hi_value)
+                # check the edge case where hi_value is an expression of a range for the numeric hi_var
+                if not (len(self.hi_value) == 1 and self.validate_expression(self.hi_value[0])):
+                    raise ValueError(
+                        f'Invalid expression: {self.hi_value[0]} or the value: {error_values} in hi_value is not in data.'
+                    )
+
+        # check if the hi_value is an expression for a range of numeric values
+        self.hi_expression = False
+        if len(self.hi_value) == 1 and (not type(safe_numeric(self.hi_value[0])) == float) and self.validate_expression(self.hi_value[0]):
+            self.hi_expression = True
+
         if self.missing and self.hi_missing:
             # self.hi_value = [x if x!="missing" else self.missing_data_placeholder for x in hi_value]
-            if self.hi_value:
+            if self.hi_value[0] is not None:
                 self.hi_value.append(self.missing_data_placeholder)
             else:
                 self.hi_value = [self.missing_data_placeholder]
         colors = ["red", "green", "yellow", "purple", "orange", "gray", "brown", "olive", "pink", "cyan", "magenta"]
-        self.color_lst = [color for color in color_lst] if color_lst else (
-            colors[:len(self.hi_value)] if hi_var else None)
-        if hi_var:
-            if hi_value and len(self.color_lst) < len(hi_value):
-                for i in range(len(hi_value) - len(self.color_lst)):
+        self.color_lst = []
+        if self.hi_expression:
+            expression_hi_value = []
+            for numeric_value in hi_var_unique_set:
+                if numeric_value != self.missing_data_placeholder and self.is_in_range(float(numeric_value)):
+                    self.color_lst.append(color_lst[0] if color_lst else colors[0])
+                    expression_hi_value.append(numeric_value)
+            if hi_missing:
+                expression_hi_value.append(self.missing_data_placeholder)
+            self.hi_value = expression_hi_value
+        else:
+            self.color_lst = [color for color in color_lst] if color_lst else (
+                colors[:len(self.hi_value)] if hi_var else None)
+
+        # handle "0.0" and "0" matching issue
+        if hi_var and hi_value != None:
+            num_map = {safe_numeric(v):v for v in set(self.data_df[hi_var].unique())}
+            num_map[self.missing_data_placeholder] = self.missing_data_placeholder
+            self.hi_value = [num_map[safe_numeric(v)] for v in self.hi_value]
+            
+
+        if hi_var != None and default_color in self.color_lst:
+            raise ValueError(
+                f'The current highlight colors {self.color_lst} conflict with the default color {default_color}. Please choose another default color or other highlight colors'
+            )
+        
+        if hi_var != None:
+            if self.hi_value and len(self.color_lst) < len(self.hi_value):
+                for i in range(len(self.hi_value) - len(self.color_lst)):
                     for c in colors:
                         if c not in self.color_lst:
                             self.color_lst.append(c)
                             break
                 warnings.warn(
                     f"Warning: The length of color is less than the total number of (high values and missing), color was automatically extended to {self.color_lst}")
-        if hi_var and default_color in self.color_lst:
-            raise ValueError(
-                f'The current highlight colors {self.color_lst} conflict with the default color {default_color}. Please choose another default color or other highlight colors'
-            )
+
+            value_color_dict = dict(zip(self.hi_value, self.color_lst))
+            self.data_df[self.color_coloumn_placeholder] = self.data_df[hi_var].apply(
+                lambda x: value_color_dict[x] if value_color_dict.get(x) else default_color)
+            self.color_lst.append(default_color)
+            self.color_lst.reverse()
+
+
         # Manipulating Spacing and Layout
         self.bar_width = bar_width
         self.min_bar_width = min_bar_width
@@ -252,27 +338,22 @@ class Hammock:
         self.shape = shape
         self.same_scale = same_scale
 
-        if self.missing:
-            self.data_df = self.data_df.fillna(self.missing_data_placeholder)
-        else:
-            self.data_df = self.data_df.dropna()
+        # if hi_var:
+            # hi_var_unique_set = set(self.data_df[hi_var].unique())
+            # hi_var_unique_set.add(self.missing_data_placeholder)
 
-        if hi_var:
-            hi_var_unique_set = set(self.data_df[hi_var].unique())
-            hi_var_unique_set.add(self.missing_data_placeholder)
+            # if not set(self.hi_value) <= hi_var_unique_set:
+            #     error_values = (set(self.hi_value) ^ hi_var_unique_set) & set(self.hi_value)
+            #     raise ValueError(
+            #         f'the values: {error_values} in highlight value is not in data.'
+            #     )
 
-            if not set(self.hi_value) <= hi_var_unique_set:
-                error_values = (set(self.hi_value) ^ hi_var_unique_set) & set(self.hi_value)
-                raise ValueError(
-                    f'the values: {error_values} in highlight value is not in data.'
-                )
+            # value_color_dict = dict(zip(self.hi_value, self.color_lst))
 
-            value_color_dict = dict(zip(self.hi_value, self.color_lst))
-
-            self.data_df[self.color_coloumn_placeholder] = self.data_df[hi_var].apply(
-                lambda x: value_color_dict[x] if value_color_dict.get(x) else default_color)
-            self.color_lst.append(default_color)
-            self.color_lst.reverse()
+            # self.data_df[self.color_coloumn_placeholder] = self.data_df[hi_var].apply(
+            #     lambda x: value_color_dict[x] if value_color_dict.get(x) else default_color)
+            # self.color_lst.append(default_color)
+            # self.color_lst.reverse()
 
         # count unique pairs of the input var_lst
         var_pairs = self._get_two_var(self.var_lst)
@@ -291,7 +372,7 @@ class Hammock:
                 data_point_numbers.append(v)
             pair_dict_lst.append(pair_dict)
 
-        if hi_var:
+        if hi_var != None:
             pair_dict_lst_color = []
             for p in var_pairs:
                 varname_p = [self._get_varname(var) for var in p]
@@ -650,8 +731,8 @@ class Hammock:
                 if self.same_scale and varname in self.same_scale:
                     min_val, max_val = same_scale_min, same_scale_max
                 else:
-                    min_val, max_val = original_unique_value[varname][0], original_unique_value[varname][-1]
-                value_interval = [temp_value_range * (x_val - min_val) / (max_val - min_val) for x_val in
+                    min_val, max_val = float(original_unique_value[varname][0]), float(original_unique_value[varname][-1])
+                value_interval = [temp_value_range * (float(x_val) - min_val) / (max_val - min_val) for x_val in
                                   original_unique_value[varname]]
                 uni_val_coordinates = self._gen_coordinate(y_start, label_num, edge_y_range,
                                                            value_interval, y_range, val_type="number")
@@ -713,7 +794,6 @@ class Hammock:
 
         return parsed_colors
 
-    import math
 
     def _compute_left_right_centers(self, midpoints_top, midpoints_bottom, lengths):
         """
@@ -775,4 +855,85 @@ class Hammock:
         return left_midpoints, right_midpoints, edge_lengths
 
 
+    def clean_expression(self, expr: str):
+        """
+        Cleans up a logical expression string by inserting necessary spaces
+        around logical operators, comparison operators, and parentheses,
+        ensuring the expression can be safely and correctly evaluated using eval().
 
+        Example:
+            >>> clean_expression("x<=4or1<x<3andx<10")
+            'x <= 4 or 1 < x < 3 and x < 10'
+
+            >>> clean_expression("((1<xandx<5)or(x>10andx<=20))andx!=13")
+            '( ( 1 < x and x < 5 ) or ( x > 10 and x <= 20 ) ) and x != 13'
+        """
+        # Add spaces around logical operators (and, or, not) even when glued to variables or numbers
+        expr = re.sub(r'(?i)(\w)(and|or|not)(\w)', r'\1 \2 \3', expr)      # e.g. 1and2 → 1 and 2
+        expr = re.sub(r'(?i)(\W)(and|or|not)(\w)', r'\1 \2 \3', expr)      # e.g. )andx → ) and x
+        expr = re.sub(r'(?i)(\w)(and|or|not)(\W)', r'\1 \2 \3', expr)      # e.g. xand) → x and )
+        expr = re.sub(r'(?i)\b(and|or|not)\b', r' \1 ', expr)              # Add spaces if still missing
+
+        # Add spaces around comparison operators: <, <=, >, >=, ==, !=
+        expr = re.sub(r'([<>!=]=?|==)', r' \1 ', expr)
+
+        # Add spaces between parentheses and adjacent variables/numbers
+        expr = re.sub(r'([a-zA-Z0-9_])(\()', r'\1 \2', expr)               # e.g. x( → x (
+        expr = re.sub(r'(\))([a-zA-Z0-9_])', r'\1 \2', expr)               # e.g. )x → ) x
+
+        # Normalize multiple spaces to a single space
+        expr = re.sub(r'\s+', ' ', expr)
+
+        return expr.strip()
+
+
+    # def build_expression_checker(self, expr: str) -> Callable[[float], bool]:
+    #     """
+    #     Builds a checker function that evaluates whether a value x satisfies
+    #     a given logical expression string. The expression should be written
+    #     using Python syntax and may omit spaces between tokens (cleaned automatically).
+
+    #     Example:
+    #         >>> checker = build_expression_checker("x<=4or1<x<3andx<10")
+    #         >>> checker(2)
+    #         True
+    #         >>> checker(5)
+    #         False
+
+    #         >>> checker = build_expression_checker("((1<xandx<5)or(x>10andx<=20))andx!=13")
+    #         >>> checker(3)
+    #         True
+    #         >>> checker(13)
+    #         False
+    #     """
+    #     # Preprocess expression to fix formatting issues
+        
+    def is_in_range(self, x: float) -> bool:
+        """
+        Evaluates whether the given x satisfies the cleaned expression.
+        Only 'x' is available inside the eval environment.
+        """
+        try:
+            expr = self.clean_expression(self.hi_value[0])
+            return eval(expr, {"__builtins__": {}}, {"x": x})
+        except Exception as e:
+            raise ValueError(f"Invalid expression: '{expr}'") from e
+
+        # return is_in_range
+
+    def validate_expression(self, expr: str):
+        """
+        Validates whether an expression string can be parsed and evaluated safely.
+        Raises ValueError with explanation if not.
+        
+        Example:
+            >>> validate_expression("x<=4or1<x<3andx<10")  # no error
+            >>> validate_expression("x <<< 3")            # raises ValueError
+        """
+        try:
+            # Try evaluating with a dummy x value
+            _ = self.is_in_range(0)
+            return True
+        except Exception as e:
+            return False
+            # raise ValueError(f"Expression is invalid: {e}")
