@@ -11,6 +11,9 @@ from typing import Callable
 
 
 class Figure(ABC):
+    """
+    This is an abstract class for the two figures, parallelogram and rectangle
+    """
     def __init__(self):
         pass
 
@@ -32,6 +35,10 @@ class Figure(ABC):
         pass
 
     def get_center_highlight(self, xs, ys, ratio_color_centers):
+
+        """
+        Calculate the left and right center points for the figures
+        """
 
         color_left_center_pts, color_right_center_pts = [], []
 
@@ -154,11 +161,12 @@ class Hammock:
              ):
 
         var_lst = var
-        # parse the color input to enable intensity feature
+        # parse the color inputs for color intensity feature
         color_lst = self._parse_colors(color)
         self.data_df = self.data_df_origin.copy()
         self.data_df_columns = self.data_df.columns.tolist()
 
+        # assertions
         if not var_lst:
             raise ValueError(
                 f'There must be some variable names passed to the argument "var".'
@@ -209,33 +217,32 @@ class Hammock:
 
 
         if missing:
-            # 1) Round float columns first (using your original float detection logic)
+            # round float columns first (using your original float detection logic)
             for col in self.data_df:
                 if "float" in self.data_df[col].dtype.name:
                     self.data_df[col] = self.data_df[col].apply(lambda x: np.round(x, 2))
 
-            # 2) Ensure categorical columns include the placeholder
+            # ensure categorical columns include the placeholder
             for col in self.data_df:
                 if self.data_df[col].dtype.name == "category":
                     if self.missing_data_placeholder not in self.data_df[col].cat.categories:
                         self.data_df[col] = self.data_df[col].cat.add_categories([self.missing_data_placeholder])
 
-            # 3) Convert all non-categorical columns to string so they can hold the placeholder
+            # convert all non-categorical columns to string so they can hold the placeholder
             non_cat_cols = self.data_df.columns.difference(
                 self.data_df.select_dtypes(include=['category']).columns
             )
             self.data_df[non_cat_cols] = self.data_df[non_cat_cols].astype('string')
 
-            # 4) Fill NaN in ALL columns with the placeholder
+            # fill NaN in ALL columns with the placeholder
             self.data_df = self.data_df.fillna(self.missing_data_placeholder)
 
-            # 5) Convert non-categorical columns to category
+            # convert non-categorical columns to category
             self.data_df[non_cat_cols] = self.data_df[non_cat_cols].astype('category')
 
         else:
             self.data_df = self.data_df.dropna()
 
-        # 6) Cache the updated column list
         self.data_df_columns = self.data_df.columns.tolist()
 
 
@@ -285,6 +292,7 @@ class Hammock:
                 self.hi_value = [self.missing_data_placeholder]
         colors = ["red", "green", "yellow", "purple", "orange", "gray", "brown", "olive", "pink", "cyan", "magenta"]
         self.color_lst = []
+        # if an expression was passed as hi_value, we have to pickup each valid values and then assign with the same color
         if self.hi_expression:
             expression_hi_value = []
             for numeric_value in hi_var_unique_set:
@@ -298,13 +306,14 @@ class Hammock:
             self.color_lst = [color for color in color_lst] if color_lst else (
                 colors[:len(self.hi_value)] if hi_var else None)
 
-        # handle "0.0" and "0" matching issue
+        # handle "0.0" and "0" matching issue since sometimes user pass int instead of float
         if hi_var and hi_value != None:
             num_map = {safe_numeric(v):v for v in set(self.data_df[hi_var].unique())}
             num_map[self.missing_data_placeholder] = self.missing_data_placeholder
             self.hi_value = [num_map[safe_numeric(v)] for v in self.hi_value]
             
 
+        # assertions
         if hi_var != None and default_color in self.color_lst:
             raise ValueError(
                 f'The current highlight colors {self.color_lst} conflict with the default color {default_color}. Please choose another default color or other highlight colors'
@@ -320,6 +329,7 @@ class Hammock:
                 warnings.warn(
                     f"Warning: The length of color is less than the total number of (high values and missing), color was automatically extended to {self.color_lst}")
 
+            # each obeservation will be assigned with one color based on the highlighted settings
             value_color_dict = dict(zip(self.hi_value, self.color_lst))
             self.data_df[self.color_coloumn_placeholder] = self.data_df[hi_var].apply(
                 lambda x: value_color_dict[x] if value_color_dict.get(x) else default_color)
@@ -358,6 +368,8 @@ class Hammock:
         # count unique pairs of the input var_lst
         var_pairs = self._get_two_var(self.var_lst)
 
+        # count the value pairs and record them
+        # an exmaple of the element in pair_dict_lst: {((var_a, val_m),(var_b, val_n)):k}
         pair_dict_lst = []
         pair_dict_lst_color = []
         data_point_numbers = []
@@ -415,6 +427,7 @@ class Hammock:
                 left_center_pts.append(left_coordinate)
                 right_center_pts.append(right_coordinate)
 
+        # label_rectangle is for argument hi_box
         label_rectangle = True if self.label else False
         label_rectangle_default_color = default_color
         label_rectangle_widths = []
@@ -605,6 +618,29 @@ class Hammock:
             return False
 
     def _label_same_varname(self, var_lst: List[str]):
+        """
+        Add a placeholder and unique labels to duplicate variable names while 
+        preserving the original input order.
+
+        Steps:
+        1. Sort variable names and add a placeholder suffix.
+        2. If duplicates exist, append an incremental index to distinguish them.
+        3. Restore the modified names back to the original order.
+
+        Args:
+            var_lst (List[str]): List of variable names.
+
+        Returns:
+            List[str]: List of variable names with placeholders and unique labels.
+
+        Example:
+            self.same_var_placeholder = "_same_var_placeholder_SVP_"
+            Input : ["b", "a", "c", "a"]
+            Output: ["b_same_var_placeholder_SVP_",
+                    "a_same_var_placeholder_SVP_",
+                    "c_same_var_placeholder_SVP_",
+                    "a_same_var_placeholder_SVP_1"]
+        """
         sorted_index = np.argsort(var_lst)
         unsorted_index = np.argsort(sorted_index)
         sorted_var_lst = sorted(var_lst)
@@ -626,6 +662,10 @@ class Hammock:
         return var_pair_lst
 
     def _gen_coordinate(self, start, n, edge, spacing, total_range, val_type="str"):
+        """
+        Generate vertical coordinates based on the value type. For str value, the coordinates are generated by
+        the space. For float value, the coordinates are generated by the magnitude of the value. 
+        """
         coor_lst = []
 
         if val_type == "str":
@@ -663,6 +703,9 @@ class Hammock:
         return (min, max)
 
     def _list_labels(self, ax, figsize_y, figsize_x, label):
+        """
+        add basic elements at the frame on the figure and return a dictionary of labels with coordinates
+        """
 
         scale = 10
         edge_scale = 10
@@ -915,6 +958,8 @@ class Hammock:
         """
         try:
             expr = self.clean_expression(self.hi_value[0])
+            if expr == "None":
+                raise ValueError("The hi_value is None.")
             return eval(expr, {"__builtins__": {}}, {"x": x})
         except Exception as e:
             raise ValueError(f"Invalid expression: '{expr}'") from e
