@@ -140,6 +140,7 @@ class Hammock:
              hi_missing: bool = False,
              missing_label_space: float = 1.,
              label: bool = True,
+             unibar: bool = True, # True if we want to display unibars, False otherwise
              # Highlighting
              hi_var: str = None,
              hi_value: List[str] = None,
@@ -150,6 +151,7 @@ class Hammock:
              bar_width: float = 1.,
              min_bar_width: float = .1,
              space: float = .5,
+             label_mode: str = "data", # either 'data' or 'interval'
              label_options: Dict = None,
              height: float = 10.,
              width: float = 15.,
@@ -245,6 +247,11 @@ class Hammock:
 
         self.data_df_columns = self.data_df.columns.tolist()
 
+        # should this be an error, or should we just ignore the unibar argument if label is set to True?
+        if label and not unibar:
+            raise ValueError(
+                "unibar must be True if label is True"
+            )
 
         self.var_lst = self._label_same_varname(var_lst)
         self.value_order = value_order
@@ -252,6 +259,7 @@ class Hammock:
         self.hi_missing = hi_missing
         self.missing_label_space = missing_label_space
         self.label = label
+        self.unibar = unibar
         # Highlighting
         self.hi_var = hi_var
         self.hi_value = hi_value if type(hi_value) == list else [hi_value]
@@ -335,12 +343,19 @@ class Hammock:
                 lambda x: value_color_dict[x] if value_color_dict.get(x) else default_color)
             self.color_lst.append(default_color)
             self.color_lst.reverse()
+        
+        # error check for label_mode
+        if label_mode not in ["data", "interval"]:
+            raise ValueError(
+                f'Invalid label_mode: {label_mode}. label_mode should be one of: "data", "interval".'
+            ) 
 
 
         # Manipulating Spacing and Layout
         self.bar_width = bar_width
         self.min_bar_width = min_bar_width
         self.space = space
+        self.label_mode = label_mode
         self.label_options = label_options
         self.height = height
         self.width = width
@@ -402,7 +417,7 @@ class Hammock:
         fig, ax = plt.subplots(figsize=(self.width, self.height))
         ax, coordinates_dict = self._list_labels(ax, self.height, self.width, self.label)
 
-        space = self.space * 10 if label else 0
+        space = self.space * 10 if label or unibar else 0
         # when space set to 1, change to univariate mode
         space_univar = True if space == 10 else False
         bar = self.bar_width * 3.5 / max(data_point_numbers)
@@ -428,7 +443,7 @@ class Hammock:
                 right_center_pts.append(right_coordinate)
 
         # label_rectangle is for argument hi_box
-        label_rectangle = True if self.label else False
+        label_rectangle = True if self.label or self.unibar else False
         label_rectangle_default_color = default_color
         label_rectangle_widths = []
         label_rectangle_total_obvs = {}
