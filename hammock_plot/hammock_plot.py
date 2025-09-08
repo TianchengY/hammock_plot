@@ -179,10 +179,10 @@ class Hammock:
                 f'Argument "color" must be a list os str.'
             )
 
-        if same_scale and not set(same_scale) <= set(self.data_df_columns):
-            error_values = (set(same_scale) ^ set(self.data_df_columns)) & set(same_scale)
+        if same_scale and not set(same_scale) <= set(self.var_lst):
+            error_values = (set(same_scale) ^ set(self.var_lst)) & set(same_scale)
             raise ValueError(
-                f'the variables: {error_values} in var_lst is not in data or value names user given does not match the data '
+                f'the variables: {error_values} in same_scale is not in var_lst or value names user given does not match the data '
             )
 
         if not set(var_lst) <= set(self.data_df_columns):
