@@ -1,4 +1,5 @@
 import pandas as pd
+from pandas.api.types import is_numeric_dtype, is_categorical_dtype
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -151,7 +152,7 @@ class Hammock:
              bar_width: float = 1.,
              min_bar_width: float = .1,
              space: float = .5,
-             interval_var_ticks: Dict = {}, # format: {"var": # ticks, ...}
+             numerical_var_levels: Dict = {}, # format: {"var": # levels, ...}
              label_options: Dict = None,
              height: float = 10.,
              width: float = 15.,
@@ -344,32 +345,33 @@ class Hammock:
             self.color_lst.append(default_color)
             self.color_lst.reverse()
         
-        # error check for interval_var_ticks
-        if not set(interval_var_ticks.keys()).issubset(set(var)):
-            error_values =  set(interval_var_ticks.keys()) - set(var)
+        # error check for numerical_var_levels
+        if not set(numerical_var_levels.keys()).issubset(set(var)):
+            error_values =  set(numerical_var_levels.keys()) - set(var)
             raise ValueError(
-                f'The value: {error_values} in interval_var_ticks is not in data.'
+                f'The value: {error_values} in numerical_var_levels is not in data.'
             )
 
-        for k, v in interval_var_ticks.items():
+        for k, v in numerical_var_levels.items():
             if not np.issubdtype(self.data_df[k].dtype, np.number):
                 raise ValueError(
-                    f'{k} is a categorical data type and thus cannot belong to interval_var_ticks'
+                    f'{k} is a categorical data type and thus cannot belong to numerical_var_levels'
                 )
-            if not isinstance(v, int):
+            if not (v is None or isinstance(v, int)):
                 raise ValueError(
-                    f'You can only specify integer values for the number of ticks for variables labeled by intervals'
+                    f'You can only specify integer values or None for the number of levels for variables labeled by intervals'
                 )
-            if v < 0:
+            if v is not None and v < 0:
                 raise ValueError(
-                    f'Ticks must be nonnegative: error with pair ({k}, {v})'
+                    f'Levels must be nonnegative: error with pair ({k}, {v})'
                 )
 
         # Manipulating Spacing and Layout
         self.bar_width = bar_width
         self.min_bar_width = min_bar_width
         self.space = space
-        self.interval_var_ticks = interval_var_ticks
+        self.DEFAULT_LEVEL_THRESHOLD = 7 # Treat numerical values with <7 levels as data-type labels by default
+        self.numerical_var_levels = numerical_var_levels
         self.label_options = label_options
         self.height = height
         self.width = width
@@ -799,9 +801,11 @@ class Hammock:
                 uni_val) - 1
             varname = varname_lst[var_i]
             var_type = str(self.data_df_origin[varname].dtype.name)
+            is_num = False # check if a column is numerical or not
 
             # case anlysis on quant variables and string variables
             if "int" in var_type or "float" in var_type:
+                is_num = True
                 temp_value_range = (y_range - 2 * edge_y_range)
                 # handle the variables in same_scale
                 if self.same_scale and varname in self.same_scale:
@@ -815,6 +819,7 @@ class Hammock:
             else:
                 # handle the variables in same_scale
                 if self.same_scale and varname in self.same_scale:
+                    is_num = True
                     temp_value_range = (y_range - 2 * edge_y_range)
                     quant_val = list(range(1, len(original_unique_value[varname]) + 1))
                     min_val, max_val = same_scale_min, same_scale_max
@@ -835,32 +840,38 @@ class Hammock:
             
             for val, y in zip(uni_val, uni_val_coordinates):
                 # draw the labels
-                if varname not in self.interval_var_ticks.keys():
-                    if val[1] == self.same_scale_placeholder:
-                        continue
-                    if label:
-                        if self.missing and val[1] == self.missing_data_placeholder:
-                            ax.text(x, y, "missing", ha='center', va='center')
+                # if the variable type is numerical and has less than 7 unique data points, treat it like categorical data
+                # "or not np.issubdtype(self.data_df[varname].dtype, np.number)" checks for categorical data
+                if val[1] == self.same_scale_placeholder:
+                    continue
+                if label and self.missing and val[1] == self.missing_data_placeholder:
+                        ax.text(x, y, "missing", ha='center', va='center')
+                elif label and (varname not in self.numerical_var_levels.keys() and len(uni_val) < 7 or not is_num or (varname in self.numerical_var_levels.keys() and self.numerical_var_levels[varname] is None)):
+                    if self.label_options and varname in self.label_options:
+                        ax.text(x, y, val[1], ha='center', va='center', **self.label_options[varname])
 
-                        elif self.label_options and varname in self.label_options:
-                            ax.text(x, y, val[1], ha='center', va='center', **self.label_options[varname])
-
-                        else:
-                            ax.text(x, y, val[1], ha='center', va='center')
+                    else:
+                        ax.text(x, y, val[1], ha='center', va='center')
                 # add labels to coordinates_dict
                 coordinates_dict[val] = (x, y)
             
-            if varname in self.interval_var_ticks.keys():
-                num_ticks = self.interval_var_ticks[varname]
-                tick_vals = np.linspace(min_val, max_val, num_ticks)
+            if label and (varname in self.numerical_var_levels.keys() or len(uni_val)>=7) and not (varname in self.numerical_var_levels.keys() and self.numerical_var_levels[varname] is None):
+                if varname in self.numerical_var_levels.keys():                        
+                    num_levels = self.numerical_var_levels[varname]
+                else:
+                    num_levels = 7
+                level_vals = np.linspace(min_val, max_val, num_levels)
 
-                # map each tick value to y-coordinate
+                # map each level value to y-coordinate
                 temp_value_range = y_range - 2 * edge_y_range
-                tick_coords = [y_start + temp_value_range * (v - min_val) / (max_val - min_val) for v in tick_vals]
+                level_coords = [y_start + temp_value_range * (v - min_val) / (max_val - min_val) for v in level_vals]
 
-                # draw the ticks on the plot
-                for tick_val, tick_y in zip(tick_vals, tick_coords):
-                    ax.text(x, tick_y, f"{tick_val:.2f}", ha='center', va='center')
+                # draw the levels on the plot
+                for tick_val, tick_y in zip(level_vals, level_coords):
+                    if self.label_options and varname in self.label_options:
+                        ax.text(x, tick_y, tick_val, ha='center', va='center', **self.label_options[varname])
+                    else:
+                        ax.text(x, tick_y, f"{tick_val:.2f}", ha='center', va='center')
                 
         return ax, coordinates_dict
 
