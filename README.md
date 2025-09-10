@@ -131,9 +131,11 @@ ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,color=color
 | Category | Parameter | Type     | Description                |
 | --- | :-------- | :------- | :-------------------------  |
 | General |     `var` | `List[str]` | List of variables to display. |
-| |             `value_order` | `Dict[str, Dict[int, str]]`  |  If specified, the order of the values in the plot follows the order of values in the list supplied in the dictionary. A specific value order is useful, for example, for ordered variables. The integer values affect spacing: for example the values 4,5,6 imply equal spacing between 4,5 and 5,6. The values 4,5,7 implies twice as much space between 5,7 as between 4,5. 
+| |             `value_order` | `Dict[str, Dict[int, str]]`  |  If specified, the order of the values in the plot follows the order of values in the list supplied in the dictionary. A specific value order is useful, for example, for ordered variables. The integer values affect spacing: for example the values 4,5,6 imply equal spacing between 4,5 and 5,6. The values 4,5,7 implies twice as much space between 5,7 as between 4,5. |
+| |            `numerical_var_levels` | `Dict[str, int \| None]` | Specifies the number of subdivisions in the y-axis for numerical variables. Example: {"NumericalVarname": 9, "NumericalVarname2": None}. Default is 7. |
 | |             `missing` | `bool` | Whether or not to add a category for missing values at the bottom of the plot.  If False, observations that have a missing value for any variable in the data frame (even those not used in the hammock plot) are removed.  Default is False. |
 | |             `label` | `bool` | Whether or not to display labels between the plotting segments |
+| |             `unibar`| `bool` | Whether or not to display unibars between the plotting segments |
 | Highlighting | `hi_var` | `str` |  Variable to be highlighted. Default is none. |
 | | `hi_value` | `List[str or int] or str or int` | Value(s) of `hi_var` to be highlighted. You can highlighted one or multiple values. You can also pass an expression (e.g. "x>1 and (x>5 or x<4)") in string when you want to specify a range for a numeric hi_var.|
 | | `hi_box` | `str` | Controls how highlighted values are displayed within category labels. Options are "vertical" for vertically stacked color segments or "horizontal" for horizontally split color segments. Default is "vertical".|

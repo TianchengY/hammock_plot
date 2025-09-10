@@ -1,4 +1,5 @@
 import pandas as pd
+from pandas.api.types import is_numeric_dtype, is_categorical_dtype
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -140,6 +141,7 @@ class Hammock:
              hi_missing: bool = False,
              missing_label_space: float = 1.,
              label: bool = True,
+             unibar: bool = True, # True if we want to display unibars, False otherwise
              # Highlighting
              hi_var: str = None,
              hi_value: List[str] = None,
@@ -150,6 +152,7 @@ class Hammock:
              bar_width: float = 1.,
              min_bar_width: float = .1,
              space: float = .5,
+             numerical_var_levels: Dict = {}, # format: {"var": # levels, ...}
              label_options: Dict = None,
              height: float = 10.,
              width: float = 15.,
@@ -177,10 +180,10 @@ class Hammock:
                 f'Argument "color" must be a list os str.'
             )
 
-        if same_scale and not set(same_scale) <= set(self.data_df_columns):
-            error_values = (set(same_scale) ^ set(self.data_df_columns)) & set(same_scale)
+        if same_scale and not set(same_scale) <= set(var_lst):
+            error_values = (set(same_scale) ^ set(var_lst)) & set(same_scale)
             raise ValueError(
-                f'the variables: {error_values} in var_lst is not in data or value names user given does not match the data '
+                f'the variables: {error_values} in same_scale is not in var_lst or value names user given does not match the data '
             )
 
         if not set(var_lst) <= set(self.data_df_columns):
@@ -245,13 +248,13 @@ class Hammock:
 
         self.data_df_columns = self.data_df.columns.tolist()
 
-
         self.var_lst = self._label_same_varname(var_lst)
         self.value_order = value_order
         self.missing = missing
         self.hi_missing = hi_missing
         self.missing_label_space = missing_label_space
         self.label = label
+        self.unibar = unibar
         # Highlighting
         self.hi_var = hi_var
         self.hi_value = hi_value if type(hi_value) == list else [hi_value]
@@ -335,12 +338,34 @@ class Hammock:
                 lambda x: value_color_dict[x] if value_color_dict.get(x) else default_color)
             self.color_lst.append(default_color)
             self.color_lst.reverse()
+        
+        # error check for numerical_var_levels
+        if not set(numerical_var_levels.keys()).issubset(set(var)):
+            error_values =  set(numerical_var_levels.keys()) - set(var)
+            raise ValueError(
+                f'The value: {error_values} in numerical_var_levels is not in data.'
+            )
 
+        for k, v in numerical_var_levels.items():
+            if not np.issubdtype(self.data_df[k].dtype, np.number):
+                raise ValueError(
+                    f'{k} is a categorical data type and thus cannot belong to numerical_var_levels'
+                )
+            if not (v is None or isinstance(v, int)):
+                raise ValueError(
+                    f'You can only specify integer values or None for the number of levels for variables labeled by intervals'
+                )
+            if v is not None and v < 0:
+                raise ValueError(
+                    f'Levels must be nonnegative: error with pair ({k}, {v})'
+                )
 
         # Manipulating Spacing and Layout
         self.bar_width = bar_width
         self.min_bar_width = min_bar_width
         self.space = space
+        self.DEFAULT_LEVEL_THRESHOLD = 7 # Treat numerical values with <7 levels as data-type labels by default
+        self.numerical_var_levels = numerical_var_levels
         self.label_options = label_options
         self.height = height
         self.width = width
@@ -402,7 +427,7 @@ class Hammock:
         fig, ax = plt.subplots(figsize=(self.width, self.height))
         ax, coordinates_dict = self._list_labels(ax, self.height, self.width, self.label)
 
-        space = self.space * 10 if label else 0
+        space = self.space * 10 if label or unibar else 0
         # when space set to 1, change to univariate mode
         space_univar = True if space == 10 else False
         bar = self.bar_width * 3.5 / max(data_point_numbers)
@@ -428,7 +453,7 @@ class Hammock:
                 right_center_pts.append(right_coordinate)
 
         # label_rectangle is for argument hi_box
-        label_rectangle = True if self.label else False
+        label_rectangle = True if self.unibar else False
         label_rectangle_default_color = default_color
         label_rectangle_widths = []
         label_rectangle_total_obvs = {}
@@ -468,8 +493,6 @@ class Hammock:
                 label_rectangle_left_center_pts.append(label_rectangle_left_coordinate)
                 label_rectangle_right_center_pts.append(label_rectangle_right_coordinate)
 
-                
-                
                 label_rectangle_widths.append(label_rectangle_width)
 
         if not hi_var:
@@ -702,6 +725,9 @@ class Hammock:
                     max = max_val if max_val > max else max
         return (min, max)
 
+    """
+        Handles labels
+    """
     def _list_labels(self, ax, figsize_y, figsize_x, label):
         """
         add basic elements at the frame on the figure and return a dictionary of labels with coordinates
@@ -725,6 +751,7 @@ class Hammock:
         for var, varname in zip(self.var_lst, varname_lst):
             unique_valnames = self.data_df[varname].dropna().unique().tolist()
             sorted_unique_valnames = []
+            # puts things in the right order by sorting the keys
             if self.value_order and varname in self.value_order:
                 varname_value_order_dict = self.value_order[varname]
                 sorted_unique_valnames_temp = [v for k, v in
@@ -755,7 +782,7 @@ class Hammock:
         ax.set_xticks(label_coordinates)
         ax.set_xticklabels(varname_lst)
 
-        # prepare for same_scale variabels
+        # prepare for same_scale variables
         if self.same_scale:
             same_scale_min, same_scale_max = self._get_same_scale_minmax(original_unique_value)
             same_scale_range = same_scale_max - same_scale_min
@@ -766,9 +793,11 @@ class Hammock:
                 uni_val) - 1
             varname = varname_lst[var_i]
             var_type = str(self.data_df_origin[varname].dtype.name)
+            is_num = False # check if a column is numerical or not
 
             # case anlysis on quant variables and string variables
             if "int" in var_type or "float" in var_type:
+                is_num = True
                 temp_value_range = (y_range - 2 * edge_y_range)
                 # handle the variables in same_scale
                 if self.same_scale and varname in self.same_scale:
@@ -782,6 +811,7 @@ class Hammock:
             else:
                 # handle the variables in same_scale
                 if self.same_scale and varname in self.same_scale:
+                    is_num = True
                     temp_value_range = (y_range - 2 * edge_y_range)
                     quant_val = list(range(1, len(original_unique_value[varname]) + 1))
                     min_val, max_val = same_scale_min, same_scale_max
@@ -790,6 +820,7 @@ class Hammock:
                                                                value_interval, y_range, val_type="number")
                 else:
                     value_interval = (y_range - 2 * edge_y_range) / (label_num)
+                    min_val, max_val = None, None # no min val, max val for categorical data
                     uni_val_coordinates = self._gen_coordinate(y_start, label_num, edge_y_range,
                                                                value_interval, y_range, val_type="str")
 
@@ -798,21 +829,44 @@ class Hammock:
                 missing_label_index = uni_val.index((uni_val[0][0], self.missing_data_placeholder))
                 uni_val_coordinates.insert(missing_label_index, edge_y_range)
 
-            # plot labels
-            for i, (val, y) in enumerate(zip(uni_val, uni_val_coordinates)):
+            
+            for val, y in zip(uni_val, uni_val_coordinates):
+                # draw the labels
+                # if the variable type is numerical and has less than 7 unique data points, treat it like categorical data
+                # "or not np.issubdtype(self.data_df[varname].dtype, np.number)" checks for categorical data
                 if val[1] == self.same_scale_placeholder:
                     continue
-                if label:
-                    if self.missing and val[1] == self.missing_data_placeholder:
+                if label and self.missing and val[1] == self.missing_data_placeholder:
                         ax.text(x, y, "missing", ha='center', va='center')
-
-                    elif self.label_options and varname in self.label_options:
+                elif label and (varname not in self.numerical_var_levels.keys() and len(uni_val) < 7 or not is_num or (varname in self.numerical_var_levels.keys() and self.numerical_var_levels[varname] is None)):
+                    if self.label_options and varname in self.label_options:
                         ax.text(x, y, val[1], ha='center', va='center', **self.label_options[varname])
 
                     else:
                         ax.text(x, y, val[1], ha='center', va='center')
+                # add labels to coordinates_dict
                 coordinates_dict[val] = (x, y)
+            
+            if label and (varname in self.numerical_var_levels.keys() or len(uni_val)>=7) and not (varname in self.numerical_var_levels.keys() and self.numerical_var_levels[varname] is None):
+                if varname in self.numerical_var_levels.keys():                        
+                    num_levels = self.numerical_var_levels[varname]
+                else:
+                    num_levels = 7
+                level_vals = np.linspace(min_val, max_val, num_levels)
+
+                # map each level value to y-coordinate
+                temp_value_range = y_range - 2 * edge_y_range
+                level_coords = [y_start + temp_value_range * (v - min_val) / (max_val - min_val) for v in level_vals]
+
+                # draw the levels on the plot
+                for tick_val, tick_y in zip(level_vals, level_coords):
+                    if self.label_options and varname in self.label_options:
+                        ax.text(x, tick_y, tick_val, ha='center', va='center', **self.label_options[varname])
+                    else:
+                        ax.text(x, tick_y, f"{tick_val:.2f}", ha='center', va='center')
+                
         return ax, coordinates_dict
+
 
     def _parse_colors(self, color_list):
         """Parses a list of colors, converting 'color=alpha' format to hex with transparency."""
