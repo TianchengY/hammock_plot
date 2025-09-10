@@ -248,12 +248,6 @@ class Hammock:
 
         self.data_df_columns = self.data_df.columns.tolist()
 
-        # should this be an error, or should we just ignore the unibar argument if label is set to True?
-        if label and not unibar:
-            raise ValueError(
-                "unibar must be True if label is True"
-            )
-
         self.var_lst = self._label_same_varname(var_lst)
         self.value_order = value_order
         self.missing = missing
@@ -459,7 +453,7 @@ class Hammock:
                 right_center_pts.append(right_coordinate)
 
         # label_rectangle is for argument hi_box
-        label_rectangle = True if self.label or self.unibar else False
+        label_rectangle = True if self.unibar else False
         label_rectangle_default_color = default_color
         label_rectangle_widths = []
         label_rectangle_total_obvs = {}
@@ -499,8 +493,6 @@ class Hammock:
                 label_rectangle_left_center_pts.append(label_rectangle_left_coordinate)
                 label_rectangle_right_center_pts.append(label_rectangle_right_coordinate)
 
-                
-                
                 label_rectangle_widths.append(label_rectangle_width)
 
         if not hi_var:
