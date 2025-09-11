@@ -18,11 +18,19 @@ class Figure(ABC):
     def __init__(self):
         pass
 
+    # makes sure that the correct vertices are connected when you draw the shape
     def _order_coordinates(self, x, y):
         x, y = np.array(x), np.array(y)
+        # y - y.mean(), x - x.mean() are centred coordinates (so their centre of mass is at the origin)
+        # np.arctan2(...) computes the angle between the positive x-axis and the point (x, y) in the plane, for each point
+            # this gives the angle of each point relative to the centroid
+        # np.argsort(...) sorts the points by angle (returns the indices that would sort the array)
         order = np.argsort(np.arctan2(y - y.mean(), x - x.mean()))
+        # returns the sorted arrays x and y
         return x[order], y[order]
 
+    # draws the shape on an axis
+    # So in plot in the abstract base class Figure, does it only fill shape by shape? What type of data is returned by each of _order_coordinates, etc, get_coordinates? Are they lists of 4 coordinates each? How does ax.fill(x, y, colour) just fill in each shape one by one?
     def plot(self, ax, left_center_pts, right_center_pts, widths, color):
         xs, ys = self.get_coordinates(left_center_pts, right_center_pts, widths)
         sorted_xs, sorted_ys = zip(*[self._order_coordinates(x, y) for x, y in zip(xs, ys)])
@@ -33,8 +41,10 @@ class Figure(ABC):
 
     @abstractmethod
     def get_coordinates(self, left_center_pts, right_center_pts, widths):
-        pass
+        pass # pass key word: when it is executed, nothing happens (usually indicative of abstract method)
 
+    # allows for highlighting only a portion of the bar
+    # it returns the coordinates of the 'centre line' of the shape that we're trying to draw
     def get_center_highlight(self, xs, ys, ratio_color_centers):
 
         """
@@ -56,10 +66,11 @@ class Figure(ABC):
         return color_left_center_pts, color_right_center_pts
 
 
-class Parallelogram(Figure):
+class Parallelogram(Figure): # indicates that Parallelogram is-a Figure
     def __init__(self):
         super().__init__()
 
+    # uses the centre points to calculate the corner coordinates of the desired shape
     def get_coordinates(self, left_center_pts, right_center_pts, widths):
         xs, ys = [], []
         for l, r, w in zip(left_center_pts, right_center_pts, widths):
@@ -81,6 +92,7 @@ class Rectangle(Figure):
     def __init__(self):
         super().__init__()
 
+    # uses the centre points to calculate the corner coordinates of the desired shape
     def get_coordinates(self, left_center_pts, right_center_pts, widths):
         xs, ys = [], []
         for l, r, w in zip(left_center_pts, right_center_pts, widths):
@@ -180,12 +192,16 @@ class Hammock:
                 f'Argument "color" must be a list os str.'
             )
 
+        # condition 1 checks if same_scale exists
+        # condition 2 (set(same_scale) <= set(self.data_df_columns)) checks same_scale is a subset of data_df_columns
         if same_scale and not set(same_scale) <= set(var_lst):
+            # gets a list of the items that are in same_scale but not in data_df_columns
             error_values = (set(same_scale) ^ set(var_lst)) & set(same_scale)
             raise ValueError(
                 f'the variables: {error_values} in same_scale is not in var_lst or value names user given does not match the data '
             )
 
+        # if the columsn we want to display dont exist in the dataframe
         if not set(var_lst) <= set(self.data_df_columns):
             error_values = (set(var_lst) ^ set(self.data_df_columns)) & set(var_lst)
             raise ValueError(
@@ -194,8 +210,12 @@ class Hammock:
 
         if value_order:
             for k, v_ori in value_order.items():
+                # k = column name
+                # v_ori = specified order in dictionary form: {1: ____, 2: ______}
+                # uni_val_set = unique categorical values within a column
                 uni_val_set = set(self.data_df[k].dropna().unique())
                 v = [value_name for order, value_name in v_ori.items()]
+                # if an order WASN'T specified for a specific categorical value
                 if not set(v) >= uni_val_set:
                     error_values = (set(v) ^ uni_val_set) & set(v)
                     raise ValueError(
@@ -207,6 +227,7 @@ class Hammock:
                 f'highlight variable is not in data. '
             )
 
+        # QUESTION: is this a redundant check?
         if hi_var and not set(var_lst) <= set(self.data_df_columns):
             error_values = (set(var_lst) ^ set(self.data_df_columns)) & set(var_lst)
             raise ValueError(
@@ -348,6 +369,7 @@ class Hammock:
 
             # each obeservation will be assigned with one color based on the highlighted settings
             value_color_dict = dict(zip(self.hi_value, self.color_lst))
+            # Question/TODO: I don't fully understand why we need to put the colours in a column placeholder yet.
             self.data_df[self.color_coloumn_placeholder] = self.data_df[hi_var].apply(
                 lambda x: value_color_dict[x] if value_color_dict.get(x) else default_color)
             self.color_lst.append(default_color)
@@ -642,6 +664,7 @@ class Hammock:
 
         return ax
 
+    # extra info was appended using the placeholder, so we're extracting the plain variable name WITHOUT the same_var_placeholder delimiter.
     def _get_varname(self, x):
         return x.split(self.same_var_placeholder)[:-1][0]
 
@@ -654,6 +677,7 @@ class Hammock:
         except ValueError:
             return False
 
+    # Question: examples with the same variable names?
     def _label_same_varname(self, var_lst: List[str]):
         """
         Add a placeholder and unique labels to duplicate variable names while 
@@ -689,6 +713,7 @@ class Hammock:
         unsorted_var_lst = [sorted_var_lst[i] for i in unsorted_index]
         return unsorted_var_lst
 
+    # adjacent columns
     def _get_two_var(self, var_lst: List[str]):
 
         var_pair_lst = []
@@ -698,6 +723,7 @@ class Hammock:
 
         return var_pair_lst
 
+    # using the variable with the largest number of values as the criteria for same_scale
     def _gen_coordinate(self, start, n, edge, spacing, total_range, val_type="str"):
         """
         Generate vertical coordinates based on the value type. For str value, the coordinates are generated by
@@ -820,6 +846,7 @@ class Hammock:
                 uni_val_coordinates = self._gen_coordinate(y_start, label_num, edge_y_range,
                                                            value_interval, y_range, val_type="number")
             else:
+                # QUESTION: is this if statement necessary?
                 # handle the variables in same_scale
                 if self.same_scale and varname in self.same_scale:
                     temp_value_range = (y_range - 2 * edge_y_range)
@@ -839,7 +866,6 @@ class Hammock:
                 missing_label_index = uni_val.index((uni_val[0][0], self.missing_data_placeholder))
                 uni_val_coordinates.insert(missing_label_index, edge_y_range)
 
-            
             for val, y in zip(uni_val, uni_val_coordinates):
                 # draw the labels
                 # if the variable type is numerical and has less than 7 unique data points, treat it like categorical data
@@ -911,11 +937,12 @@ class Hammock:
         return ax, coordinates_dict
     
     def _get_formatted_label(self, datatype, value):
+        # if the label is a string
         if datatype == np.str_ or value == self.same_scale_placeholder or value == self.missing_data_placeholder:
             return value
         # otherwise, it should be a numerical value
         value = float(value)
-        if value >= 1000000 or (0 < abs(value) < 0.01): # threshold for displaying in scientific notation
+        if abs(value) >= 1000000 or (0 < abs(value) < 0.01): # threshold for displaying scientific notation
             return f"{value:.2e}"
         if datatype == np.integer:
             return str(int(value))
@@ -1005,7 +1032,7 @@ class Hammock:
         
         return left_midpoints, right_midpoints, edge_lengths
 
-
+    # below are the helper functions to support highlighting a range of values
     def clean_expression(self, expr: str):
         """
         Cleans up a logical expression string by inserting necessary spaces
