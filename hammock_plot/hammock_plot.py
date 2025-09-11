@@ -168,7 +168,7 @@ class Hammock:
         color_lst = self._parse_colors(color)
         self.data_df = self.data_df_origin.copy()
         self.data_df_columns = self.data_df.columns.tolist()
-
+        
         # assertions
         if not var_lst:
             raise ValueError(
@@ -217,7 +217,21 @@ class Hammock:
             raise ValueError(
                 f'hi_value or hi_missing must be speicified as hi_var is given.'
             )
-
+        
+        # set dictionary with the variables and their types before `missing` placeholders are added
+        self.var_types = {}
+        
+        for varname in var:
+            temp = self.data_df[varname].dropna()
+            datatype = temp.dtype
+            if np.issubdtype(datatype, np.integer):
+                self.var_types[varname] = np.integer
+            elif np.issubdtype(datatype, np.number):
+                if (temp == temp.astype(int)).all():
+                    self.var_types[varname] = np.integer
+                else: self.var_types[varname] = np.floating
+            else:
+                self.var_types[varname] = np.str_
 
         if missing:
             # round float columns first (using your original float detection logic)
@@ -347,7 +361,7 @@ class Hammock:
             )
 
         for k, v in numerical_var_levels.items():
-            if not np.issubdtype(self.data_df[k].dtype, np.number):
+            if self.var_types[k] == np.str_: # categorical data type
                 raise ValueError(
                     f'{k} is a categorical data type and thus cannot belong to numerical_var_levels'
                 )
@@ -707,8 +721,7 @@ class Hammock:
     def _get_same_scale_minmax(self, original_unique_value):
         min, max = 0, 0
         for i, varname in enumerate(self.same_scale):
-            var_type = str(self.data_df_origin[varname].dtype.name)
-            if "int" in var_type or "float" in var_type:
+            if np.issubdtype(self.var_types[varname], np.number):
                 min_val, max_val = original_unique_value[varname][0], original_unique_value[varname][-1]
                 if i == 0:
                     min, max = min_val, max_val
@@ -730,7 +743,7 @@ class Hammock:
     """
     def _list_labels(self, ax, figsize_y, figsize_x, label):
         """
-        add basic elements at the frame on the figure and return a dictionary of labels with coordinates
+        add basic elements at the frame on the figure and return a dictionary of unibar positions with coordinates
         """
 
         scale = 10
@@ -792,12 +805,10 @@ class Hammock:
             label_num = len(uni_val) - 2 if (uni_val[0][0], self.missing_data_placeholder) in uni_val else len(
                 uni_val) - 1
             varname = varname_lst[var_i]
-            var_type = str(self.data_df_origin[varname].dtype.name)
-            is_num = False # check if a column is numerical or not
+            var_type = self.var_types[varname]
 
             # case anlysis on quant variables and string variables
-            if "int" in var_type or "float" in var_type:
-                is_num = True
+            if np.issubdtype(var_type, np.number):
                 temp_value_range = (y_range - 2 * edge_y_range)
                 # handle the variables in same_scale
                 if self.same_scale and varname in self.same_scale:
@@ -811,7 +822,6 @@ class Hammock:
             else:
                 # handle the variables in same_scale
                 if self.same_scale and varname in self.same_scale:
-                    is_num = True
                     temp_value_range = (y_range - 2 * edge_y_range)
                     quant_val = list(range(1, len(original_unique_value[varname]) + 1))
                     min_val, max_val = same_scale_min, same_scale_max
@@ -838,35 +848,79 @@ class Hammock:
                     continue
                 if label and self.missing and val[1] == self.missing_data_placeholder:
                         ax.text(x, y, "missing", ha='center', va='center')
-                elif label and (varname not in self.numerical_var_levels.keys() and len(uni_val) < 7 or not is_num or (varname in self.numerical_var_levels.keys() and self.numerical_var_levels[varname] is None)):
+                elif label and (varname not in self.numerical_var_levels.keys() and len(uni_val) < 7 or not np.issubdtype(var_type, np.number) or (varname in self.numerical_var_levels.keys() and self.numerical_var_levels[varname] is None)):
                     if self.label_options and varname in self.label_options:
-                        ax.text(x, y, val[1], ha='center', va='center', **self.label_options[varname])
+                        ax.text(x, y, self._get_formatted_label(var_type, val[1]), ha='center', va='center', **self.label_options[varname])
 
                     else:
-                        ax.text(x, y, val[1], ha='center', va='center')
+                        ax.text(x, y, self._get_formatted_label(var_type, val[1]), ha='center', va='center')
                 # add labels to coordinates_dict
                 coordinates_dict[val] = (x, y)
             
+            # draw the labels that are based on levels
             if label and (varname in self.numerical_var_levels.keys() or len(uni_val)>=7) and not (varname in self.numerical_var_levels.keys() and self.numerical_var_levels[varname] is None):
                 if varname in self.numerical_var_levels.keys():                        
                     num_levels = self.numerical_var_levels[varname]
+                    num_levels_flexible = False
                 else:
                     num_levels = 7
-                level_vals = np.linspace(min_val, max_val, num_levels)
+                    num_levels_flexible = True
 
-                # map each level value to y-coordinate
-                temp_value_range = y_range - 2 * edge_y_range
-                level_coords = [y_start + temp_value_range * (v - min_val) / (max_val - min_val) for v in level_vals]
+                if var_type == np.floating:
+                    level_vals = np.linspace(min_val, max_val, num_levels)
 
-                # draw the levels on the plot
-                for tick_val, tick_y in zip(level_vals, level_coords):
-                    if self.label_options and varname in self.label_options:
-                        ax.text(x, tick_y, tick_val, ha='center', va='center', **self.label_options[varname])
+                    # map each level value to y-coordinate
+                    temp_value_range = y_range - 2 * edge_y_range
+                    level_coords = [y_start + temp_value_range * (v - min_val) / (max_val - min_val) for v in level_vals]
+
+                    # draw the levels on the plot
+                    for tick_val, tick_y in zip(level_vals, level_coords):
+                        if self.label_options and varname in self.label_options:
+                            ax.text(x, tick_y, self._get_formatted_label(var_type, tick_val), ha='center', va='center', **self.label_options[varname])
+                        else:
+                            ax.text(x, tick_y, self._get_formatted_label(var_type, tick_val), ha='center', va='center')
+                elif var_type == np.integer:
+                    # figure out the full set of integer values between min and max
+                    possible_vals = np.arange(int(np.floor(min_val)), int(np.ceil(max_val)) + 1)
+                    if len(possible_vals) < num_levels:
+                        warnings.warn(
+                            f"Variable '{varname}' has only {len(possible_vals)} unique integer values "
+                            f"but {num_levels} levels were requested. Showing all available values instead."
+                        )
+                        level_vals = possible_vals
+                    elif num_levels_flexible and len(possible_vals) <= 14:
+                        num_levels = len(possible_vals)
+                        indices = np.linspace(0, len(possible_vals) - 1, num_levels, dtype=int)
+                        level_vals = possible_vals[indices]
                     else:
-                        ax.text(x, tick_y, f"{tick_val:.2f}", ha='center', va='center')
+                        # choose evenly spaced indices from the available integers
+                        indices = np.linspace(0, len(possible_vals) - 1, num_levels, dtype=int)
+                        level_vals = possible_vals[indices]
+
+                    # map each integer level value to y-coordinate
+                    temp_value_range = y_range - 2 * edge_y_range
+                    level_coords = [y_start + temp_value_range * (v - min_val) / (max_val - min_val) for v in level_vals]
+
+                    # draw the integer levels on the plot
+                    for tick_val, tick_y in zip(level_vals, level_coords):
+                        if self.label_options and varname in self.label_options:
+                            ax.text(x, tick_y, self._get_formatted_label(var_type, tick_val), ha='center', va='center', **self.label_options[varname])
+                        else:
+                            ax.text(x, tick_y, self._get_formatted_label(var_type, tick_val), ha='center', va='center')
                 
         return ax, coordinates_dict
-
+    
+    def _get_formatted_label(self, datatype, value):
+        if datatype == np.str_ or value == self.same_scale_placeholder or value == self.missing_data_placeholder:
+            return value
+        # otherwise, it should be a numerical value
+        value = float(value)
+        if value >= 1000000 or (0 < abs(value) < 0.01): # threshold for displaying in scientific notation
+            return f"{value:.2e}"
+        if datatype == np.integer:
+            return str(int(value))
+        if datatype == np.floating:
+            return f"{value:.2f}" # round to 2 decimal places
 
     def _parse_colors(self, color_list):
         """Parses a list of colors, converting 'color=alpha' format to hex with transparency."""
