@@ -914,6 +914,9 @@ class Hammock:
                             f"but {num_levels} levels were requested. Showing all available values instead."
                         )
                         level_vals = possible_vals
+                    # if the var type is Integer, then we allow up to 14 levels until we default to 7
+                    # (if # possible levels >=14, then we set # levels = 7. if # possible evels < 14, then we set # levels = # possible levels)
+                    #   This is to avoid weird spacing between 'levels', since we do not want levels to be float values
                     elif num_levels_flexible and len(possible_vals) <= 14:
                         num_levels = len(possible_vals)
                         indices = np.linspace(0, len(possible_vals) - 1, num_levels, dtype=int)
