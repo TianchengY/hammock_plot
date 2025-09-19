@@ -45,7 +45,7 @@ Minimal example of a hammock plot:
 ```python
 var = ["hospitalizations","group","gender","comorbidities"]
 hammock = hammock_plot.Hammock(data_df = df)
-ax = hammock.plot(var=var, min_bar_width=0.11)
+ax = hammock.plot(var=var, min_bar_height=0.11)
 ```
 <img src="image/asthma_minimal.png" alt="Minimal example for a Hammock plot" width="600"/>
 
@@ -56,7 +56,7 @@ var = ["hospitalizations","group","gender","comorbidities"]
 group_dict= {1: "child", 2: "adolescent",3: "adult"}
 value_order = {"group": group_dict}
 hammock = hammock_plot.Hammock(data_df = df)
-ax = hammock.plot(var=var, value_order=value_order, min_bar_width=0.11)
+ax = hammock.plot(var=var, value_order=value_order, min_bar_height=0.11)
 ```
 
 <!--- to restrict image size, I am using a an html command, rather than the standard ![](image.png) --->
@@ -66,7 +66,7 @@ ax = hammock.plot(var=var, value_order=value_order, min_bar_width=0.11)
 We highlight observations with comorbidities=0  in red:
 
 ```python
-ax = hammock.plot(var=var, value_order=value_order ,hi_var="comorbidities", hi_value=[0], color=["red"], min_bar_width=0.11)
+ax = hammock.plot(var=var, value_order=value_order ,hi_var="comorbidities", hi_value=[0], color=["red"], min_bar_height=0.11)
 ```
 
 <!---   ![Hammock plot with highlighting](image/asthma_highlighting.png)    --->
@@ -87,7 +87,7 @@ The three variables represent different ordinal scales for satisfaction. We are 
 ```python
 var = ["sataces","satcomm","satrate"]
 hammock = hammock_plot.Hammock(data_df = df)
-ax = hammock.plot(var=var, missing=True, min_bar_width=0.15) 
+ax = hammock.plot(var=var, missing=True, min_bar_height=0.15) 
 ```
 
 <img src="image/diabetes.png" alt="Hammock plot for the Diabetes Data" width="600"/>
@@ -111,11 +111,11 @@ var_lst = ["type","speaker1","speaker2","sex1"]
 color_lst = ["red","yellow","green"]
 hi_value = ["Beggars","Citizens","Gentry"]
 
-speaker_dict={0:"Beggars",1:"Royalty",2:"Nobility",3:"Gentry",4:"Citizens",5:"Yeomanry"}
+speaker_order=["Beggars", "Royalty", "Nobility", "Gentry", "Citizens", "Yeomanry"]
 
 hammock = hammock_plot.Hammock(data_df = data_df)
 ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,color=color_lst, bar_width=0.6,missing=True,
-                value_order ={"speaker1":speaker_dict,"speaker2":speaker_dict} )
+                value_order ={"speaker1":speaker_order,"speaker2":speaker_order} )
 ```
 
 <img src="image/shakespeare.png" alt="Hammock plot for the Diabetes Data" width="600"/>
@@ -131,7 +131,7 @@ ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,color=color
 | Category | Parameter | Type     | Description                |
 | --- | :-------- | :------- | :-------------------------  |
 | General |     `var` | `List[str]` | List of variables to display. |
-| |             `value_order` | `Dict[str, Dict[int, str]]`  |  If specified, the order of the values in the plot follows the order of values in the list supplied in the dictionary. A specific value order is useful, for example, for ordered variables. The integer values affect spacing: for example the values 4,5,6 imply equal spacing between 4,5 and 5,6. The values 4,5,7 implies twice as much space between 5,7 as between 4,5. |
+| |             `value_order` | `Dict[str, List[int]]`  |  If specified, the order of the values in the plot follows the order of values in the list supplied in the dictionary. Only applicable to categorical variables |
 | |            `numerical_var_levels` | `Dict[str, int \| None]` | Specifies the number of subdivisions in the y-axis for numerical variables. Example: {"NumericalVarname": 9, "NumericalVarname2": None}. Default is 7. |
 | |             `missing` | `bool` | Whether or not to add a category for missing values at the bottom of the plot.  If False, observations that have a missing value for any variable in the data frame (even those not used in the hammock plot) are removed.  Default is False. |
 | |             `label` | `bool` | Whether or not to display labels between the plotting segments |
@@ -142,12 +142,12 @@ ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,color=color
 | | `hi_missing` | `bool` | Whether or not missing values for `hi_var` should be highlighted. |
 | | `color` | `List[str]` | List of colors corresponding to the list of values to be highlighted. Each color can be specified as a plain color name (e.g., `"red"`, `"yellow"`) or in the format `"color=alpha"` (e.g., `"red=0.5"`) to control transparency/intensity, where `alpha` is a decimal between 0 and 1. The default highlight color list is `["red", "green", "yellow", "lightblue", "orange", "gray", "brown", "olive", "pink", "cyan", "magenta"]`. |
 | | `default_color` | `str` |  Default color of plotting elements for boxes that are not highlighted. Default is "blue" |
-| Manipulating Spacing and Layout |   `bar_width` | `float`  | Factor by which the default width is  increased or reduced. This allows reducing visual clutter. Default is 1.0. | 
-| |              `space` |  `float`  | Space left for the labels between the plotting elements. Default is 0.5 | 
+| Manipulating Spacing and Layout |   `uni_fraction` | `float`  | Fraction of vertical space that should be populated by data. Adjusts the height of the data points. Defaults is 0.08. | 
+| |              `space` |  `float`  |Fraction of horizontal space allocated to labels/univ. bars rather than to connecting boxes. Default is 0.3 | 
 | |              `label_options` |  `Dict[str, Dict[str, Any]]`  | Manipulates the size and look of the labels. Args following the options in the website: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.text.html Example:{"ExampleVarname":{"fontsize":12,"fontstyle":"italic","fontweight":"black","color":"b"}}  Default is None. | 
 | |              `height` |  `float`  | Height of the plot in inches. Default is 10. | 
 | |              `width` |  `float`  |  Width of the plot in inches. Default is 15. Caution: Width too narrow may distort the plot. | 
-| |              `min_bar_width` | `float` | Minimal bar width. Bars representing only a tiny fraction of the data may be so narrow, that they are invivisible in a plot. The default value tries to ensure this does not happen.  Default is 0.07.
+| |              `min_bar_height` | `float` | Minimal bar height. Bars representing only a tiny fraction of the data may be so narrow, that they are invivisible in a plot. The default value tries to ensure this does not happen.  Default is 0.1.
 | Other options |              `shape` |  `str`  | Shape of the boxes. "rectangle" (default) or "parallelogram". | 
 | |              `same_scale` |  `List[str]`  | List of variables that have the same scale. Default is None. | 
 | |              `display_figure` |  `bool`  | Whether or not to display the figure. This can be useful if you just want to save the plots. Default is 'True'. | 
