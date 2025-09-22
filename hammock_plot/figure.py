@@ -346,6 +346,7 @@ class Figure:
                         # Other
                         shape_type,
                         same_scale,
+                        same_scale_type,
                     ):
 
         fig = cls(width = width,
@@ -396,22 +397,6 @@ class Figure:
         
         fig.data_df = data_df
         
-        # Determine scale ranges for unibars that should use same_scale
-        scale_ranges: Dict[str, Tuple[float, float]] = {}
-        if same_scale:
-            # Collect all numeric values across the same_scale group
-            combined_vals = []
-            for uni_name in same_scale:
-                uni_series = data_df[uni_name]
-                numeric_vals = pd.to_numeric(uni_series, errors="coerce").dropna()
-                combined_vals.extend(numeric_vals.tolist())
-
-            if combined_vals:
-                global_min, global_max = min(combined_vals), max(combined_vals)
-                # Assign the same global range to all unibars in same_scale
-                for uni_name in same_scale:
-                    scale_ranges[uni_name] = (global_min, global_max)
-        
         colors = [default_color] + colors if colors else [default_color]
 
         # Build unibars
@@ -425,8 +410,16 @@ class Figure:
             else:
                 uniq = uni_series.dropna().unique().tolist()
                 order = uniq
+            
+            display_type = "default"
+            num_levels = 7
+            if numerical_var_levels and v in numerical_var_levels.keys():
+                if numerical_var_levels[v]:
+                    display_type="levels"
+                    num_levels = numerical_var_levels[v]
+                else:
+                    display_type = "rugplot"
 
-            uni_scale = scale_ranges.get(v, None)
             uni = Unibar(
                 df=data_df,
                 name=v,
@@ -435,25 +428,16 @@ class Figure:
                 label=label,
                 missing=(missing_placeholder is not None),
                 missing_placeholder=missing_placeholder,
-                scale=uni_scale,
                 val_order=order,
                 min_bar_height=fig.min_bar_height,
                 colors=colors,
                 hi_box=hi_box,
+                display_type = display_type,
+                num_levels = num_levels
             )
 
             fig.add_unibar(uni)
-    
-        # Build next links
-        for i in range(len(var_list)-1):
-            left = var_list[i]; right = var_list[i+1]
-            grouped = data_df.groupby([left, right], observed=True).size().to_dict()
-            left_uni = fig.unibars[i]; right_uni = fig.unibars[i+1]
-            for (lv, rv), cnt in grouped.items():
-                lv_obj = left_uni.get_value_by_id(str(lv))
-                rv_obj = right_uni.get_value_by_id(str(rv))
-                if lv_obj and rv_obj:
-                    lv_obj.add_next(str(rv), int(cnt))
+
         
         # adjust some variables for drawing
         available_height = fig.height * fig.scale * fig.uni_fraction
@@ -469,6 +453,57 @@ class Figure:
         for unibar in fig.unibars:
             unibar.set_measurements(bar_unit=fig.bar_unit,
                                     missing_padding=max(min_bar_height, missing_padding) + Defaults.SPACE_ABOVE_MISSING)
+            
+        if same_scale_type and same_scale_type == "numerical":
+            # Determine ranges for unibars that should use same_scale
+            range = None
+            if same_scale:
+                # Collect all numeric values across the same_scale group
+                combined_vals = []
+                for uni_name in same_scale:
+                    uni_series = data_df[uni_name]
+                    numeric_vals = pd.to_numeric(uni_series, errors="coerce").dropna()
+                    combined_vals.extend(numeric_vals.tolist())
+
+                if combined_vals:
+                    global_min, global_max = min(combined_vals), max(combined_vals)
+                    # Assign the same global range to all unibars in same_scale
+                    for uni_name in same_scale:
+                        range = (global_min, global_max)
+                
+                max_min_occ = 0
+                max_max_occ = 0
+                for uni in fig.unibars:
+                    if uni.name in same_scale:
+                        for val in uni.values:
+                            if val.numeric == global_min:
+                                max_min_occ = max(val.occurrences, max_min_occ)
+                            if val.numeric == global_max:
+                                max_max_occ = max(val.occurrences, max_max_occ)
+                min_max_pos = (max_min_occ * fig.bar_unit / 2, max_max_occ * fig.bar_unit / 2)
+
+                for uni in fig.unibars:
+                    if uni.name in same_scale:
+                        uni.range = range
+                        uni.min_max_pos = min_max_pos
+
+        elif same_scale_type and same_scale_type == "categorical":
+            # determine the positions of the first and last categories to make them line up
+            if same_scale:
+                max_btm_occ = 0
+                max_top_occ = 0
+                for uni in fig.unibars:
+                    if uni.name in same_scale:
+                        for val in uni.values:
+                            if val.id == value_order[uni.name][0]:
+                                max_btm_occ = max(max_btm_occ, val.occurrences)
+                            if val.id == value_order[uni.name][-1]:
+                                max_top_occ = max(max_top_occ, val.occurrences)
+                min_max_pos = (max_btm_occ * fig.bar_unit / 2, max_top_occ * fig.bar_unit / 2)
+
+                for uni in fig.unibars:
+                    if uni.name in same_scale:
+                        uni.min_max_pos = min_max_pos
         
         fig.layout_unibars()
 

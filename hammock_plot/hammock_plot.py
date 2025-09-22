@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from figure import Figure
 from utils import Defaults
 import numpy as np
-from utils import safe_numeric, validate_expression
+from utils import safe_numeric, validate_expression, resolve_ordering
 import warnings
 
 class Hammock:
@@ -59,6 +59,7 @@ class Hammock:
                 f'the variables: {error_values} in var_lst is not in data or value names user given does not match the data '
             )
         
+        # make dictionary with variable types
         var_types = {}
             
         for varname in var:
@@ -115,19 +116,54 @@ class Hammock:
                 f'the variables: {error_values} in same_scale is not in var_lst or value names user given does not match the data '
             )
         
-        # value_order error catch
-        if value_order:
-            for k, v_ori in value_order.items():
-                # k = column name
-                # v_ori = specified order in dictionary form: {1: ____, 2: ______}
-                # uni_val_set = unique categorical values within a column
-                uni_val_set = set(self.data_df[k].dropna().unique())
-                # if an order WASN'T specified for a specific categorical value
-                if not set(v_ori) >= uni_val_set:
-                    error_values = (set(v_ori) ^ uni_val_set) & set(v_ori)
-                    raise ValueError(
-                        f'Does not find values {error_values} in variable {k}.'
-                    )
+        same_scale_type = None
+
+        if same_scale:
+            # should all be categorical or numerical
+            cur_type = var_types[same_scale[0]]
+            if cur_type == np.str_: # categorical data type
+                same_scale_type = "categorical"
+                for cur_var in same_scale:
+                    if np.issubdtype(var_types[cur_var], np.integer) or np.issubdtype(var_types[cur_var], np.floating):
+                        raise ValueError(
+                            "Variables in same_scale must either all be numerical or all be categorical."
+                        )
+            else: # numerical data type
+                same_scale_type = "numerical"
+                for cur_var in same_scale:
+                    if var_types[cur_var] == np.str_:
+                        raise ValueError(
+                            "Variables in same_scale must either all be numerical or all be categorical."
+                        )
+                
+        if same_scale and value_order:
+            orders = []
+            for cur_var in same_scale:
+                if cur_var in value_order:
+                    orders.append(value_order[cur_var])
+            resolved_order = resolve_ordering(orders)
+            if resolved_order == None:
+                raise ValueError(
+                    "value_order has conflict with same_scale."
+                )
+            else:
+                for cur_var in same_scale:
+                    # set the new value_order to be the full, resolved order
+                    value_order[cur_var] = resolved_order
+        elif same_scale and same_scale_type == "categorical":
+            combined_uni_vals = []
+            seen = set()
+            for cur_var in same_scale:
+                uni_vals = list(self.data_df[cur_var].dropna().unique())
+                for val in uni_vals:
+                    if val not in seen:
+                        seen.add(val)
+                        combined_uni_vals.append(val)
+            # now set the combined order for all variables
+            if not value_order: value_order = {}
+            for cur_var in same_scale:
+                value_order[cur_var] = sorted(combined_uni_vals)
+                    
         
         # highlight variable is not in data
         if hi_var and not hi_var in data_df_columns:
@@ -192,7 +228,7 @@ class Hammock:
             raise ValueError(
                 f"Invalid shape {shape} provided. shape must be either 'parallelogram' or 'rectangle'."
             )
-
+            
         fig = Figure.from_dataframe(
             # general
             self.data_df,
@@ -222,6 +258,7 @@ class Hammock:
             # Other
             shape_type=shape,
             same_scale=same_scale,
+            same_scale_type=same_scale_type,
         )
 
         ax = fig.draw_unibars(label_opts=label_options)

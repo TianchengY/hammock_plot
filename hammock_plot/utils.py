@@ -1,4 +1,5 @@
 import re
+from collections import defaultdict, deque
 
 class Defaults:
     # General
@@ -13,7 +14,7 @@ class Defaults:
     SPACE: float = 0.3
     MIN_BAR_HEIGHT: float = 0.1
     BAR_UNIT: float = 1.0
-    XMARGIN: float = 0.04
+    XMARGIN: float = 0.02
     YMARGIN: float = 0.04
     SCALE: float = 10
     GAP_BTWN_UNI_MULTI: float = 2
@@ -66,3 +67,36 @@ def safe_numeric(val):
                 return float(val)
             except (ValueError, TypeError):
                 return val
+
+def resolve_ordering(orders):
+    graph = defaultdict(set)
+    indegree = defaultdict(int)
+    nodes = set()
+
+    # Build graph
+    for seq in orders:
+        for i in range(len(seq)):
+            nodes.add(seq[i])
+            if i > 0:
+                u, v = seq[i-1], seq[i]
+                if v not in graph[u]:
+                    graph[u].add(v)
+                    indegree[v] += 1
+
+    # Initialize queue with nodes of indegree 0
+    q = deque([n for n in nodes if indegree[n] == 0])
+    order = []
+
+    while q:
+        u = q.popleft()
+        order.append(u)
+        for v in graph[u]:
+            indegree[v] -= 1
+            if indegree[v] == 0:
+                q.append(v)
+
+    # If we used all nodes, success
+    if len(order) == len(nodes):
+        return order
+    else:
+        return None

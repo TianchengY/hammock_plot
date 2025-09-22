@@ -14,13 +14,12 @@ class Unibar:
                  label: bool,
                  missing: bool,
                  missing_placeholder: str,
-                 scale: Tuple[float, float],
                  val_order: List[str],
                  min_bar_height,
                  colors,
                  hi_box,
-                 num_levels = 7,
-                 display_type: str = "rugplot",):
+                 num_levels: int,
+                 display_type: str,):
         self.df = df
         self.name = name
         self.display_type = display_type
@@ -29,7 +28,6 @@ class Unibar:
         self.unibar = unibar
         self.label = label
         self.missing = missing
-        self.scale = scale
         self.y_top = 0.0
         self.y_bottom = 0.0
         self.highlight_colors: Optional[List[str]] = None
@@ -43,10 +41,12 @@ class Unibar:
         self.hi_box = hi_box
         self.colors = colors
 
+        # for same_scale variables
+        self.range = None # if numerical, will be a min val and a max val
+        self.min_max_pos = None # records the centre positions of the top and bottom values
+
     def _build_values(
         self,
-        value_order: Optional[List[str]] = None,
-        numerical_var_levels: Optional[Dict[str, Optional[int]]] = None
     ) -> List[Value]:
         """
         Create Value objects for this unibar from self.df.
@@ -62,8 +62,8 @@ class Unibar:
         all_colors = sorted(self.df["color_index"].unique())
 
         # Determine order
-        if value_order and self.name in value_order:
-            order = value_order
+        if self.val_order:
+            order = self.val_order
         else:
             order = uni_series.dropna().unique().tolist()
 
@@ -88,11 +88,14 @@ class Unibar:
                 dtype=dtype if str(val) != self.missing_placeholder else np.str_
             ))
 
-        # Optionally determine display_type based on numeric levels
-        if np.issubdtype(dtype, np.number):
-            if len(values) >= 7 or (numerical_var_levels and self.name in numerical_var_levels):
-                if not (numerical_var_levels and self.name in numerical_var_levels and numerical_var_levels[self.name] is None):
-                    self.display_type = "levels"
+        # Set display type if there is no specified display type
+        if np.issubdtype(dtype, np.number) and self.display_type == "default":
+            if len(values) >= 7:
+                self.display_type = "levels"
+            else:
+                self.display_type = "rugplot"
+        elif self.display_type == "default":
+            self.display_type = "rugplot"
 
         self.values = values
         return values
@@ -133,10 +136,16 @@ class Unibar:
             bottom += self.missing_padding
 
         # --- Adjust top for last non-missing bar ---
-        top_adjustment = max(self.min_bar_height, self.non_missing_vals[-1].occurrences * self.bar_unit) / 2
+        if self.min_max_pos:
+            top_adjustment =  max(self.min_bar_height / 2, self.min_max_pos[1]) if self.min_max_pos[1] != 0 else 0
+        else:
+            top_adjustment = max(self.min_bar_height, self.non_missing_vals[-1].occurrences * self.bar_unit) / 2 if self.non_missing_vals[-1].occurrences != 0 else 0
         top -= top_adjustment
         
-        bottom_adjustment = max(self.min_bar_height, self.non_missing_vals[0].occurrences * self.bar_unit) / 2
+        if self.min_max_pos:
+            bottom_adjustment = max(self.min_bar_height / 2, self.min_max_pos[0]) if self.min_max_pos[0] != 0 else 0
+        else:
+            bottom_adjustment =  max(self.min_bar_height, self.non_missing_vals[0].occurrences * self.bar_unit) / 2 if self.non_missing_vals[0].occurrences != 0 else 0
         bottom += bottom_adjustment
 
         # --- Numeric values ---
@@ -156,8 +165,8 @@ class Unibar:
                 nums = [x[0] for x in numeric_vals]
                 vals = [x[1] for x in numeric_vals]
 
-                # Determine scale
-                minv, maxv = self.scale if self.scale else (min(nums), max(nums))
+                # Determine range
+                minv, maxv = self.range if self.range else (min(nums), max(nums))
 
                 # Map to vertical coordinates
                 if maxv == minv:
@@ -171,7 +180,18 @@ class Unibar:
                 for v, p in zip(vals, positions):
                     v.set_y(centre=p)
 
-        # --- String/Categorical values ---
+        # --- String/Categorical values (without same_scale) ---
+        elif self.val_type == np.str_ and self.non_missing_vals and self.min_max_pos:
+            n = len(self.non_missing_vals)
+
+            # spacing between centers
+            step = (top - bottom) / n
+
+            for i, val in enumerate(self.non_missing_vals):
+                # place at center of each interval
+                pos = bottom + (i + 0.5) * step
+                val.set_y(pos)
+        # --- String/Categorical values (with same_scale) ---
         elif self.val_type == np.str_ and self.non_missing_vals:
             n = len(self.non_missing_vals)
 
@@ -180,7 +200,7 @@ class Unibar:
                 self.non_missing_vals[0].set_y(centre=(bottom + top) / 2)
             else:
                 # --- Step 1: compute natural positions without compression ---
-                total_coloured_y = sum(max(val.occurrences * self.bar_unit, self.min_bar_height)
+                total_coloured_y = sum((max(val.occurrences * self.bar_unit, self.min_bar_height) if val.occurrences != 0 else 0)
                                     for val in self.non_missing_vals)
                 coloured_y_with_adjustments = total_coloured_y - bottom_adjustment - top_adjustment
 
@@ -194,9 +214,9 @@ class Unibar:
 
                 for i in range(1, n):
                     prev_half = max(self.non_missing_vals[i-1].occurrences * self.bar_unit,
-                                    self.min_bar_height) / 2
+                                    self.min_bar_height) / 2 if self.non_missing_vals[i-1].occurrences != 0 else 0
                     cur_half = max(self.non_missing_vals[i].occurrences * self.bar_unit,
-                                self.min_bar_height) / 2
+                                self.min_bar_height) / 2 if self.non_missing_vals[i].occurrences != 0 else 0
                     cur_y += prev_half + cur_half + space
                     positions.append(cur_y)
 
@@ -205,7 +225,7 @@ class Unibar:
                     v.set_y(centre=p)
 
         # --- Set final unibar bounds ---
-        self.y_bottom = bottom  # true bottom of the unibar
+        self.y_bottom = y_start  # true bottom of the unibar
         self.y_top = top
     
     def sort_values(self):
@@ -242,7 +262,7 @@ class Unibar:
 
         return ax
 
-    # ---------- Hooks for Template Method ----------
+    # ---------- Template Method ----------
     def _draw_background(self, ax, rectangle_painter, color, bar_unit):
         """
         Hook method: Draw the unibar background depending on display_type.
@@ -267,7 +287,7 @@ class Unibar:
         for val in self.values:
             # Compute vertical bar height
             bar_height = val.occurrences * bar_unit
-            bar_height = max(bar_height, self.min_bar_height) # enforce minimum bar height
+            bar_height = max(bar_height, self.min_bar_height) if bar_height != 0 else 0 # enforce minimum bar height unless there are no such occurrences
 
             heights.append(bar_height)
 
@@ -305,7 +325,7 @@ class Unibar:
 
         # Draw numeric levels if display_type="levels"
         if self.display_type == "levels" and np.issubdtype(self.val_type, np.number) and self.non_missing_vals:
-            min_val, max_val = self.scale if self.scale else (min(v.numeric for v in self.non_missing_vals),
+            min_val, max_val = self.range if self.range else (min(v.numeric for v in self.non_missing_vals),
                                                             max(v.numeric for v in self.non_missing_vals))
             num_levels = self.num_levels
 
@@ -322,10 +342,12 @@ class Unibar:
 
             # Compute coordinate range based on first and last non-missing bar centers
             first_center = self.non_missing_vals[0].vert_centre
-            last_center = self.y_top
-            bottom_coord = first_center
-            top_coord = last_center
-
+            last_center = self.non_missing_vals[-1].vert_centre
+            bottom_coord =  (self.y_bottom + self.min_max_pos[0]) if self.min_max_pos else first_center
+            if self.missing and self.min_max_pos and bottom_coord == self.y_bottom + self.min_max_pos[0]:
+                bottom_coord += self.missing_padding
+            top_coord = (self.y_top - self.min_max_pos[1]) if self.min_max_pos else last_center
+            
             level_coords = [bottom_coord + (top_coord - bottom_coord) * (v - min_val) / (max_val - min_val) 
                             for v in level_vals]
 
