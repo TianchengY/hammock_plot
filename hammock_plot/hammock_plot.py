@@ -200,6 +200,11 @@ class Hammock:
                     raise ValueError(
                         f'Invalid expression: {hi_value}.'
                     )
+                else:
+                    if var_types[hi_var] == np.str_:
+                        raise ValueError(
+                            "Range based highlighting for categorical variables is not allowed."
+                        )
 
         num_hi_colors = len(hi_value) if isinstance(hi_value, list) else 0
         num_hi_colors = 1 if isinstance(hi_value, str) else num_hi_colors

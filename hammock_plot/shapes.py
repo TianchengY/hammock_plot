@@ -110,10 +110,36 @@ class Parallelogram(FigureBase):
             x, y = np.zeros(4), np.zeros(4)
             alpha = np.arctan(abs(l[1] - r[1]) / abs(l[0] - r[0])) if l[0] != r[0] else np.arctan(np.inf)
             vertical_w = w / np.cos(alpha)
+
             x[0:2], x[2:4] = l[0], r[0]
-            y[0], y[1], y[2], y[3] = l[1] + vertical_w / 2, l[1] - vertical_w / 2, r[1] + vertical_w / 2, r[1] - vertical_w / 2
-            xs.append(x); ys.append(y)
+            y[0], y[1], y[2], y[3] = l[1] + vertical_w / 2, l[1] - vertical_w / 2, \
+                                     r[1] + vertical_w / 2, r[1] - vertical_w / 2
+
+            xs.append(x)
+            ys.append(y)
+
         return xs, ys
+    
+    # def get_coordinates(self, left_center_pts, right_center_pts, heights):
+    #     xs, ys = [], []
+    #     for l, r, h in zip(left_center_pts, right_center_pts, heights):
+    #         x = np.zeros(4)
+    #         y = np.zeros(4)
+
+    #         # left side (x stays l[0], y up/down by h/2)
+    #         x[0] = x[1] = l[0]
+    #         y[0] = l[1] + h / 2  # top
+    #         y[1] = l[1] - h / 2  # bottom
+
+    #         # right side (x stays r[0], y up/down by h/2)
+    #         x[2] = x[3] = r[0]
+    #         y[2] = r[1] + h / 2  # top
+    #         y[3] = r[1] - h / 2  # bottom
+
+    #         xs.append(x)
+    #         ys.append(y)
+
+    #     return xs, ys
 
 
 class Rectangle(FigureBase):
