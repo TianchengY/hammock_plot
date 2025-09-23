@@ -6,8 +6,8 @@ class Defaults:
     MISSING_PLACEHOLDER: str = "missing"
 
     # Colours
-    COLORS: list = ["red", "green", "yellow", "purple", "orange", "gray", "brown", "olive", "pink", "cyan", "magenta"]
-    DEFAULT_COLOR: str = "lightskyblue"
+    COLORS: list = ["#e31a1c", "#33a02c", "#fb9a99", "#33a02c", "#b2df8a", "#ff7f00", "#fdbf6f", "#6a3d9a", "#cab2d6", "#b15928", "#1f78b4"]
+    DEFAULT_COLOR: str = "#a6cee3"
 
     # Layout
     UNI_FRACTION: float = 0.08
