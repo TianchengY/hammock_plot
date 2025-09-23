@@ -265,15 +265,23 @@ class Unibar:
     # ---------- Template Method ----------
     def _draw_background(self, ax, rectangle_painter, color, bar_unit):
         if self.display_type in ["rugplot", "levels"]:
-            self._draw_rectangles(ax, rectangle_painter, bar_unit)
-            # if self.val_type != np.str_:
-            #     self._draw_violin(ax)
+            # self._draw_rectangles(ax, rectangle_painter, bar_unit)
+            if self.val_type != np.str_:
+                #self._draw_violin(ax)
+                self._draw_boxplot(ax)
+                missing_values = []
+                for val in self.values:
+                    if val.id == self.missing_placeholder:
+                        missing_values.append(val)
+                self._draw_rectangles(ax, missing_values, rectangle_painter, bar_unit)
+            else:
+                self._draw_rectangles(ax, self.values, rectangle_painter, bar_unit)
         elif self.display_type == "violin":
             self._draw_violin(ax)
         else:
             raise ValueError(f"Unknown display_type: {self.display_type}")
 
-    def _draw_rectangles(self, ax, rectangle_painter, bar_unit):
+    def _draw_rectangles(self, ax, values, rectangle_painter, bar_unit):
         """
         Draw rectangles
         """
@@ -282,7 +290,7 @@ class Unibar:
 
         left_pts, right_pts, heights, weights = [], [], [], []
 
-        for val in self.values:
+        for val in values:
             # Compute vertical bar height
             bar_height = val.occurrences * bar_unit
             bar_height = max(bar_height, self.min_bar_height) if bar_height != 0 else 0 # enforce minimum bar height unless there are no such occurrences
@@ -297,14 +305,13 @@ class Unibar:
 
         rectangle_painter.plot(ax, left_pts, right_pts, heights, self.colors, weights, orientation=self.hi_box,zorder=1)
 
-    def _draw_violin(self, ax):
+    def _prepare_scaled_data(self):
         """
-        Draw a vertical split violin plot centered at self.pos_x, scaled to match the Unibar's vertical range.
-        Left half = highlighted data, Right half = non-highlighted data.
-        If no highlight, both halves are the same color.
+        Shared helper: prepare scaled left/right data and colors for plotting.
+        Returns: (left_scaled, right_scaled, colors)
         """
         if not self.non_missing_vals:
-            return
+            return [], [], []
 
         # Determine colors
         if len(self.colors) == 1:
@@ -312,7 +319,7 @@ class Unibar:
         else:
             colors = self.colors[:2]
 
-        # Determine bottom and top for violin
+        # Determine bottom and top for scaling
         bottom_coord = self.y_bottom
         if self.missing and self.missing_vals:
             bottom_coord = self.missing_vals[0].vert_centre + getattr(self, "missing_padding", 0)
@@ -331,10 +338,9 @@ class Unibar:
                 right_data.extend([val_numeric] * v.occurrences)
                 left_data.extend([val_numeric] * v.occurrences)
 
-        min_val = min(numeric_vals)
-        max_val = max(numeric_vals)
+        min_val, max_val = min(numeric_vals), max(numeric_vals)
 
-        # Scale function to fit violin vertically
+        # Scaling function
         def scale_y(val):
             if max_val == min_val:
                 return (bottom_coord + top_coord) / 2
@@ -343,7 +349,14 @@ class Unibar:
         left_scaled = [scale_y(d) for d in left_data]
         right_scaled = [scale_y(d) for d in right_data]
 
-        # Draw left half
+        return left_scaled, right_scaled, colors
+
+    def _draw_violin(self, ax):
+        left_scaled, right_scaled, colors = self._prepare_scaled_data()
+        if not left_scaled and not right_scaled:
+            return
+
+        # Left half
         if left_scaled:
             parts_left = ax.violinplot(
                 dataset=[left_scaled],
@@ -357,10 +370,10 @@ class Unibar:
                 verts = pc.get_paths()[0].vertices
                 verts[:, 0] = np.clip(verts[:, 0], -np.inf, self.pos_x)
                 pc.set_facecolor(colors[1])
-                pc.set_edgecolor("black")
+                pc.set_edgecolor(colors[1])
                 pc.set_alpha(0.7)
 
-        # Draw right half
+        # Right half
         if right_scaled:
             parts_right = ax.violinplot(
                 dataset=[right_scaled],
@@ -374,14 +387,52 @@ class Unibar:
                 verts = pc.get_paths()[0].vertices
                 verts[:, 0] = np.clip(verts[:, 0], self.pos_x, np.inf)
                 pc.set_facecolor(colors[0])
-                pc.set_edgecolor("black")
+                pc.set_edgecolor(colors[0])
                 pc.set_alpha(0.7)
 
-        # --- Optional: add mean marker if you want ---
-        # mean_val = np.mean(numeric_vals)
-        # mean_y = scale_y(mean_val)
-        # ax.plot(self.pos_x, mean_y, marker='o', color='darkblue', markersize=5, zorder=3)
+    def _draw_boxplot(self, ax):
+        left_scaled, right_scaled, colors = self._prepare_scaled_data()
+        if not left_scaled and not right_scaled:
+            return
 
+        # Half-width for split look
+        half_width = self.width / 2
+
+        # Left half (highlighted)
+        if left_scaled:
+            bp_left = ax.boxplot(
+                x=[left_scaled],
+                positions=[self.pos_x - half_width/2],
+                widths=half_width,
+                vert=True,
+                patch_artist=True,
+                manage_ticks=False,
+                showfliers=False  # 🔥 removes weird circles
+            )
+            for element in ['boxes', 'whiskers', 'caps', 'medians']:
+                for artist in bp_left[element]:
+                    artist.set_color(colors[1])
+            for patch in bp_left['boxes']:
+                patch.set_facecolor(colors[1])
+                patch.set_alpha(0.7)
+
+        # Right half (non-highlighted)
+        if right_scaled:
+            bp_right = ax.boxplot(
+                x=[right_scaled],
+                positions=[self.pos_x + half_width/2],
+                widths=half_width,
+                vert=True,
+                patch_artist=True,
+                manage_ticks=False,
+                showfliers=False
+            )
+            for element in ['boxes', 'whiskers', 'caps', 'medians']:
+                for artist in bp_right[element]:
+                    artist.set_color(colors[0])
+            for patch in bp_right['boxes']:
+                patch.set_facecolor(colors[0])
+                patch.set_alpha(0.7)
 
     # ---------- Label Drawing ----------
     def _draw_labels(self, ax, label_opts: Dict = None):
