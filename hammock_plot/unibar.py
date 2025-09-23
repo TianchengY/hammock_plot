@@ -264,18 +264,16 @@ class Unibar:
 
     # ---------- Template Method ----------
     def _draw_background(self, ax, rectangle_painter, color, bar_unit):
-        """
-        Hook method: Draw the unibar background depending on display_type.
-        Can be extended to support other display types like 'violin'.
-        """
         if self.display_type in ["rugplot", "levels"]:
-            self._draw_rectangles(ax, rectangle_painter, color, bar_unit)
+            self._draw_rectangles(ax, rectangle_painter, bar_unit)
+            # if self.val_type != np.str_:
+            #     self._draw_violin(ax)
         elif self.display_type == "violin":
             self._draw_violin(ax)
         else:
             raise ValueError(f"Unknown display_type: {self.display_type}")
 
-    def _draw_rectangles(self, ax, rectangle_painter, color, bar_unit):
+    def _draw_rectangles(self, ax, rectangle_painter, bar_unit):
         """
         Draw rectangles
         """
@@ -301,9 +299,89 @@ class Unibar:
 
     def _draw_violin(self, ax):
         """
-        Hook method for drawing violin plots (to be implemented)
+        Draw a vertical split violin plot centered at self.pos_x, scaled to match the Unibar's vertical range.
+        Left half = highlighted data, Right half = non-highlighted data.
+        If no highlight, both halves are the same color.
         """
-        pass
+        if not self.non_missing_vals:
+            return
+
+        # Determine colors
+        if len(self.colors) == 1:
+            colors = [self.colors[0], self.colors[0]]
+        else:
+            colors = self.colors[:2]
+
+        # Determine bottom and top for violin
+        bottom_coord = self.y_bottom
+        if self.missing and self.missing_vals:
+            bottom_coord = self.missing_vals[0].vert_centre + getattr(self, "missing_padding", 0)
+        top_coord = self.y_top
+
+        left_data, right_data, numeric_vals = [], [], []
+
+        for v in self.non_missing_vals:
+            val_numeric = v.numeric if v.numeric is not None else float(v.id)
+            numeric_vals.append(val_numeric)
+
+            if len(v.occ_by_colour) > 1:
+                left_data.extend([val_numeric] * v.occ_by_colour[1])
+                right_data.extend([val_numeric] * v.occ_by_colour[0])
+            else:
+                right_data.extend([val_numeric] * v.occurrences)
+                left_data.extend([val_numeric] * v.occurrences)
+
+        min_val = min(numeric_vals)
+        max_val = max(numeric_vals)
+
+        # Scale function to fit violin vertically
+        def scale_y(val):
+            if max_val == min_val:
+                return (bottom_coord + top_coord) / 2
+            return bottom_coord + (val - min_val) / (max_val - min_val) * (top_coord - bottom_coord)
+
+        left_scaled = [scale_y(d) for d in left_data]
+        right_scaled = [scale_y(d) for d in right_data]
+
+        # Draw left half
+        if left_scaled:
+            parts_left = ax.violinplot(
+                dataset=[left_scaled],
+                positions=[self.pos_x],
+                widths=self.width,
+                showmeans=False,
+                showmedians=False,
+                showextrema=False
+            )
+            for pc in parts_left['bodies']:
+                verts = pc.get_paths()[0].vertices
+                verts[:, 0] = np.clip(verts[:, 0], -np.inf, self.pos_x)
+                pc.set_facecolor(colors[1])
+                pc.set_edgecolor("black")
+                pc.set_alpha(0.7)
+
+        # Draw right half
+        if right_scaled:
+            parts_right = ax.violinplot(
+                dataset=[right_scaled],
+                positions=[self.pos_x],
+                widths=self.width,
+                showmeans=False,
+                showmedians=False,
+                showextrema=False
+            )
+            for pc in parts_right['bodies']:
+                verts = pc.get_paths()[0].vertices
+                verts[:, 0] = np.clip(verts[:, 0], self.pos_x, np.inf)
+                pc.set_facecolor(colors[0])
+                pc.set_edgecolor("black")
+                pc.set_alpha(0.7)
+
+        # --- Optional: add mean marker if you want ---
+        # mean_val = np.mean(numeric_vals)
+        # mean_y = scale_y(mean_val)
+        # ax.plot(self.pos_x, mean_y, marker='o', color='darkblue', markersize=5, zorder=3)
+
 
     # ---------- Label Drawing ----------
     def _draw_labels(self, ax, label_opts: Dict = None):
