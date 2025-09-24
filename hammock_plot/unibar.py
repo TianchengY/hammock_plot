@@ -267,8 +267,8 @@ class Unibar:
         if self.display_type in ["rugplot", "levels"]:
             # self._draw_rectangles(ax, rectangle_painter, bar_unit)
             if self.val_type != np.str_:
-                #self._draw_violin(ax)
-                self._draw_boxplot(ax)
+                self._draw_violin(ax)
+                # self._draw_boxplot(ax)
                 missing_values = []
                 for val in self.values:
                     if val.id == self.missing_placeholder:
