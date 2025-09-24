@@ -265,7 +265,7 @@ class Unibar:
     # ---------- Template Method ----------
     def _draw_background(self, ax, rectangle_painter, color, bar_unit):
         if self.display_type in ["rugplot", "levels"]:
-            # self._draw_rectangles(ax, rectangle_painter, bar_unit)
+            # self._draw_rectangles(ax, self.values, rectangle_painter, bar_unit)
             if self.val_type != np.str_:
                 self._draw_violin(ax)
                 # self._draw_boxplot(ax)
