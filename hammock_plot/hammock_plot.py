@@ -115,6 +115,13 @@ class Hammock:
             raise ValueError(
                 f'the variables: {error_values} in same_scale is not in var_lst or value names user given does not match the data '
             )
+
+        if value_order and not set(value_order.keys()) <= set(var):
+            # gets a list of the items that are in value_order but not in data_df_columns
+            error_values = set(value_order.keys()) - (set(value_order.keys()) & set(var))
+            raise ValueError(
+                f'the variables: {error_values} in value_order is not in var_lst or value names user given does not match the data '
+            )
         
         same_scale_type = None
 
@@ -261,12 +268,13 @@ class Hammock:
             space=space,
             
             # Other
+            label_options=label_options,
             shape_type=shape,
             same_scale=same_scale,
             same_scale_type=same_scale_type,
         )
 
-        ax = fig.draw_unibars(label_opts=label_options)
+        ax = fig.draw_unibars()
         ax = fig.draw_connections(ax=ax)
 
         if save_path:

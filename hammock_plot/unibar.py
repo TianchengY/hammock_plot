@@ -19,7 +19,8 @@ class Unibar:
                  colors,
                  hi_box,
                  num_levels: int,
-                 display_type: str,):
+                 display_type: str,
+                 label_options: dict):
         self.df = df
         self.name = name
         self.display_type = display_type
@@ -44,6 +45,8 @@ class Unibar:
         # for same_scale variables
         self.range = None # if numerical, will be a min val and a max val
         self.min_max_pos = None # records the centre positions of the top and bottom values
+
+        self.label_options = label_options
 
     def _build_values(
         self,
@@ -245,7 +248,7 @@ class Unibar:
             
 
 
-    def draw(self, ax, label_opts: Dict = None, rectangle_painter=None,
+    def draw(self, ax, rectangle_painter=None,
              color="lightskyblue", bar_unit: float = 1.5,
              default_highlight_colors: Optional[List[str]] = None):
         """
@@ -258,7 +261,7 @@ class Unibar:
 
         # Step 2: Draw labels
         if self.label:
-            self._draw_labels(ax, label_opts)
+            self._draw_labels(ax)
 
         return ax
 
@@ -435,7 +438,7 @@ class Unibar:
                 patch.set_alpha(0.7)
 
     # ---------- Label Drawing ----------
-    def _draw_labels(self, ax, label_opts: Dict = None):
+    def _draw_labels(self, ax):
         """
         Draw labels depending on variable type, missing data, and numeric levels.
         """
@@ -445,12 +448,12 @@ class Unibar:
         if self.missing_vals:
             for mv in self.missing_vals:
                 # Place missing labels just above the bottom with missing_padding
-                ax.text(x, mv.vert_centre, "missing", ha='center', va='center', **(label_opts or {}))
+                ax.text(x, mv.vert_centre, "missing", ha='center', va='center', **(self.label_options or {}))
 
         if self.display_type == "rugplot":
             # Draw non-missing data labels
             for val in self.non_missing_vals:
-                ax.text(x, val.vert_centre, self._get_formatted_label(val.dtype, val.id), ha='center', va='center', **(label_opts or {}))
+                ax.text(x, val.vert_centre, self._get_formatted_label(val.dtype, val.id), ha='center', va='center', **(self.label_options or {}))
 
         # Draw numeric levels if display_type="levels"
         if self.display_type == "levels" and np.issubdtype(self.val_type, np.number) and self.non_missing_vals:
@@ -481,7 +484,7 @@ class Unibar:
                             for v in level_vals]
 
             for tick_val, tick_y in zip(level_vals, level_coords):
-                ax.text(x, tick_y, self._get_formatted_label(self.val_type, tick_val), ha='center', va='center', **(label_opts or {}))
+                ax.text(x, tick_y, self._get_formatted_label(self.val_type, tick_val), ha='center', va='center', **(self.label_options or {}))
     
     def _get_formatted_label(self, datatype, value):
         # if the label is a string

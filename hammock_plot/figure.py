@@ -227,7 +227,6 @@ class Figure:
         rect_painter = self.fig_painter
         for uni in self.unibars:
             uni.draw(ax,
-                    label_opts=label_opts,
                     rectangle_painter=rect_painter,
                     color=self.default_color,
                     bar_unit=self.bar_unit)
@@ -344,6 +343,7 @@ class Figure:
                         space: float,
 
                         # Other
+                        label_options: dict,
                         shape_type,
                         same_scale,
                         same_scale_type,
@@ -420,6 +420,8 @@ class Figure:
                 else:
                     display_type = "rugplot"
 
+            label_opts = label_options[v] if label_options and v in label_options else None
+
             uni = Unibar(
                 df=data_df,
                 name=v,
@@ -433,7 +435,8 @@ class Figure:
                 colors=colors,
                 hi_box=hi_box,
                 display_type = display_type,
-                num_levels = num_levels
+                num_levels = num_levels,
+                label_options=label_opts,
             )
 
             fig.add_unibar(uni)
