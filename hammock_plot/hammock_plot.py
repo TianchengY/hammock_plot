@@ -60,6 +60,9 @@ class Hammock:
                 f'the variables: {error_values} in var_lst is not in data or value names user given does not match the data '
             )
         
+        if space == 1:
+            warnings.warn("Tip: To leave a bit of a gap between the univariate bars, set space to something close to 1 but not quite one (ex 0.9)")
+        
         # make dictionary with variable types
         var_types = {}
             

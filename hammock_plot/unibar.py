@@ -369,9 +369,9 @@ class Unibar:
                 dataset=[data_scaled[1]],
                 positions=[self.pos_x],
                 widths=self.width,
-                showmeans=True,
-                showmedians=True,
-                showextrema=True
+                showmeans=False,
+                showmedians=False,
+                showextrema=False
             )
             pc.set_facecolor(facecolors[1])
             pc.set_edgecolor('none')
@@ -388,9 +388,9 @@ class Unibar:
                 dataset=[left_scaled],
                 positions=[self.pos_x],
                 widths=self.width,
-                showmeans=True,
-                showmedians=True,
-                showextrema=True
+                showmeans=False,
+                showmedians=False,
+                showextrema=False
             )
             for pc in parts_left['bodies']:
                 verts = pc.get_paths()[0].vertices
@@ -404,9 +404,9 @@ class Unibar:
                 dataset=[right_scaled],
                 positions=[self.pos_x],
                 widths=self.width,
-                showmeans=True,
-                showmedians=True,
-                showextrema=True
+                showmeans=False,
+                showmedians=False,
+                showextrema=False,
             )
             for pc in parts_right['bodies']:
                 verts = pc.get_paths()[0].vertices
