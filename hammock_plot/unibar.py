@@ -20,10 +20,12 @@ class Unibar:
                  hi_box,
                  num_levels: int,
                  display_type: str,
+                 label_type: str,
                  label_options: dict):
         self.df = df
         self.name = name
         self.display_type = display_type
+        self.label_type = label_type
         self.val_type = val_type          # "np.str_" or "np.floating" or "np.integer"
         self.num_levels = num_levels
         self.unibar = unibar
@@ -92,13 +94,13 @@ class Unibar:
             ))
 
         # Set display type if there is no specified display type
-        if np.issubdtype(dtype, np.number) and self.display_type == "default":
+        if np.issubdtype(dtype, np.number) and self.label_type == "default":
             if len(values) >= 7:
-                self.display_type = "levels"
+                self.label_type = "levels"
             else:
-                self.display_type = "rugplot"
-        elif self.display_type == "default":
-            self.display_type = "rugplot"
+                self.label_type = "values"
+        elif self.label_type == "default":
+            self.label_type = "values"
 
         self.values = values
         return values
@@ -115,7 +117,6 @@ class Unibar:
             self.missing_padding = missing_padding
         if scale_ypos is not None:
             self.scale_ypos = scale_ypos
-
 
     def compute_vertical_positions(self, y_start: float, y_end: float):
         if len(self.values) == 0:
@@ -249,29 +250,29 @@ class Unibar:
 
 
     def draw(self, ax, rectangle_painter=None,
-             color="lightskyblue", bar_unit: float = 1.5,
-             default_highlight_colors: Optional[List[str]] = None):
+             color="lightskyblue", bar_unit: float = 1.5, y_start: int = None, y_end: int = None):
         """
         Template Method for drawing a unibar:
         1. Draw the background according to display_type
-        2. Draw the labels
+        2. Draw the labels according to label_type
         """
         # Step 1: Draw background based on display_type
-        self._draw_background(ax, rectangle_painter, color, bar_unit)
+        self._draw_background(ax, rectangle_painter, bar_unit, y_start, y_end)
 
         # Step 2: Draw labels
         if self.label:
-            self._draw_labels(ax)
+            self._draw_labels(ax, y_start, y_end)
 
         return ax
 
     # ---------- Template Method ----------
-    def _draw_background(self, ax, rectangle_painter, color, bar_unit):
-        if self.display_type in ["rugplot", "levels"]:
-            # self._draw_rectangles(ax, self.values, rectangle_painter, bar_unit)
+    def _draw_background(self, ax, rectangle_painter, bar_unit, y_start, y_end):
+        if self.missing:
+            y_start += self.missing_padding
+
+        if self.display_type == "rugplot":
+            self._draw_rectangles(ax, self.values, rectangle_painter, bar_unit)
             if self.val_type != np.str_:
-                self._draw_violin(ax)
-                # self._draw_boxplot(ax)
                 missing_values = []
                 for val in self.values:
                     if val.id == self.missing_placeholder:
@@ -280,7 +281,9 @@ class Unibar:
             else:
                 self._draw_rectangles(ax, self.values, rectangle_painter, bar_unit)
         elif self.display_type == "violin":
-            self._draw_violin(ax)
+            self._draw_violin(ax, y_start, y_end)
+        elif self.display_type == "box":
+            self._draw_boxplot(ax, y_start, y_end)
         else:
             raise ValueError(f"Unknown display_type: {self.display_type}")
 
@@ -308,59 +311,75 @@ class Unibar:
 
         rectangle_painter.plot(ax, left_pts, right_pts, heights, self.colors, weights, orientation=self.hi_box,zorder=1)
 
-    def _prepare_scaled_data(self):
+    def _prepare_scaled_data(self, y_start, y_end):
         """
-        Shared helper: prepare scaled left/right data and colors for plotting.
-        Returns: (left_scaled, right_scaled, colors)
+        Prepare scaled data and colors for plotting.
+        Each element in data_scaled corresponds to one highlight (color),
+        with the last element holding the non-highlighted data.
+        Expands each Value according to occ_by_colour, then scales numeric
+        values globally into [y_start, y_end].
+        
+        Returns:
+            data_scaled: list of lists, each list is the scaled values for a highlight
+            facecolors: list of colors for each dataset
+            edgecolors: same as facecolors
         """
         if not self.non_missing_vals:
             return [], [], []
 
-        # Determine colors
-        if len(self.colors) == 1:
-            colors = [self.colors[0], self.colors[0]]
-        else:
-            colors = self.colors[:2]
+        n_colors = len(self.colors)
+        data_expanded = [[] for _ in range(n_colors)]
 
-        # Determine bottom and top for scaling
-        bottom_coord = self.y_bottom
-        if self.missing and self.missing_vals:
-            bottom_coord = self.missing_vals[0].vert_centre + getattr(self, "missing_padding", 0)
-        top_coord = self.y_top
-
-        left_data, right_data, numeric_vals = [], [], []
-
+        # Collect all numeric values to compute global min/max
+        all_numeric_vals = []
         for v in self.non_missing_vals:
-            val_numeric = v.numeric if v.numeric is not None else float(v.id)
-            numeric_vals.append(val_numeric)
+            val_numeric = v.numeric
+            all_numeric_vals.append(val_numeric)
 
-            if len(v.occ_by_colour) > 1:
-                left_data.extend([val_numeric] * v.occ_by_colour[1])
-                right_data.extend([val_numeric] * v.occ_by_colour[0])
-            else:
-                right_data.extend([val_numeric] * v.occurrences)
-                left_data.extend([val_numeric] * v.occurrences)
-
-        min_val, max_val = min(numeric_vals), max(numeric_vals)
+        min_val, max_val = min(all_numeric_vals), max(all_numeric_vals)
 
         # Scaling function
         def scale_y(val):
             if max_val == min_val:
-                return (bottom_coord + top_coord) / 2
-            return bottom_coord + (val - min_val) / (max_val - min_val) * (top_coord - bottom_coord)
+                return (y_start + y_end) / 2
+            return y_start + (val - min_val) / (max_val - min_val) * (y_end - y_start)
 
-        left_scaled = [scale_y(d) for d in left_data]
-        right_scaled = [scale_y(d) for d in right_data]
+        # Expand each Value according to occ_by_colour
+        for v in self.non_missing_vals:
+            val_numeric = v.numeric
+            occs = v.occ_by_colour
 
-        return left_scaled, right_scaled, colors
+            # Pad occs if fewer than colors
+            if len(occs) < n_colors:
+                occs = occs + [0]*(n_colors - len(occs))
 
-    def _draw_violin(self, ax):
-        left_scaled, right_scaled, colors = self._prepare_scaled_data()
-        if not left_scaled and not right_scaled:
-            return
+            for i, occ in enumerate(occs):
+                data_expanded[i].extend([val_numeric] * occ)
 
-        # Left half
-        if left_scaled:
+        # Scale each dataset
+        data_scaled = [[scale_y(val) for val in dataset] for dataset in data_expanded]
+
+        return data_scaled, self.colors, self.colors
+
+    def _draw_violin(self, ax, y_start, y_end):
+        data_scaled, facecolors, edgecolors = self._prepare_scaled_data(y_start, y_end)
+        if len(data_scaled) == 1:
+            # no highlight variable (both halves)
+            parts_right = ax.violinplot(
+                dataset=[data_scaled[1]],
+                positions=[self.pos_x],
+                widths=self.width,
+                showmeans=False,
+                showmedians=False,
+                showextrema=False
+            )
+            pc.set_facecolor(facecolors[1])
+            pc.set_edgecolor(edgecolors[1])
+            pc.set_alpha(0.7)
+        else: # draw one half
+            left_scaled = data_scaled[1]
+            right_scaled = data_scaled[0]
+            # Left half
             parts_left = ax.violinplot(
                 dataset=[left_scaled],
                 positions=[self.pos_x],
@@ -372,12 +391,11 @@ class Unibar:
             for pc in parts_left['bodies']:
                 verts = pc.get_paths()[0].vertices
                 verts[:, 0] = np.clip(verts[:, 0], -np.inf, self.pos_x)
-                pc.set_facecolor(colors[1])
-                pc.set_edgecolor(colors[1])
+                pc.set_facecolor(facecolors[1])
+                pc.set_edgecolor(edgecolors[1])
                 pc.set_alpha(0.7)
 
-        # Right half
-        if right_scaled:
+            # Right half
             parts_right = ax.violinplot(
                 dataset=[right_scaled],
                 positions=[self.pos_x],
@@ -389,102 +407,115 @@ class Unibar:
             for pc in parts_right['bodies']:
                 verts = pc.get_paths()[0].vertices
                 verts[:, 0] = np.clip(verts[:, 0], self.pos_x, np.inf)
-                pc.set_facecolor(colors[0])
-                pc.set_edgecolor(colors[0])
+                pc.set_facecolor(facecolors[0])
+                pc.set_edgecolor(edgecolors[0])
                 pc.set_alpha(0.7)
 
-    def _draw_boxplot(self, ax):
-        left_scaled, right_scaled, colors = self._prepare_scaled_data()
-        if not left_scaled and not right_scaled:
+    def _draw_boxplot(self, ax, y_start, y_end):
+        data_scaled, facecolors, edgecolors = self._prepare_scaled_data(y_start, y_end)
+        n = len(data_scaled)
+        if n == 0:
             return
 
-        # Half-width for split look
-        half_width = self.width / 2
+        # Ensure colors match number of boxes
+        if len(facecolors) < n:
+            facecolors = (facecolors * n)[:n]
+        if len(edgecolors) < n:
+            edgecolors = (edgecolors * n)[:n]
 
-        # Left half (highlighted)
-        if left_scaled:
-            bp_left = ax.boxplot(
-                x=[left_scaled],
-                positions=[self.pos_x - half_width/2],
-                widths=half_width,
+        # Box widths (fit inside self.width with padding)
+        width_per_box = self.width / n * 0.8
+
+        # offsets left-to-right, reversed: leftmost = largest index, rightmost = smallest index
+        offsets = np.linspace(-self.width/2 + width_per_box/2, self.width/2 - width_per_box/2, n)
+        offsets = offsets[::-1]  # reverse so index 0 goes to right, index n-1 goes to left
+
+        for i, values in enumerate(data_scaled):
+            if not values:
+                continue
+
+            bp = ax.boxplot(
+                x=[values],
+                positions=[self.pos_x + offsets[i]],
+                widths=width_per_box,
                 vert=True,
                 patch_artist=True,
                 manage_ticks=False,
-                showfliers=False  # 🔥 removes weird circles
+                showfliers=True
             )
-            for element in ['boxes', 'whiskers', 'caps', 'medians']:
-                for artist in bp_left[element]:
-                    artist.set_color(colors[1])
-            for patch in bp_left['boxes']:
-                patch.set_facecolor(colors[1])
+
+            # Set edge colors
+            for element in ['whiskers', 'caps', 'medians']:
+                for artist in bp[element]:
+                    artist.set_color(edgecolors[i])
+
+            # Set face colors
+            for patch in bp['boxes']:
+                patch.set_facecolor(facecolors[i])
+                patch.set_edgecolor(edgecolors[i])
                 patch.set_alpha(0.7)
 
-        # Right half (non-highlighted)
-        if right_scaled:
-            bp_right = ax.boxplot(
-                x=[right_scaled],
-                positions=[self.pos_x + half_width/2],
-                widths=half_width,
-                vert=True,
-                patch_artist=True,
-                manage_ticks=False,
-                showfliers=False
-            )
-            for element in ['boxes', 'whiskers', 'caps', 'medians']:
-                for artist in bp_right[element]:
-                    artist.set_color(colors[0])
-            for patch in bp_right['boxes']:
-                patch.set_facecolor(colors[0])
-                patch.set_alpha(0.7)
 
     # ---------- Label Drawing ----------
-    def _draw_labels(self, ax):
-        """
-        Draw labels depending on variable type, missing data, and numeric levels.
-        """
+    def _draw_labels(self, ax, y_start, y_end):
         x = self.pos_x
-
         # Draw missing labels first at proper bottom offset
         if self.missing_vals:
             for mv in self.missing_vals:
                 # Place missing labels just above the bottom with missing_padding
-                ax.text(x, mv.vert_centre, "missing", ha='center', va='center', **(self.label_options or {}))
+                ax.text(x, mv.vert_centre, self.missing_placeholder, ha='center', va='center', **(self.label_options or {}))
+        
+        if self.label_type == "values":
+            self._draw_value_labels(ax) #draws labels directly according to the values
+        elif self.label_type == "levels":
+            self._draw_level_labels(ax, y_start, y_end)
+        else:
+            raise ValueError(f"invalid label_type {self.label_type}")
 
-        if self.display_type == "rugplot":
-            # Draw non-missing data labels
-            for val in self.non_missing_vals:
-                ax.text(x, val.vert_centre, self._get_formatted_label(val.dtype, val.id), ha='center', va='center', **(self.label_options or {}))
+    # --------- Label drawing directly onto values --------
+    def _draw_value_labels(self, ax):
+        for val in self.non_missing_vals:
+            ax.text(self.pos_x, val.vert_centre, self._get_formatted_label(val.dtype, val.id), ha='center', va='center', **(self.label_options or {}))
 
+    # -------- Label drawing - levels (starting from y_start and ending at y_end) ------
+    def _draw_level_labels(self, ax, y_start, y_end):
         # Draw numeric levels if display_type="levels"
-        if self.display_type == "levels" and np.issubdtype(self.val_type, np.number) and self.non_missing_vals:
-            min_val, max_val = self.range if self.range else (min(v.numeric for v in self.non_missing_vals),
-                                                            max(v.numeric for v in self.non_missing_vals))
-            num_levels = self.num_levels
+        min_val, max_val = self.range if self.range else (min(v.numeric for v in self.non_missing_vals),
+                                                        max(v.numeric for v in self.non_missing_vals))
+        num_levels = self.num_levels
 
-            # Handle integer vs float
-            if self.val_type == np.floating:
-                level_vals = np.linspace(min_val, max_val, num_levels)
-            elif self.val_type == np.integer:
-                possible_vals = np.arange(int(np.floor(min_val)), int(np.ceil(max_val)) + 1)
-                if len(possible_vals) <= num_levels:
-                    level_vals = possible_vals
-                else:
-                    indices = np.linspace(0, len(possible_vals) - 1, num_levels, dtype=int)
-                    level_vals = possible_vals[indices]
-
+        # Handle integer vs float
+        if self.val_type == np.floating:
+            level_vals = np.linspace(min_val, max_val, num_levels)
+        elif self.val_type == np.integer:
+            possible_vals = np.arange(int(np.floor(min_val)), int(np.ceil(max_val)) + 1)
+            if len(possible_vals) <= num_levels:
+                level_vals = possible_vals
+            else:
+                indices = np.linspace(0, len(possible_vals) - 1, num_levels, dtype=int)
+                level_vals = possible_vals[indices]
+        
+        if self.display_type == "rugplot":
             # Compute coordinate range based on first and last non-missing bar centers
             first_center = self.non_missing_vals[0].vert_centre
             last_center = self.non_missing_vals[-1].vert_centre
-            bottom_coord =  (self.y_bottom + self.min_max_pos[0]) if self.min_max_pos else first_center
-            if self.missing and self.min_max_pos and bottom_coord == self.y_bottom + self.min_max_pos[0]:
-                bottom_coord += self.missing_padding
-            top_coord = (self.y_top - self.min_max_pos[1]) if self.min_max_pos else last_center
             
-            level_coords = [bottom_coord + (top_coord - bottom_coord) * (v - min_val) / (max_val - min_val) 
-                            for v in level_vals]
+            bottom_coord =  (self.y_bottom + self.min_max_pos[0]) if self.min_max_pos else first_center
+            top_coord = (self.y_top - self.min_max_pos[1]) if self.min_max_pos else last_center
+        else: # "box" or "violin" display types
+            bottom_coord = y_start
+            top_coord = y_end
+    
+        if self.missing and self.min_max_pos and bottom_coord == self.y_bottom + self.min_max_pos[0]:
+            bottom_coord += self.missing_padding
+        elif self.missing and self.display_type in ["violin", "box"]:
+            bottom_coord += self.missing_padding
+        
+        level_coords = [bottom_coord + (top_coord - bottom_coord) * (v - min_val) / (max_val - min_val) 
+                        for v in level_vals]
 
-            for tick_val, tick_y in zip(level_vals, level_coords):
-                ax.text(x, tick_y, self._get_formatted_label(self.val_type, tick_val), ha='center', va='center', **(self.label_options or {}))
+        for tick_val, tick_y in zip(level_vals, level_coords):
+            ax.text(self.pos_x, tick_y, self._get_formatted_label(self.val_type, tick_val), ha='center', va='center', **(self.label_options or {}))
     
     def _get_formatted_label(self, datatype, value):
         # if the label is a string

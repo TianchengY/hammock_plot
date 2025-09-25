@@ -228,8 +228,9 @@ class Figure:
         for uni in self.unibars:
             uni.draw(ax,
                     rectangle_painter=rect_painter,
-                    color=self.default_color,
-                    bar_unit=self.bar_unit)
+                    bar_unit=self.bar_unit,
+                    y_start=self.y_start,
+                    y_end=self.y_end)
         return ax
 
     def draw_connections(self, ax=None):
@@ -322,6 +323,7 @@ class Figure:
                         var_list: List[str],
                         value_order: Dict[str, List[str]],
                         numerical_var_levels:  Dict[str, int],
+                        numerical_display_type: Dict[str, str],
                         missing: bool,
                         missing_placeholder: str,
                         label: bool,
@@ -410,15 +412,23 @@ class Figure:
             else:
                 uniq = uni_series.dropna().unique().tolist()
                 order = uniq
+
+            display_type = "rugplot" # default
+            if numerical_display_type and v in numerical_display_type:
+                display_type = numerical_display_type[v]
             
-            display_type = "default"
+            label_type = "default"
+            
+            if display_type == "violin" or display_type == "box":
+                label_type = "levels"
+
             num_levels = 7
-            if numerical_var_levels and v in numerical_var_levels.keys():
+            if display_type == "rugplot" and numerical_var_levels and v in numerical_var_levels.keys():
                 if numerical_var_levels[v]:
-                    display_type="levels"
+                    label_type="levels"
                     num_levels = numerical_var_levels[v]
                 else:
-                    display_type = "rugplot"
+                    label_type = "values"
 
             label_opts = label_options[v] if label_options and v in label_options else None
 
@@ -435,6 +445,7 @@ class Figure:
                 colors=colors,
                 hi_box=hi_box,
                 display_type = display_type,
+                label_type = label_type,
                 num_levels = num_levels,
                 label_options=label_opts,
             )

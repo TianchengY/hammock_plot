@@ -19,6 +19,7 @@ class Hammock:
              var: List[str] = None,
              value_order: Dict[str, List[str]] = None,
              numerical_var_levels: Dict[str, int] = None,
+             numerical_display_type: Dict[str, str] = None,
              missing: bool = False,
              missing_placeholder: str = Defaults.MISSING_PLACEHOLDER,
              label: bool = True,
@@ -73,6 +74,24 @@ class Hammock:
                 else: var_types[varname] = np.floating
             else:
                 var_types[varname] = np.str_
+        
+        if numerical_display_type:
+            # invalid variable name passed to numerical_display_type dictionary
+            if not set(numerical_display_type.keys()).issubset(set(var)):
+                error_values = set(numerical_display_type.keys()) - set(var)
+                raise ValueError(
+                    f'The value: {error_values} in numerical_display_type is not in data. '
+                )
+
+            for variable, display_type in numerical_display_type.items():
+                if (display_type == "box" or display_type == "violin") and var_types[variable] == np.str_:
+                    raise ValueError(
+                        f'Cannot assign display type {display_type} to categorical variable {variable}.'
+                    )
+                if not display_type in ["violin", "box", "rugplot"]:
+                    raise ValueError(
+                        'All display types must be one of: ["violin", "box", "rugplot"]'
+                    )
     
         if numerical_var_levels:
             # invalid variable name passed to numerical_var_levels dictionary
@@ -217,6 +236,9 @@ class Hammock:
         num_hi_colors = 1 if isinstance(hi_value, str) else num_hi_colors
         num_hi_colors += 1 if hi_missing else 0
 
+        if numerical_display_type and"violin" in numerical_display_type.values() and num_hi_colors > 2:
+            warnings.warn("Violin plots will only display unhighlighted values and ONE highlighted value.")
+
         colors = colors[0:num_hi_colors] if len(colors) >= num_hi_colors else colors
         # default colour in colors
         if hi_var != None and default_color in colors:
@@ -247,6 +269,7 @@ class Hammock:
             var_list=var,
             value_order=value_order,
             numerical_var_levels=numerical_var_levels,
+            numerical_display_type=numerical_display_type,
             missing=missing,
             missing_placeholder=(missing_placeholder if missing else None),
             label=label,
