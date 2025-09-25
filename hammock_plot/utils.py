@@ -103,7 +103,7 @@ def resolve_ordering(orders):
     else:
         return None
 
-def edge_color_from_face(facecolor, delta=0.3):
+def edge_color_from_face(facecolor, delta=0.5):
     """
     Compute an edge color based on a face color by adjusting brightness.
     

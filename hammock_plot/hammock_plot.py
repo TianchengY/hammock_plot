@@ -90,7 +90,7 @@ class Hammock:
                     )
                 if not display_type in ["violin", "box", "rugplot"]:
                     raise ValueError(
-                        'All display types must be one of: ["violin", "box", "rugplot"]'
+                        f'All display types must be one of: ["violin", "box", "rugplot"]; invalid display type {display_type}'
                     )
     
         if numerical_var_levels:
