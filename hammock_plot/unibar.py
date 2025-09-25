@@ -366,16 +366,18 @@ class Unibar:
         if len(data_scaled) == 1:
             # no highlight variable (both halves)
             parts = ax.violinplot(
-                dataset=[data_scaled[1]],
+                dataset=[data_scaled[0]],
                 positions=[self.pos_x],
                 widths=self.width,
                 showmeans=False,
                 showmedians=False,
-                showextrema=False
+                showextrema=False,
+                bw_method=0.23,
             )
-            pc.set_facecolor(facecolors[1])
-            pc.set_edgecolor('none')
-            pc.set_alpha(0.7)
+            for pc in parts['bodies']:
+                pc.set_facecolor(facecolors[0])
+                pc.set_edgecolor('none')
+                pc.set_alpha(0.7)
             # Set line colors
             for key in ['cmeans', 'cmedians', 'cmins', 'cmaxes']:
                 if key in parts and parts[key] is not None:
