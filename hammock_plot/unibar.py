@@ -3,7 +3,7 @@ from typing import List, Dict, Tuple, Optional
 import numpy as np
 import matplotlib.pyplot as plt
 from value import Value
-from utils import Defaults
+from utils import Defaults, edge_color_from_face
 
 class Unibar:
     def __init__(self,
@@ -322,7 +322,7 @@ class Unibar:
         Returns:
             data_scaled: list of lists, each list is the scaled values for a highlight
             facecolors: list of colors for each dataset
-            edgecolors: same as facecolors
+            edgecolors: uses function in utils.py to make a darker/lighter edge colour relative to the face colour
         """
         if not self.non_missing_vals:
             return [], [], []
@@ -359,23 +359,27 @@ class Unibar:
         # Scale each dataset
         data_scaled = [[scale_y(val) for val in dataset] for dataset in data_expanded]
 
-        return data_scaled, self.colors, self.colors
+        return data_scaled, self.colors, [edge_color_from_face(color) for color in self.colors]
 
     def _draw_violin(self, ax, y_start, y_end):
         data_scaled, facecolors, edgecolors = self._prepare_scaled_data(y_start, y_end)
         if len(data_scaled) == 1:
             # no highlight variable (both halves)
-            parts_right = ax.violinplot(
+            parts = ax.violinplot(
                 dataset=[data_scaled[1]],
                 positions=[self.pos_x],
                 widths=self.width,
-                showmeans=False,
-                showmedians=False,
-                showextrema=False
+                showmeans=True,
+                showmedians=True,
+                showextrema=True
             )
             pc.set_facecolor(facecolors[1])
-            pc.set_edgecolor(edgecolors[1])
+            pc.set_edgecolor('none')
             pc.set_alpha(0.7)
+            # Set line colors
+            for key in ['cmeans', 'cmedians', 'cmins', 'cmaxes']:
+                if key in parts and parts[key] is not None:
+                    parts[key].set_color(edgecolors[0])
         else: # draw one half
             left_scaled = data_scaled[1]
             right_scaled = data_scaled[0]
@@ -384,15 +388,15 @@ class Unibar:
                 dataset=[left_scaled],
                 positions=[self.pos_x],
                 widths=self.width,
-                showmeans=False,
-                showmedians=False,
-                showextrema=False
+                showmeans=True,
+                showmedians=True,
+                showextrema=True
             )
             for pc in parts_left['bodies']:
                 verts = pc.get_paths()[0].vertices
                 verts[:, 0] = np.clip(verts[:, 0], -np.inf, self.pos_x)
                 pc.set_facecolor(facecolors[1])
-                pc.set_edgecolor(edgecolors[1])
+                pc.set_edgecolor('none')
                 pc.set_alpha(0.7)
 
             # Right half
@@ -400,22 +404,34 @@ class Unibar:
                 dataset=[right_scaled],
                 positions=[self.pos_x],
                 widths=self.width,
-                showmeans=False,
-                showmedians=False,
-                showextrema=False
+                showmeans=True,
+                showmedians=True,
+                showextrema=True
             )
             for pc in parts_right['bodies']:
                 verts = pc.get_paths()[0].vertices
                 verts[:, 0] = np.clip(verts[:, 0], self.pos_x, np.inf)
                 pc.set_facecolor(facecolors[0])
-                pc.set_edgecolor(edgecolors[0])
+                pc.set_edgecolor('none')
                 pc.set_alpha(0.7)
+            
+            # set colour of means, medians, extrema
+            for key in ['cmeans', 'cmedians', 'cmins', 'cmaxes']:
+                if key in parts_right and parts_right[key] is not None:
+                    parts_right[key].set_color(edgecolors[0])
+                if key in parts_left and parts_left[key] is not None:
+                    parts_left[key].set_color(edgecolors[1])
 
-    def _draw_boxplot(self, ax, y_start, y_end):
+    def _draw_boxplot(self, ax, y_start, y_end, gap_ratio=0.02):
         data_scaled, facecolors, edgecolors = self._prepare_scaled_data(y_start, y_end)
         n = len(data_scaled)
         if n == 0:
             return
+
+        # Reverse all lists so visual order = highlighted 2 -> highlighted 1 -> not highlighted
+        data_scaled = data_scaled[::-1]
+        facecolors = facecolors[::-1]
+        edgecolors = edgecolors[::-1]
 
         # Ensure colors match number of boxes
         if len(facecolors) < n:
@@ -423,21 +439,35 @@ class Unibar:
         if len(edgecolors) < n:
             edgecolors = (edgecolors * n)[:n]
 
-        # Box widths (fit inside self.width with padding)
-        width_per_box = self.width / n * 0.8
+        # Calculate proportional widths
+        num_points = [len(values) for values in data_scaled]
+        total_points = sum(num_points)
+        if total_points == 0:
+            return
+        gap = self.width * gap_ratio
+        box_widths = [self.width * (cnt / total_points) for cnt in num_points]
 
-        # offsets left-to-right, reversed: leftmost = largest index, rightmost = smallest index
-        offsets = np.linspace(-self.width/2 + width_per_box/2, self.width/2 - width_per_box/2, n)
-        offsets = offsets[::-1]  # reverse so index 0 goes to right, index n-1 goes to left
+        # Compute total width including gaps
+        total_width = sum(box_widths) + gap * (n - 1)
+        start_x = self.pos_x - total_width / 2  # leftmost edge of first box
 
+        # Compute offsets sequentially
+        offsets = []
+        current_x = start_x
+        for w in box_widths:
+            center = current_x + w / 2
+            offsets.append(center)
+            current_x += w + gap
+
+        # Draw boxes
         for i, values in enumerate(data_scaled):
             if not values:
                 continue
 
             bp = ax.boxplot(
                 x=[values],
-                positions=[self.pos_x + offsets[i]],
-                widths=width_per_box,
+                positions=[offsets[i]],
+                widths=box_widths[i],
                 vert=True,
                 patch_artist=True,
                 manage_ticks=False,

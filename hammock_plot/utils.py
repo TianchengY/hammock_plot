@@ -1,5 +1,7 @@
 import re
 from collections import defaultdict, deque
+import colorsys
+import matplotlib.colors as mcolors
 
 class Defaults:
     # General
@@ -100,3 +102,37 @@ def resolve_ordering(orders):
         return order
     else:
         return None
+
+def edge_color_from_face(facecolor, delta=0.3):
+    """
+    Compute an edge color based on a face color by adjusting brightness.
+    
+    Parameters:
+        facecolor: str or tuple
+            Hex string (e.g. '#FFAA00') or RGB tuple (r,g,b) in [0,1].
+        delta: float
+            How much to increase/decrease brightness.
+            If face is light, brightness is reduced by delta.
+            If face is dark, brightness is increased by delta.
+    
+    Returns:
+        edgecolor: RGB tuple (r,g,b)
+    """
+    # Convert hex to RGB if necessary
+    if isinstance(facecolor, str):
+        rgb = mcolors.to_rgb(facecolor)
+    else:
+        rgb = facecolor
+
+    # Convert RGB to HSV
+    h, s, v = colorsys.rgb_to_hsv(*rgb)
+
+    # Adjust brightness based on current value
+    if v > 0.6:  # light color
+        v = max(0, v - delta)
+    else:        # dark color
+        v = min(1, v + delta)
+
+    # Convert back to RGB
+    edge_rgb = colorsys.hsv_to_rgb(h, s, v)
+    return edge_rgb
