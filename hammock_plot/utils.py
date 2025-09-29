@@ -22,6 +22,8 @@ class Defaults:
     GAP_BTWN_UNI_MULTI: float = 2
     MIN_MULTI_WIDTH: float = 3 # in pixels
     SPACE_ABOVE_MISSING: float = 2
+    NUM_LEVELS = 7
+    ALPHA = 0.7
 
 
 def clean_expression(expr: str) -> str:

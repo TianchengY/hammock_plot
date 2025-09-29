@@ -21,7 +21,8 @@ class Unibar:
                  num_levels: int,
                  display_type: str,
                  label_type: str,
-                 label_options: dict):
+                 label_options: dict,
+                 alpha:float,):
         self.df = df
         self.name = name
         self.display_type = display_type
@@ -43,6 +44,7 @@ class Unibar:
 
         self.hi_box = hi_box
         self.colors = colors
+        self.alpha = alpha
 
         # for same_scale variables
         self.range = None # if numerical, will be a min val and a max val
@@ -312,7 +314,7 @@ class Unibar:
             right_pts.append((self.pos_x + half_label_space, val.vert_centre))
             weights.append(val.occ_by_colour)
 
-        rectangle_painter.plot(ax, left_pts, right_pts, heights, self.colors, weights, orientation=self.hi_box,zorder=1)
+        rectangle_painter.plot(ax, left_pts, right_pts, heights, self.colors, weights, orientation=self.hi_box,zorder=1, alpha=self.alpha)
 
     def _prepare_scaled_data(self, y_start, y_end):
         """
@@ -380,7 +382,7 @@ class Unibar:
             for pc in parts['bodies']:
                 pc.set_facecolor(facecolors[0])
                 pc.set_edgecolor('none')
-                pc.set_alpha(0.7)
+                pc.set_alpha(self.alpha)
             # Set line colors
             for key in ['cmeans', 'cmedians', 'cmins', 'cmaxes']:
                 if key in parts and parts[key] is not None:
@@ -402,7 +404,7 @@ class Unibar:
                 verts[:, 0] = np.clip(verts[:, 0], -np.inf, self.pos_x)
                 pc.set_facecolor(facecolors[1])
                 pc.set_edgecolor('none')
-                pc.set_alpha(0.7)
+                pc.set_alpha(self.alpha)
 
             # Right half
             parts_right = ax.violinplot(
@@ -418,7 +420,7 @@ class Unibar:
                 verts[:, 0] = np.clip(verts[:, 0], self.pos_x, np.inf)
                 pc.set_facecolor(facecolors[0])
                 pc.set_edgecolor('none')
-                pc.set_alpha(0.7)
+                pc.set_alpha(self.alpha)
             
             # set colour of means, medians, extrema
             for key in ['cmeans', 'cmedians', 'cmins', 'cmaxes']:
@@ -494,7 +496,7 @@ class Unibar:
             for patch in bp['boxes']:
                 patch.set_facecolor(facecolors[i])
                 patch.set_edgecolor(edgecolors[i])
-                patch.set_alpha(0.7)
+                patch.set_alpha(self.alpha)
 
 
     # ---------- Label Drawing ----------

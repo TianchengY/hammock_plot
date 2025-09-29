@@ -40,6 +40,7 @@ class Hammock:
              height: float = 10,
              width: float = 15,
              min_bar_height: float = Defaults.MIN_BAR_HEIGHT,
+             alpha: float = Defaults.ALPHA,
 
              # Other
              shape: str = "rectangle",
@@ -63,6 +64,13 @@ class Hammock:
         if space == 1:
             warnings.warn("Tip: To leave a bit of a gap between the univariate bars, set space to something close to 1 but not quite one (ex 0.9)")
         
+        if alpha < 0:
+            warnings.warn("alpha < 0. Value has been clamped to 0.")
+            alpha = 0
+        elif alpha > 1:
+            warnings.warn("alpha > 1. Value has been clamped to 1.")
+            alpha = 1
+
         # make dictionary with variable types
         var_types = {}
             
@@ -292,6 +300,7 @@ class Hammock:
             uni_fraction=uni_fraction,
             min_bar_height=min_bar_height,
             space=space,
+            alpha=alpha,
             
             # Other
             label_options=label_options,

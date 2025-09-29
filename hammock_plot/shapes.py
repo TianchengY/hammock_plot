@@ -3,6 +3,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Iterable
 import matplotlib.pyplot as plt
+from utils import Defaults
 
 class FigureBase(ABC):
     """
@@ -21,7 +22,8 @@ class FigureBase(ABC):
             colors: List[str],
             weights: List[List[float]],   # per-shape weights
             orientation: str = "vertical",
-            zorder: int = 0):
+            zorder: int = 0,
+            alpha: float = Defaults.ALPHA):
         """
         Draw polygons (rectangles or parallelograms) with segmented coloring.
 
@@ -60,7 +62,7 @@ class FigureBase(ABC):
                     rb = right_top + (right_bot - right_top) * f1
                     poly_x_slice = [lt[0], lb[0], rb[0], rt[0]]
                     poly_y_slice = [lt[1], lb[1], rb[1], rt[1]]
-                    ax.fill(poly_x_slice, poly_y_slice, color=col, edgecolor=None, zorder=zorder)
+                    ax.fill(poly_x_slice, poly_y_slice, color=col, edgecolor=None, zorder=zorder,alpha=alpha)
 
             else:  # horizontal split (vertical bars)
                 top_left    = np.array([poly_x[0], poly_y[0]])
@@ -83,7 +85,7 @@ class FigureBase(ABC):
                     br = bot_left  + (bot_right - bot_left) * f1
                     poly_x_slice = [tl[0], tr[0], br[0], bl[0]]
                     poly_y_slice = [tl[1], tr[1], br[1], bl[1]]
-                    ax.fill(poly_x_slice, poly_y_slice, color=col, edgecolor=None, zorder=zorder)
+                    ax.fill(poly_x_slice, poly_y_slice, color=col, edgecolor=None, zorder=zorder, alpha=alpha)
 
                 # Draw default color last (topmost / right side)
                 tl = top_left + (top_right - top_left) * cum
@@ -92,7 +94,7 @@ class FigureBase(ABC):
                 br = bot_right
                 poly_x_slice = [tl[0], tr[0], br[0], bl[0]]
                 poly_y_slice = [tl[1], tr[1], br[1], bl[1]]
-                ax.fill(poly_x_slice, poly_y_slice, color=default_col, edgecolor=None, zorder=zorder)
+                ax.fill(poly_x_slice, poly_y_slice, color=default_col, edgecolor=None, zorder=zorder, alpha=alpha)
 
         return ax
 

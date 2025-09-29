@@ -343,6 +343,7 @@ class Figure:
                         uni_fraction: float,
                         min_bar_height: float,
                         space: float,
+                        alpha: float,
 
                         # Other
                         label_options: dict,
@@ -419,7 +420,7 @@ class Figure:
             # display_type = numerical_display_type[i]
             label_type = "default"
 
-            num_levels = 7 # default num levels
+            num_levels = Defaults.NUM_LEVELS # default num levels
 
             if display_type == "violin" or display_type == "box":
                 label_type = "levels"
@@ -449,6 +450,7 @@ class Figure:
                 label_type = label_type,
                 num_levels = num_levels,
                 label_options=label_opts,
+                alpha = alpha
             )
 
             fig.add_unibar(uni)
