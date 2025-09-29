@@ -2,8 +2,8 @@
 from typing import List, Dict, Tuple, Optional
 import numpy as np
 import matplotlib.pyplot as plt
-from .value import Value
-from .utils import Defaults, edge_color_from_face
+from hammock_plot.value import Value
+from hammock_plot.utils import Defaults, edge_color_from_face
 
 class Unibar:
     def __init__(self,
@@ -21,8 +21,7 @@ class Unibar:
                  num_levels: int,
                  display_type: str,
                  label_type: str,
-                 label_options: dict,
-                 alpha:float,):
+                 label_options: dict):
         self.df = df
         self.name = name
         self.display_type = display_type
@@ -44,7 +43,6 @@ class Unibar:
 
         self.hi_box = hi_box
         self.colors = colors
-        self.alpha = alpha
 
         # for same_scale variables
         self.range = None # if numerical, will be a min val and a max val
@@ -251,13 +249,15 @@ class Unibar:
             
 
 
-    def draw(self, ax, rectangle_painter=None,
+    def draw(self, ax, alpha, rectangle_painter=None,
              color="lightskyblue", bar_unit: float = 1.5, y_start: int = None, y_end: int = None):
         """
         Template Method for drawing a unibar:
         1. Draw the background according to display_type
         2. Draw the labels according to label_type
         """
+        self.alpha = alpha
+
         # Step 1: Draw background based on display_type
         self._draw_background(ax, rectangle_painter, bar_unit, y_start, y_end)
 
@@ -284,7 +284,7 @@ class Unibar:
             y_end = self.non_missing_vals[-1].vert_centre
 
         if self.display_type == "rugplot":
-            self._draw_rectangles(ax, self.values, rectangle_painter, bar_unit)
+            self._draw_rectangles(ax, self.non_missing_vals, rectangle_painter, bar_unit)
         elif self.display_type == "violin":
             self._draw_violin(ax, y_start, y_end)
         elif self.display_type == "box":
@@ -314,7 +314,7 @@ class Unibar:
             right_pts.append((self.pos_x + half_label_space, val.vert_centre))
             weights.append(val.occ_by_colour)
 
-        rectangle_painter.plot(ax, left_pts, right_pts, heights, self.colors, weights, orientation=self.hi_box,zorder=1, alpha=self.alpha)
+        rectangle_painter.plot(ax, self.alpha, left_pts, right_pts, heights, self.colors, weights, orientation=self.hi_box,zorder=1)
 
     def _prepare_scaled_data(self, y_start, y_end):
         """

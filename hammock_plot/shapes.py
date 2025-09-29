@@ -3,7 +3,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Iterable
 import matplotlib.pyplot as plt
-from .utils import Defaults
+from hammock_plot.utils import Defaults
 
 class FigureBase(ABC):
     """
@@ -16,14 +16,14 @@ class FigureBase(ABC):
         return x[order], y[order]
 
     def plot(self, ax,
+            alpha: float,
             left_center_pts: List[Tuple[float, float]],
             right_center_pts: List[Tuple[float, float]],
             heights: List[float],
             colors: List[str],
             weights: List[List[float]],   # per-shape weights
             orientation: str = "vertical",
-            zorder: int = 0,
-            alpha: float = Defaults.ALPHA):
+            zorder: int = 0,):
         """
         Draw polygons (rectangles or parallelograms) with segmented coloring.
 

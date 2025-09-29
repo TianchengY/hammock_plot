@@ -2,12 +2,12 @@
 from typing import List, Dict, Tuple, Optional, Any
 import matplotlib.pyplot as plt
 import numpy as np
-from .shapes import Rectangle, Parallelogram, FigureBase
-from .unibar import Unibar
-from .value import Value
+from hammock_plot.shapes import Rectangle, Parallelogram, FigureBase
+from hammock_plot.unibar import Unibar
+from hammock_plot.value import Value
 import pandas as pd
-from .utils import clean_expression, is_in_range, validate_expression
-from .utils import Defaults
+from hammock_plot.utils import clean_expression, is_in_range, validate_expression
+from hammock_plot.utils import Defaults
 import re
 
 class Figure:
@@ -215,7 +215,7 @@ class Figure:
         self.scale_y = self.scale * self.height
 
 
-    def draw_unibars(self, ax=None, label_opts: Dict = None):
+    def draw_unibars(self, alpha, ax=None):
         if ax is None:
             fig, ax = plt.subplots(figsize=(self.width, self.height))
         ax.set_xlim(0, self.scale * self.width)
@@ -230,10 +230,11 @@ class Figure:
                     rectangle_painter=rect_painter,
                     bar_unit=self.bar_unit,
                     y_start=self.y_start,
-                    y_end=self.y_end)
+                    y_end=self.y_end,
+                    alpha=alpha)
         return ax
 
-    def draw_connections(self, ax=None):
+    def draw_connections(self, alpha, ax=None):
         # nothing to draw if no multi width (no room for connections)
         if self.multi_width == 0:
             return ax
@@ -306,6 +307,7 @@ class Figure:
             if left_center_pts:
                 rect_painter.plot(
                     ax=ax,
+                    alpha=alpha,
                     left_center_pts=left_center_pts,
                     right_center_pts=right_center_pts,
                     heights=heights,
@@ -343,13 +345,13 @@ class Figure:
                         uni_fraction: float,
                         min_bar_height: float,
                         space: float,
-                        alpha: float,
 
                         # Other
                         label_options: dict,
                         shape_type,
                         same_scale,
                         same_scale_type,
+                        var_types,
                     ):
 
         fig = cls(width = width,
@@ -374,22 +376,22 @@ class Figure:
 
         data_df = df.copy()
         
-        # Precompute unibar data types
-        var_types = {}
+        # # Precompute unibar data types
+        # var_types = {}
 
-        for varname in var_list:
-            temp = data_df[varname].dropna()
-            datatype = temp.dtype
-            if np.issubdtype(datatype, np.integer):
-                var_types[varname] = np.integer
-            elif np.issubdtype(datatype, np.number):
-                # Check if all numbers are effectively integers
-                if (temp == temp.astype(int)).all():
-                    var_types[varname] = np.integer
-                else:
-                    var_types[varname] = np.floating
-            else:
-                var_types[varname] = np.str_
+        # for varname in var_list:
+        #     temp = data_df[varname].dropna()
+        #     datatype = temp.dtype
+        #     if np.issubdtype(datatype, np.integer):
+        #         var_types[varname] = np.integer
+        #     elif np.issubdtype(datatype, np.number):
+        #         # Check if all numbers are effectively integers
+        #         if (temp == temp.astype(int)).all():
+        #             var_types[varname] = np.integer
+        #         else:
+        #             var_types[varname] = np.floating
+        #     else:
+        #         var_types[varname] = np.str_
         
         if missing_placeholder is not None:
             data_df = data_df.fillna(missing_placeholder)
@@ -449,8 +451,7 @@ class Figure:
                 display_type = display_type,
                 label_type = label_type,
                 num_levels = num_levels,
-                label_options=label_opts,
-                alpha = alpha
+                label_options=label_opts
             )
 
             fig.add_unibar(uni)
