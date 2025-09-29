@@ -418,16 +418,17 @@ class Figure:
                 display_type = numerical_display_type[v]
             # display_type = numerical_display_type[i]
             label_type = "default"
-            
+
+            num_levels = 7 # default num levels
+
             if display_type == "violin" or display_type == "box":
                 label_type = "levels"
 
-            num_levels = 7
-            if display_type == "rugplot" and numerical_var_levels and v in numerical_var_levels.keys():
+            if numerical_var_levels and v in numerical_var_levels.keys():
                 if numerical_var_levels[v]:
                     label_type="levels"
                     num_levels = numerical_var_levels[v]
-                else:
+                elif display_type == "rugplot": # v: None - labels are by value only if display is rugplot
                     label_type = "values"
 
             label_opts = label_options[v] if label_options and v in label_options else None

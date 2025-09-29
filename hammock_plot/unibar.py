@@ -276,7 +276,11 @@ class Unibar:
                     if val.id == self.missing_placeholder:
                         missing_values.append(val)
                 self._draw_rectangles(ax, missing_values, rectangle_painter, bar_unit)
-    
+
+        if self.display_type == "values":
+            y_start = self.non_missing_vals[0].vert_centre
+            y_end = self.non_missing_vals[-1].vert_centre
+
         if self.display_type == "rugplot":
             self._draw_rectangles(ax, self.values, rectangle_painter, bar_unit)
         elif self.display_type == "violin":

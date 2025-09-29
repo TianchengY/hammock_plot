@@ -303,6 +303,10 @@ class Hammock:
         ax = fig.draw_unibars()
         ax = fig.draw_connections(ax=ax)
 
+        # Hide borders
+        for border in ['right', 'left', 'top', 'bottom']:
+            ax.spines[border].set_visible(False)
+
         if save_path:
             ax.get_figure().savefig(save_path)
         if display_figure:
