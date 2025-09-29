@@ -2,12 +2,12 @@
 from typing import List, Dict, Tuple, Optional, Any
 import matplotlib.pyplot as plt
 import numpy as np
-from shapes import Rectangle, Parallelogram, FigureBase
-from unibar import Unibar
-from value import Value
+from .shapes import Rectangle, Parallelogram, FigureBase
+from .unibar import Unibar
+from .value import Value
 import pandas as pd
-from utils import clean_expression, is_in_range, validate_expression
-from utils import Defaults
+from .utils import clean_expression, is_in_range, validate_expression
+from .utils import Defaults
 import re
 
 class Figure:

@@ -2,10 +2,10 @@
 import pandas as pd
 from typing import List, Dict, Tuple, Optional, Any
 import matplotlib.pyplot as plt
-from figure import Figure
-from utils import Defaults
+from .figure import Figure
+from .utils import Defaults
 import numpy as np
-from utils import safe_numeric, validate_expression, resolve_ordering
+from .utils import safe_numeric, validate_expression, resolve_ordering
 import warnings
 
 class Hammock:

@@ -3,7 +3,7 @@ import numpy as np
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Iterable
 import matplotlib.pyplot as plt
-from utils import Defaults
+from .utils import Defaults
 
 class FigureBase(ABC):
     """

@@ -2,8 +2,8 @@
 from typing import List, Dict, Tuple, Optional
 import numpy as np
 import matplotlib.pyplot as plt
-from value import Value
-from utils import Defaults, edge_color_from_face
+from .value import Value
+from .utils import Defaults, edge_color_from_face
 
 class Unibar:
     def __init__(self,
