@@ -323,7 +323,7 @@ class Figure:
                         var_list: List[str],
                         value_order: Dict[str, List[str]],
                         numerical_var_levels:  Dict[str, int],
-                        numerical_display_type: Dict[str, str],
+                        numerical_display_type,#: Dict[str, str],
                         missing: bool,
                         missing_placeholder: str,
                         label: bool,
@@ -402,7 +402,7 @@ class Figure:
         colors = [default_color] + colors if colors else [default_color]
 
         # Build unibars
-        for v in var_list:
+        for i, v in enumerate(var_list):
             uni_series = data_df[v]
             dtype = var_types[v]
 
@@ -416,7 +416,7 @@ class Figure:
             display_type = "rugplot" # default
             if numerical_display_type and v in numerical_display_type:
                 display_type = numerical_display_type[v]
-            
+            # display_type = numerical_display_type[i]
             label_type = "default"
             
             if display_type == "violin" or display_type == "box":

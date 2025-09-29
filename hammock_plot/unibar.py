@@ -270,16 +270,15 @@ class Unibar:
         if self.missing:
             y_start += self.missing_padding
 
-        if self.display_type == "rugplot":
-            self._draw_rectangles(ax, self.values, rectangle_painter, bar_unit)
-            if self.val_type != np.str_:
+        if self.val_type != np.str_:
                 missing_values = []
                 for val in self.values:
                     if val.id == self.missing_placeholder:
                         missing_values.append(val)
                 self._draw_rectangles(ax, missing_values, rectangle_painter, bar_unit)
-            else:
-                self._draw_rectangles(ax, self.values, rectangle_painter, bar_unit)
+    
+        if self.display_type == "rugplot":
+            self._draw_rectangles(ax, self.values, rectangle_painter, bar_unit)
         elif self.display_type == "violin":
             self._draw_violin(ax, y_start, y_end)
         elif self.display_type == "box":
@@ -425,15 +424,20 @@ class Unibar:
                     parts_left[key].set_color(edgecolors[1])
 
     def _draw_boxplot(self, ax, y_start, y_end, gap_ratio=0.02):
+        def rotate_left(lst):
+            if len(lst) > 1:
+                return lst[1:] + lst[:1]
+            return lst
+
         data_scaled, facecolors, edgecolors = self._prepare_scaled_data(y_start, y_end)
         n = len(data_scaled)
         if n == 0:
             return
 
         # Reverse all lists so visual order = highlighted 2 -> highlighted 1 -> not highlighted
-        data_scaled = data_scaled[::-1]
-        facecolors = facecolors[::-1]
-        edgecolors = edgecolors[::-1]
+        data_scaled = rotate_left(data_scaled)
+        facecolors = rotate_left(facecolors)
+        edgecolors = rotate_left(edgecolors)
 
         # Ensure colors match number of boxes
         if len(facecolors) < n:
@@ -473,7 +477,8 @@ class Unibar:
                 vert=True,
                 patch_artist=True,
                 manage_ticks=False,
-                showfliers=True
+                showfliers=True,
+                flierprops=dict(marker='o', markerfacecolor=facecolors[i], markeredgecolor='none')
             )
 
             # Set edge colors
