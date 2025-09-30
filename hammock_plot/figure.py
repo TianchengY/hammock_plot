@@ -412,6 +412,8 @@ class Figure:
             # ordering: use value_order if provided, else default sort
             if value_order and v in value_order:
                 order = value_order[v]
+                if missing:
+                    order = [missing_placeholder] + order
             else:
                 uniq = uni_series.dropna().unique().tolist()
                 order = uniq
@@ -442,7 +444,7 @@ class Figure:
                 val_type=dtype,
                 unibar=unibar,
                 label=label,
-                missing=(missing_placeholder is not None),
+                missing=missing,
                 missing_placeholder=missing_placeholder,
                 val_order=order,
                 min_bar_height=fig.min_bar_height,

@@ -67,10 +67,7 @@ class Unibar:
         all_colors = sorted(self.df["color_index"].unique())
 
         # Determine order
-        if self.val_order:
-            order = self.val_order
-        else:
-            order = uni_series.dropna().unique().tolist()
+        order = self.val_order
 
         for val in order:
             cnt = int(counts.get(val, 0))
@@ -271,13 +268,8 @@ class Unibar:
     def _draw_background(self, ax, rectangle_painter, bar_unit, y_start, y_end):
         if self.missing:
             y_start += self.missing_padding
-
-        if self.val_type != np.str_:
-                missing_values = []
-                for val in self.values:
-                    if val.id == self.missing_placeholder:
-                        missing_values.append(val)
-                self._draw_rectangles(ax, missing_values, rectangle_painter, bar_unit)
+            # draw missing values
+            self._draw_rectangles(ax, self.missing_vals, rectangle_painter, bar_unit)
 
         if self.display_type == "values":
             y_start = self.non_missing_vals[0].vert_centre
@@ -503,7 +495,7 @@ class Unibar:
     def _draw_labels(self, ax, y_start, y_end):
         x = self.pos_x
         # Draw missing labels first at proper bottom offset
-        if self.missing_vals:
+        if self.missing:
             for mv in self.missing_vals:
                 # Place missing labels just above the bottom with missing_padding
                 ax.text(x, mv.vert_centre, self.missing_placeholder, ha='center', va='center', **(self.label_options or {}))
@@ -518,7 +510,8 @@ class Unibar:
     # --------- Label drawing directly onto values --------
     def _draw_value_labels(self, ax):
         for val in self.non_missing_vals:
-            ax.text(self.pos_x, val.vert_centre, self._get_formatted_label(val.dtype, val.id), ha='center', va='center', **(self.label_options or {}))
+            if val.occurrences > 0: # do not draw if no values exist
+                ax.text(self.pos_x, val.vert_centre, self._get_formatted_label(val.dtype, val.id), ha='center', va='center', **(self.label_options or {}))
 
     # -------- Label drawing - levels (starting from y_start and ending at y_end) ------
     def _draw_level_labels(self, ax, y_start, y_end):

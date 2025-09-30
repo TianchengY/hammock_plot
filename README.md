@@ -45,18 +45,26 @@ Minimal example of a hammock plot:
 ```python
 var = ["hospitalizations","group","gender","comorbidities"]
 hammock = hammock_plot.Hammock(data_df = df)
-ax = hammock.plot(var=var, min_bar_height=0.11)
+ax = hammock.plot(var=var)
 ```
 <img src="image/asthma_minimal.png" alt="Minimal example for a Hammock plot" width="600"/>
+
+The labels for the numerical variables aren't as desired; we would like the labels directly drawn on the data. We specify that we want no levels for our numerical variables.
+
+```python
+numeric_levels = {"comorbidities": None, "hospitalizations": None}
+ax = hammock.plot(var=var, numerical_var_levels=numeric_levels)
+```
+
+<img src="image/asthma_levels.png" alt="Hammock plot" width="600"/>
 
 The ordering of the child-adolescent-adult variable is not in the desired order; adult should not be in the middle. We now specify a specific order, child-adolescent-adult. 
 
 ```python
-var = ["hospitalizations","group","gender","comorbidities"]
-group_dict= {1: "child", 2: "adolescent",3: "adult"}
-value_order = {"group": group_dict}
+group_order = ["child", "adolescent", "adult"]
+value_order = {"group": group_order}
 hammock = hammock_plot.Hammock(data_df = df)
-ax = hammock.plot(var=var, value_order=value_order, min_bar_height=0.11)
+ax = hammock.plot(var=var, value_order=value_order, numerical_var_levels=numeric_levels)
 ```
 
 <!--- to restrict image size, I am using a an html command, rather than the standard ![](image.png) --->
@@ -66,7 +74,7 @@ ax = hammock.plot(var=var, value_order=value_order, min_bar_height=0.11)
 We highlight observations with comorbidities=0  in red:
 
 ```python
-ax = hammock.plot(var=var, value_order=value_order ,hi_var="comorbidities", hi_value=[0], color=["red"], min_bar_height=0.11)
+ax = hammock.plot(var=var ,hi_var="comorbidities", hi_value=[0], colors=["red"], numerical_var_levels=numeric_levels)
 ```
 
 <!---   ![Hammock plot with highlighting](image/asthma_highlighting.png)    --->
@@ -87,7 +95,7 @@ The three variables represent different ordinal scales for satisfaction. We are 
 ```python
 var = ["sataces","satcomm","satrate"]
 hammock = hammock_plot.Hammock(data_df = df)
-ax = hammock.plot(var=var, missing=True, min_bar_height=0.15) 
+ax = hammock.plot(var=var, missing=True, min_bar_height=0.2,numerical_var_levels={"sataces": None, "satcomm": None, "satrate": None}) 
 ```
 
 <img src="image/diabetes.png" alt="Hammock plot for the Diabetes Data" width="600"/>
@@ -133,6 +141,7 @@ ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,color=color
 | General |     `var` | `List[str]` | List of variables to display. |
 | |             `value_order` | `Dict[str, List[int]]`  |  If specified, the order of the values in the plot follows the order of values in the list supplied in the dictionary. Only applicable to categorical variables |
 | |            `numerical_var_levels` | `Dict[str, int \| None]` | Specifies the number of subdivisions in the y-axis for numerical variables. Example: {"NumericalVarname": 9, "NumericalVarname2": None}. Default is 7. |
+| |            `numerical_display_type` | `Dict[str, str]` | Specifies the type of plot (rugplot, box plot, violin plot) for numerical variable display. Example: {"NumericalVarname": "rugplot", "NumericalVarname2": "violin", "NumericalVarname3": "box"}. Default is "rugplot". |
 | |             `missing` | `bool` | Whether or not to add a category for missing values at the bottom of the plot.  If False, observations that have a missing value for any variable in the data frame (even those not used in the hammock plot) are removed.  Default is False. |
 | |             `label` | `bool` | Whether or not to display labels between the plotting segments |
 | |             `unibar`| `bool` | Whether or not to display unibars between the plotting segments |
@@ -147,6 +156,7 @@ ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,color=color
 | |              `label_options` |  `Dict[str, Dict[str, Any]]`  | Manipulates the size and look of the labels. Args following the options in the website: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.text.html Example:{"ExampleVarname":{"fontsize":12,"fontstyle":"italic","fontweight":"black","color":"b"}}  Default is None. | 
 | |              `height` |  `float`  | Height of the plot in inches. Default is 10. | 
 | |              `width` |  `float`  |  Width of the plot in inches. Default is 15. Caution: Width too narrow may distort the plot. | 
+| |               `alpha` | `float` | Alpha value for the colours in the plot. Float from 0-1. Default is 0.7. |
 | |              `min_bar_height` | `float` | Minimal bar height. Bars representing only a tiny fraction of the data may be so narrow, that they are invivisible in a plot. The default value tries to ensure this does not happen.  Default is 0.1.
 | Other options |              `shape` |  `str`  | Shape of the boxes. "rectangle" (default) or "parallelogram". | 
 | |              `same_scale` |  `List[str]`  | List of variables that have the same scale. Default is None. | 
