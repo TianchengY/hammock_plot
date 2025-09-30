@@ -121,14 +121,57 @@ hi_value = ["Beggars","Citizens","Gentry"]
 
 speaker_order=["Beggars", "Royalty", "Nobility", "Gentry", "Citizens", "Yeomanry"]
 
-hammock = hammock_plot.Hammock(data_df = data_df)
+hammock = hammock_plot.Hammock(data_df = df)
 ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,color=color_lst, bar_width=0.6,missing=True,
                 value_order ={"speaker1":speaker_order,"speaker2":speaker_order} )
 ```
 
-<img src="image/shakespeare.png" alt="Hammock plot for the Diabetes Data" width="600"/>
+<img src="image/shakespeare_order.png" alt="Hammock plot for the Shakespeare data, with value_order specified" width="600"/>
 
+### Example same_scale using Shakespeare data
+We can accomplish similar results using `same_scale`.
+```python
+hammock = hammock_plot.Hammock(data_df = df)
+ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,color=color_lst, bar_width=0.6,missing=True,
+                value_order ={"speaker1":speaker_order}, same_scale=["speaker1", "speaker2"] )
+```
+<img src="image/shakespeare_scale.png" alt="Hammock plot for the Shakespeare data, with same_scale specified" width="600"/>
 
+### Example numerical_display_type using penguin data
+
+We import the Shakespeare dataset:
+
+```python
+import hammock_plot
+import pandas as pd
+df = pd.read_csv('./data/data_penguins.csv')
+```
+
+We use `numerical_display_type` to control how we want to display our numerical data.
+
+```python
+hammock = hammock_plot.Hammock(df)
+ax = hammock.plot(
+    var= ["species", "island", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"],
+    hi_var="island",
+    hi_value=["Torgersen"],
+    missing=True,
+    numerical_display_type={"bill_length_mm":"box", "bill_depth_mm": "rugplot", "flipper_length_mm": "violin", "body_mass_g":"box"},
+)
+```
+<img src="image/penguin_display_violin.png" alt="Hammock plot for the penguin data, demonstrating numerical_display_type" width="600"/>
+
+Box plots support multiple highlight values. Violin plots only support one highlight value.
+```python
+ax = hammock.plot(
+  var= ["species", "island", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"],
+  hi_var="island",
+  hi_value=["Torgersen", "Biscoe"],
+  missing=True,
+  numerical_display_type={"bill_length_mm":"box", "bill_depth_mm": "box", "flipper_length_mm": "box", "body_mass_g":"box"},
+)
+```
+<img src="image/penguin_display_types.png" alt="Hammock plot for the penguin data, demonstrating numerical_display_type with multiple highlighting" width="600"/>
 
 ## API Reference
 
