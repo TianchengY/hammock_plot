@@ -116,9 +116,6 @@ class Unibar:
             self.scale_ypos = scale_ypos
 
     def compute_vertical_positions(self, y_start: float, y_end: float):
-        if len(self.values) == 0:
-            return
-
         bottom = y_start
         top = y_end
 
@@ -140,13 +137,13 @@ class Unibar:
         if self.min_max_pos:
             top_adjustment =  max(self.min_bar_height / 2, self.min_max_pos[1]) if self.min_max_pos[1] != 0 else 0
         else:
-            top_adjustment = max(self.min_bar_height, self.non_missing_vals[-1].occurrences * self.bar_unit) / 2 if self.non_missing_vals[-1].occurrences != 0 else 0
+            top_adjustment = max(self.min_bar_height, self.non_missing_vals[-1].occurrences * self.bar_unit) / 2 if self.non_missing_vals and self.non_missing_vals[-1].occurrences != 0 else 0
         top -= top_adjustment
         
         if self.min_max_pos:
             bottom_adjustment = max(self.min_bar_height / 2, self.min_max_pos[0]) if self.min_max_pos[0] != 0 else 0
         else:
-            bottom_adjustment =  max(self.min_bar_height, self.non_missing_vals[0].occurrences * self.bar_unit) / 2 if self.non_missing_vals[0].occurrences != 0 else 0
+            bottom_adjustment =  max(self.min_bar_height, self.non_missing_vals[0].occurrences * self.bar_unit) / 2 if self.non_missing_vals and self.non_missing_vals[0].occurrences != 0 else 0
         bottom += bottom_adjustment
 
         # --- Numeric values ---
@@ -271,7 +268,7 @@ class Unibar:
             # draw missing values
             self._draw_rectangles(ax, self.missing_vals, rectangle_painter, bar_unit)
 
-        if self.display_type == "values":
+        if self.display_type == "values" and self.non_missing_vals:
             y_start = self.non_missing_vals[0].vert_centre
             y_end = self.non_missing_vals[-1].vert_centre
 
@@ -288,7 +285,7 @@ class Unibar:
         """
         Draw rectangles
         """
-        if not self.unibar or rectangle_painter is None:
+        if not values or not self.unibar or rectangle_painter is None:
             return
 
         left_pts, right_pts, heights, weights = [], [], [], []

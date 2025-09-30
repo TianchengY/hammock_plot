@@ -375,6 +375,7 @@ class Figure:
                   same_scale = same_scale)
 
         data_df = df.copy()
+        data_df = data_df[var_list]
         
         # # Precompute unibar data types
         # var_types = {}
@@ -462,7 +463,12 @@ class Figure:
         # adjust some variables for drawing
         available_height = fig.height * fig.scale * fig.uni_fraction
         max_total_occurrences = max(sum(v.occurrences for v in uni.values) for uni in fig.unibars)
-        fig.bar_unit = available_height / max_total_occurrences
+        
+        # avoid divide by 0
+        if max_total_occurrences > 0:
+            fig.bar_unit = available_height / max_total_occurrences
+        else:
+            fig.bar_unit = 1.0
 
         max_missing_occ = max(
             sum(v.occurrences for v in uni.values if str(v.id) == fig.missing_placeholder)

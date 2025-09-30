@@ -279,10 +279,10 @@ class Hammock:
             raise ValueError(
                 f"Invalid shape {shape} provided. shape must be either 'parallelogram' or 'rectangle'."
             )
-            
+
         fig = Figure.from_dataframe(
             # general
-            self.data_df,
+            self.data_df[var],
             var_list=var,
             value_order=value_order,
             numerical_var_levels=numerical_var_levels,
