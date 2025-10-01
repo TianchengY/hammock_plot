@@ -6,7 +6,7 @@ with open("README.md", "r", encoding="utf8") as fh:
 
 setuptools.setup(
     name="hammock_plot",
-    version='0.4',
+    version='1.0',
     author="Tiancheng Yang",
     author_email="t77yang@uwaterloo.ca",
     description="Hammock - visualization of categorical or mixed categorical/continuous data",
