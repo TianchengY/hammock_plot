@@ -13,6 +13,7 @@ class Defaults:
 
     # Layout
     UNI_FRACTION: float = 0.08
+    CONNECTOR_FRACTION: float = 1
     SPACE: float = 0.3
     MIN_BAR_HEIGHT: float = 0.15
     BAR_UNIT: float = 1.0
