@@ -281,7 +281,7 @@ class Hammock:
                 f"Invalid shape {shape} provided. shape must be either 'parallelogram' or 'rectangle'."
             )
 
-        fig = Figure.from_dataframe(
+        fig = Figure(
             # general
             self.data_df[var],
             var_list=var,

@@ -12,6 +12,26 @@ import re
 
 class Figure:
     def __init__(self,
+                # general
+                df: "pd.DataFrame",
+                var_list: List[str],
+                value_order: Dict[str, List[str]],
+                numerical_var_levels:  Dict[str, int],
+                numerical_display_type,#: Dict[str, str],
+                missing: bool,
+                missing_placeholder: str,
+                label: bool,
+                unibar: bool,
+
+                # highlighting
+                hi_var: str,
+                hi_value,
+                hi_missing: bool,
+                hi_box: str,
+                default_color: str,
+                colors: List[str],
+
+                # Layout
                 width: float,
                 height: float,
                 uni_fraction: float,
@@ -19,54 +39,63 @@ class Figure:
                 min_bar_height: float,
                 space: float,
 
-                unibar: bool,
-                label: bool,
-                label_options,
-            
-                colors: List[str],
-                default_color: str,
-                hi_var: str,
-                hi_value: List[str],
-                missing_placeholder: str,
-                hi_missing: bool,
-
-                value_order: Dict[str, List[str]],
-
-                shape_type: str,
-                same_scale: List[str],
+                # Other
+                label_options: dict,
+                shape_type,
+                same_scale,
+                same_scale_type,
+                var_types,
                 ):
+
+        self.var_list = var_list
+        self.value_order = value_order
+        self.missing = missing
+        self.missing_placeholder = missing_placeholder
+        self.label = label
+        self.unibar = unibar
+
+        self.hi_var = hi_var
+        self.hi_value = hi_value
+        self.hi_missing = hi_missing
+        self.hi_box = hi_box
+        # initialize colours
+        self.colors = [default_color] + colors if colors else [default_color]
         
-        self.height = height
+        # create data df based on parameters
+        data_df = df.copy()
+        data_df = data_df[var_list]
+        if missing_placeholder is not None:
+            data_df = data_df.fillna(missing_placeholder)
+        else:
+            data_df = data_df.dropna()
+        data_df = self.assign_color_index(data_df, var_list)
+        self.data_df = data_df
+
         self.width = width
+        self.height = height
         self.uni_fraction = uni_fraction
         self.connector_fraction = connector_fraction
-        self.space = space
         self.min_bar_height = min_bar_height
+        self.space = space
+        
         self.label_options = label_options
+        self.fig_painter: FigureBase = Rectangle() if shape_type == "rectangle" else Parallelogram()
 
         self.scale = Defaults.SCALE
         self.xmargin = Defaults.XMARGIN
         self.ymargin = Defaults.YMARGIN
         self.bar_unit = Defaults.BAR_UNIT
 
-        self.unibar = unibar
-        self.label = label
-        self.unibars: List[Unibar] = []
-        self.fig_painter: FigureBase = Rectangle() if shape_type == "rectangle" else Parallelogram()
-
-        self.value_order = value_order
-        
-        self.colors = [default_color] + colors
-        self.default_color = default_color
-        self.missing_placeholder = missing_placeholder
-        self.hi_missing = hi_missing
-
-        self.hi_var = hi_var
-        self.hi_value = hi_value
-
-        self.same_scale = same_scale
-
         self.gap_btwn_uni_multi = Defaults.GAP_BTWN_UNI_MULTI if unibar or label else 0
+        # build and layout unibars
+        self.unibars: List[Unibar] = []
+        self.build_unibars(var_types=var_types,
+                           numerical_display_type=numerical_display_type,
+                           numerical_var_levels=numerical_var_levels,
+                           same_scale=same_scale,
+                           same_scale_type=same_scale_type)
+
+        self.layout_unibars()
 
     # -----------------------------
     # Highlight helpers (instance methods)
@@ -163,6 +192,133 @@ class Figure:
     
     def add_unibar(self, unibar: Unibar):
         self.unibars.append(unibar)
+    
+    def build_unibars(self, var_types, numerical_display_type, numerical_var_levels, same_scale, same_scale_type):
+        # Build unibars
+        for i, v in enumerate(self.var_list):
+            uni_series = self.data_df[v]
+            dtype = var_types[v]
+
+            # ordering: use value_order if provided, else default sort
+            if self.value_order and v in self.value_order:
+                order = self.value_order[v]
+                if self.missing:
+                    order = [self.missing_placeholder] + order
+            else:
+                uniq = uni_series.dropna().unique().tolist()
+                order = uniq
+
+            display_type = "rugplot" # default
+            if numerical_display_type and v in numerical_display_type:
+                display_type = numerical_display_type[v]
+            # display_type = numerical_display_type[i]
+            label_type = "default"
+
+            num_levels = Defaults.NUM_LEVELS # default num levels
+
+            if display_type == "violin" or display_type == "box":
+                label_type = "levels"
+
+            if numerical_var_levels and v in numerical_var_levels.keys():
+                if numerical_var_levels[v]:
+                    label_type="levels"
+                    num_levels = numerical_var_levels[v]
+                elif display_type == "rugplot": # v: None - labels are by value only if display is rugplot
+                    label_type = "values"
+
+            label_opts = self.label_options[v] if self.label_options and v in self.label_options else None
+
+            uni = Unibar(
+                df=self.data_df,
+                name=v,
+                val_type=dtype,
+                unibar=self.unibar,
+                label=self.label,
+                missing=self.missing,
+                missing_placeholder=self.missing_placeholder,
+                val_order=order,
+                min_bar_height=self.min_bar_height,
+                colors=self.colors,
+                hi_box=self.hi_box,
+                display_type = display_type,
+                label_type = label_type,
+                num_levels = num_levels,
+                label_options=label_opts
+            )
+
+            self.add_unibar(uni)
+
+        
+        # adjust some variables for drawing
+        available_height = self.height * self.scale * self.uni_fraction
+        max_total_occurrences = max(sum(v.occurrences for v in uni.values) for uni in self.unibars)
+        
+        # avoid divide by 0
+        if max_total_occurrences > 0:
+            self.bar_unit = available_height / max_total_occurrences
+        else:
+            self.bar_unit = 1.0
+
+        max_missing_occ = max(
+            sum(v.occurrences for v in uni.values if str(v.id) == self.missing_placeholder)
+            for uni in self.unibars
+        )
+        missing_padding = max_missing_occ * self.bar_unit
+
+        for unibar in self.unibars:
+            unibar.set_measurements(bar_unit=self.bar_unit,
+                                    missing_padding=max(self.min_bar_height, missing_padding) + Defaults.SPACE_ABOVE_MISSING)
+            
+        if same_scale_type and same_scale_type == "numerical":
+            # Determine ranges for unibars that should use same_scale
+            range = None
+            if same_scale:
+                # Collect all numeric values across the same_scale group
+                combined_vals = []
+                for uni_name in same_scale:
+                    uni_series = self.data_df[uni_name]
+                    numeric_vals = pd.to_numeric(uni_series, errors="coerce").dropna()
+                    combined_vals.extend(numeric_vals.tolist())
+
+                if combined_vals:
+                    global_min, global_max = min(combined_vals), max(combined_vals)
+                    # Assign the same global range to all unibars in same_scale
+                    for uni_name in same_scale:
+                        range = (global_min, global_max)
+                
+                max_min_occ = 0
+                max_max_occ = 0
+                for uni in self.unibars:
+                    if uni.name in same_scale:
+                        for val in uni.values:
+                            if val.numeric == global_min:
+                                max_min_occ = max(val.occurrences, max_min_occ)
+                            if val.numeric == global_max:
+                                max_max_occ = max(val.occurrences, max_max_occ)
+                min_max_pos = (max_min_occ * self.bar_unit / 2, max_max_occ * self.bar_unit / 2)
+
+                for uni in self.unibars:
+                    if uni.name in same_scale:
+                        uni.range = range
+                        uni.min_max_pos = min_max_pos
+
+        elif same_scale_type and same_scale_type == "categorical":
+            # determine the positions of the first and last categories to make them line up
+            if same_scale:
+                max_btm_occ = 0
+                max_top_occ = 0
+                for uni in self.unibars:
+                    if uni.name in same_scale:
+                        for val in uni.values:
+                            if val.id == self.value_order[uni.name][0]:
+                                max_btm_occ = max(max_btm_occ, val.occurrences)
+                            if val.id == self.value_order[uni.name][-1]:
+                                max_top_occ = max(max_top_occ, val.occurrences)
+                min_max_pos = (max_btm_occ * self.bar_unit / 2, max_top_occ * self.bar_unit / 2)
+
+                for uni in self.unibars:
+                    if uni.name in same_scale:
+                        uni.min_max_pos = min_max_pos
 
     def layout_unibars(self):
         n = len(self.unibars)
@@ -339,223 +495,3 @@ class Figure:
                 )
 
         return ax
-
-    @classmethod
-    def from_dataframe(cls,
-                        # general
-                        df: "pd.DataFrame",
-                        var_list: List[str],
-                        value_order: Dict[str, List[str]],
-                        numerical_var_levels:  Dict[str, int],
-                        numerical_display_type,#: Dict[str, str],
-                        missing: bool,
-                        missing_placeholder: str,
-                        label: bool,
-                        unibar: bool,
-
-                        # highlighting
-                        hi_var: str,
-                        hi_value,
-                        hi_missing: bool,
-                        hi_box: str,
-                        default_color: str,
-                        colors: List[str],
-
-                        # Layout
-                        width: float,
-                        height: float,
-                        uni_fraction: float,
-                        connector_fraction: float,
-                        min_bar_height: float,
-                        space: float,
-
-                        # Other
-                        label_options: dict,
-                        shape_type,
-                        same_scale,
-                        same_scale_type,
-                        var_types,
-                    ):
-
-        fig = cls(width = width,
-                  height = height,
-                  uni_fraction = uni_fraction,
-                  connector_fraction = connector_fraction,
-                  min_bar_height = min_bar_height,
-                  space=space,
-
-                  unibar=unibar,
-                  label=label,
-                  label_options=label_options,
-                  
-                  colors = colors,
-                  default_color = default_color,
-                  hi_var = hi_var,
-                  hi_value = hi_value,
-                  hi_missing = hi_missing,
-                  missing_placeholder = missing_placeholder,
-                  value_order = value_order,
-
-                  shape_type = shape_type,
-                  same_scale = same_scale)
-
-        data_df = df.copy()
-        data_df = data_df[var_list]
-        
-        # # Precompute unibar data types
-        # var_types = {}
-
-        # for varname in var_list:
-        #     temp = data_df[varname].dropna()
-        #     datatype = temp.dtype
-        #     if np.issubdtype(datatype, np.integer):
-        #         var_types[varname] = np.integer
-        #     elif np.issubdtype(datatype, np.number):
-        #         # Check if all numbers are effectively integers
-        #         if (temp == temp.astype(int)).all():
-        #             var_types[varname] = np.integer
-        #         else:
-        #             var_types[varname] = np.floating
-        #     else:
-        #         var_types[varname] = np.str_
-        
-        if missing_placeholder is not None:
-            data_df = data_df.fillna(missing_placeholder)
-        else:
-            data_df = data_df.dropna()
-
-        data_df = fig.assign_color_index(data_df, var_list)
-        
-        fig.data_df = data_df
-        
-        colors = [default_color] + colors if colors else [default_color]
-
-        # Build unibars
-        for i, v in enumerate(var_list):
-            uni_series = data_df[v]
-            dtype = var_types[v]
-
-            # ordering: use value_order if provided, else default sort
-            if value_order and v in value_order:
-                order = value_order[v]
-                if missing:
-                    order = [missing_placeholder] + order
-            else:
-                uniq = uni_series.dropna().unique().tolist()
-                order = uniq
-
-            display_type = "rugplot" # default
-            if numerical_display_type and v in numerical_display_type:
-                display_type = numerical_display_type[v]
-            # display_type = numerical_display_type[i]
-            label_type = "default"
-
-            num_levels = Defaults.NUM_LEVELS # default num levels
-
-            if display_type == "violin" or display_type == "box":
-                label_type = "levels"
-
-            if numerical_var_levels and v in numerical_var_levels.keys():
-                if numerical_var_levels[v]:
-                    label_type="levels"
-                    num_levels = numerical_var_levels[v]
-                elif display_type == "rugplot": # v: None - labels are by value only if display is rugplot
-                    label_type = "values"
-
-            label_opts = label_options[v] if label_options and v in label_options else None
-
-            uni = Unibar(
-                df=data_df,
-                name=v,
-                val_type=dtype,
-                unibar=unibar,
-                label=label,
-                missing=missing,
-                missing_placeholder=missing_placeholder,
-                val_order=order,
-                min_bar_height=fig.min_bar_height,
-                colors=colors,
-                hi_box=hi_box,
-                display_type = display_type,
-                label_type = label_type,
-                num_levels = num_levels,
-                label_options=label_opts
-            )
-
-            fig.add_unibar(uni)
-
-        
-        # adjust some variables for drawing
-        available_height = fig.height * fig.scale * fig.uni_fraction
-        max_total_occurrences = max(sum(v.occurrences for v in uni.values) for uni in fig.unibars)
-        
-        # avoid divide by 0
-        if max_total_occurrences > 0:
-            fig.bar_unit = available_height / max_total_occurrences
-        else:
-            fig.bar_unit = 1.0
-
-        max_missing_occ = max(
-            sum(v.occurrences for v in uni.values if str(v.id) == fig.missing_placeholder)
-            for uni in fig.unibars
-        )
-        missing_padding = max_missing_occ * fig.bar_unit
-
-        for unibar in fig.unibars:
-            unibar.set_measurements(bar_unit=fig.bar_unit,
-                                    missing_padding=max(min_bar_height, missing_padding) + Defaults.SPACE_ABOVE_MISSING)
-            
-        if same_scale_type and same_scale_type == "numerical":
-            # Determine ranges for unibars that should use same_scale
-            range = None
-            if same_scale:
-                # Collect all numeric values across the same_scale group
-                combined_vals = []
-                for uni_name in same_scale:
-                    uni_series = data_df[uni_name]
-                    numeric_vals = pd.to_numeric(uni_series, errors="coerce").dropna()
-                    combined_vals.extend(numeric_vals.tolist())
-
-                if combined_vals:
-                    global_min, global_max = min(combined_vals), max(combined_vals)
-                    # Assign the same global range to all unibars in same_scale
-                    for uni_name in same_scale:
-                        range = (global_min, global_max)
-                
-                max_min_occ = 0
-                max_max_occ = 0
-                for uni in fig.unibars:
-                    if uni.name in same_scale:
-                        for val in uni.values:
-                            if val.numeric == global_min:
-                                max_min_occ = max(val.occurrences, max_min_occ)
-                            if val.numeric == global_max:
-                                max_max_occ = max(val.occurrences, max_max_occ)
-                min_max_pos = (max_min_occ * fig.bar_unit / 2, max_max_occ * fig.bar_unit / 2)
-
-                for uni in fig.unibars:
-                    if uni.name in same_scale:
-                        uni.range = range
-                        uni.min_max_pos = min_max_pos
-
-        elif same_scale_type and same_scale_type == "categorical":
-            # determine the positions of the first and last categories to make them line up
-            if same_scale:
-                max_btm_occ = 0
-                max_top_occ = 0
-                for uni in fig.unibars:
-                    if uni.name in same_scale:
-                        for val in uni.values:
-                            if val.id == value_order[uni.name][0]:
-                                max_btm_occ = max(max_btm_occ, val.occurrences)
-                            if val.id == value_order[uni.name][-1]:
-                                max_top_occ = max(max_top_occ, val.occurrences)
-                min_max_pos = (max_btm_occ * fig.bar_unit / 2, max_top_occ * fig.bar_unit / 2)
-
-                for uni in fig.unibars:
-                    if uni.name in same_scale:
-                        uni.min_max_pos = min_max_pos
-        
-        fig.layout_unibars()
-
-        return fig
