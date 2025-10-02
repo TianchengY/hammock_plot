@@ -34,7 +34,8 @@ class Hammock:
              default_color: str = Defaults.DEFAULT_COLOR,
 
              # Layout
-             uni_fraction: float = Defaults.UNI_FRACTION, 
+             uni_fraction: float = Defaults.UNI_FRACTION,
+             connector_fraction: float = Defaults.CONNECTOR_FRACTION, 
              space: float = Defaults.SPACE, 
              label_options: dict = None,
              height: float = 10,
@@ -304,6 +305,7 @@ class Hammock:
             width=width,
             height=height,
             uni_fraction=uni_fraction,
+            connector_fraction=connector_fraction,
             min_bar_height=min_bar_height,
             space=space,
             

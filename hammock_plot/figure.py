@@ -15,11 +15,13 @@ class Figure:
                 width: float,
                 height: float,
                 uni_fraction: float,
+                connector_fraction: float,
                 min_bar_height: float,
                 space: float,
 
                 unibar: bool,
                 label: bool,
+                label_options,
             
                 colors: List[str],
                 default_color: str,
@@ -37,8 +39,10 @@ class Figure:
         self.height = height
         self.width = width
         self.uni_fraction = uni_fraction
+        self.connector_fraction = connector_fraction
         self.space = space
         self.min_bar_height = min_bar_height
+        self.label_options = label_options
 
         self.scale = Defaults.SCALE
         self.xmargin = Defaults.XMARGIN
@@ -218,20 +222,38 @@ class Figure:
     def draw_unibars(self, alpha, ax=None):
         if ax is None:
             fig, ax = plt.subplots(figsize=(self.width, self.height))
+
+        # set axes limits
         ax.set_xlim(0, self.scale * self.width)
         ax.set_ylim(0, self.scale * self.height)
         ax.set_yticks([])
+
+        # xticks + labels
         ax.set_xticks([c.pos_x for c in self.unibars])
         ax.set_xticklabels([c.name for c in self.unibars])
+
+        # apply per-label formatting
+        for label, c in zip(ax.get_xticklabels(), self.unibars):
+            if self.label_options:
+                opts = self.label_options.get(c.name, {})
+                if opts:
+                    label.set(**opts)
+
+        # spacing for x ticks
         ax.tick_params(axis='x', which='major', pad=10)
+
+        # draw the unibars
         rect_painter = self.fig_painter
         for uni in self.unibars:
-            uni.draw(ax,
-                    rectangle_painter=rect_painter,
-                    bar_unit=self.bar_unit,
-                    y_start=self.y_start,
-                    y_end=self.y_end,
-                    alpha=alpha)
+            uni.draw(
+                ax,
+                rectangle_painter=rect_painter,
+                bar_unit=self.bar_unit,
+                y_start=self.y_start,
+                y_end=self.y_end,
+                alpha=alpha,
+            )
+
         return ax
 
     def draw_connections(self, alpha, ax=None):
@@ -300,7 +322,7 @@ class Figure:
 
                 left_center_pts.append((lx, ly))
                 right_center_pts.append((rx, ry))
-                heights.append(total_cnt * self.bar_unit)
+                heights.append(total_cnt * self.bar_unit * self.connector_fraction)
                 weights.append(wts)
 
             # draw the batch for this adjacent pair
@@ -343,6 +365,7 @@ class Figure:
                         width: float,
                         height: float,
                         uni_fraction: float,
+                        connector_fraction: float,
                         min_bar_height: float,
                         space: float,
 
@@ -357,11 +380,13 @@ class Figure:
         fig = cls(width = width,
                   height = height,
                   uni_fraction = uni_fraction,
+                  connector_fraction = connector_fraction,
                   min_bar_height = min_bar_height,
                   space=space,
 
                   unibar=unibar,
                   label=label,
+                  label_options=label_options,
                   
                   colors = colors,
                   default_color = default_color,
