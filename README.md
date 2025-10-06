@@ -206,6 +206,7 @@ ax = hammock.plot(
 | |              `same_scale` |  `List[str]`  | List of variables that have the same scale. Default is None. | 
 | |              `display_figure` |  `bool`  | Whether or not to display the figure. This can be useful if you just want to save the plots. Default is 'True'. | 
 | |              `save_path` |  `str`  |   If it is not None, the figure will be saved to the given path with given name and format. Default is None. | 
+| |             `violin_bw_method` | `str` or `float` | Specifies the bw method used to plot a violin plot. See https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.violinplot.html for more details. |
 
 
 ## Historical context

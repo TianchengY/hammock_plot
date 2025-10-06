@@ -47,7 +47,8 @@ class Hammock:
              shape: str = "rectangle",
              same_scale: list = None,
              display_figure: bool = True,
-             save_path: str = None):
+             save_path: str = None,
+             violin_bw_method: float = 'scott'):
         
         data_df_columns = self.data_df.columns.tolist()
         
@@ -315,6 +316,7 @@ class Hammock:
             same_scale=same_scale,
             same_scale_type=same_scale_type,
             var_types=var_types,
+            violin_bw_method=violin_bw_method,
         )
 
         ax = fig.draw_unibars(alpha=alpha)

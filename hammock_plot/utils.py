@@ -26,6 +26,17 @@ class Defaults:
     NUM_LEVELS = 7
     ALPHA = 0.7
 
+# for future use
+class Options:
+    # some static variables
+    @staticmethod
+    def set_global_options(zz):
+        pass
+
+    # some instance variables
+    def __init__():
+        pass
+
 
 def clean_expression(expr: str) -> str:
     """

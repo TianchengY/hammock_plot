@@ -21,7 +21,8 @@ class Unibar:
                  num_levels: int,
                  display_type: str,
                  label_type: str,
-                 label_options: dict):
+                 label_options: dict,
+                 violin_bw_method,):
         self.df = df
         self.name = name
         self.display_type = display_type
@@ -49,6 +50,7 @@ class Unibar:
         self.min_max_pos = None # records the centre positions of the top and bottom values
 
         self.label_options = label_options
+        self.violin_bw_method = violin_bw_method
 
     def _build_values(
         self,
@@ -366,7 +368,7 @@ class Unibar:
                 showmeans=False,
                 showmedians=False,
                 showextrema=False,
-                bw_method=0.23,
+                bw_method=self.violin_bw_method,
             )
             for pc in parts['bodies']:
                 pc.set_facecolor(facecolors[0])

@@ -45,6 +45,7 @@ class Figure:
                 same_scale,
                 same_scale_type,
                 var_types,
+                violin_bw_method
                 ):
 
         self.var_list = var_list
@@ -67,7 +68,7 @@ class Figure:
         if missing_placeholder is not None:
             data_df = data_df.fillna(missing_placeholder)
         else:
-            data_df = data_df.dropna()
+            data_df = data_df.dropna(subset=var_list)
         data_df = self.assign_color_index(data_df, var_list)
         self.data_df = data_df
 
@@ -93,7 +94,8 @@ class Figure:
                            numerical_display_type=numerical_display_type,
                            numerical_var_levels=numerical_var_levels,
                            same_scale=same_scale,
-                           same_scale_type=same_scale_type)
+                           same_scale_type=same_scale_type,
+                           violin_bw_method=violin_bw_method)
 
         self.layout_unibars()
 
@@ -193,7 +195,7 @@ class Figure:
     def add_unibar(self, unibar: Unibar):
         self.unibars.append(unibar)
     
-    def build_unibars(self, var_types, numerical_display_type, numerical_var_levels, same_scale, same_scale_type):
+    def build_unibars(self, var_types, numerical_display_type, numerical_var_levels, same_scale, same_scale_type, violin_bw_method):
         # Build unibars
         for i, v in enumerate(self.var_list):
             uni_series = self.data_df[v]
@@ -243,7 +245,8 @@ class Figure:
                 display_type = display_type,
                 label_type = label_type,
                 num_levels = num_levels,
-                label_options=label_opts
+                label_options=label_opts,
+                violin_bw_method=violin_bw_method,
             )
 
             self.add_unibar(uni)
