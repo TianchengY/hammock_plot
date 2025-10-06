@@ -202,6 +202,7 @@ class Hammock:
                 for cur_var in same_scale:
                     # set the new value_order to be the full, resolved order
                     value_order[cur_var] = resolved_order
+
         elif same_scale and same_scale_type == "categorical":
             combined_uni_vals = []
             seen = set()
@@ -284,6 +285,22 @@ class Hammock:
                 f"Invalid shape {shape} provided. shape must be either 'parallelogram' or 'rectangle'."
             )
         
+        if not value_order:
+            value_order = {}
+
+        # set up value_order to be populated for each of the variables
+        for v in var:
+            # ordering: use value_order if provided, else default sort
+            if v in value_order:
+                if missing:
+                    value_order[v] = [missing_placeholder] + value_order[v]
+            else:
+                uniq = self.data_df[v].dropna().unique().tolist()
+                if missing:
+                    value_order[v] = [missing_placeholder] + uniq
+                else:
+                    value_order[v] = uniq
+    
         # set up dataframe to be used in Figure
         if missing:
             self.data_df = self.data_df.fillna(missing_placeholder)

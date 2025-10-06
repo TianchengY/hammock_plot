@@ -7,6 +7,15 @@ import pandas as pd
 from hammock_plot.utils import Defaults
 
 class Figure:
+    """
+        Initializes a Figure.
+        Pre:
+        - df is computed to have a "color_index" column
+        - df either has missing variables labeled as missing_placeholder or missing values are dropped
+        - value_order is populated with each variable
+        - colors is a List: [default color] + highlight colors
+        - 
+    """
     def __init__(self,
                 # general
                 df: pd.DataFrame,
@@ -68,6 +77,7 @@ class Figure:
         self.bar_unit = Defaults.BAR_UNIT
 
         self.gap_btwn_uni_multi = Defaults.GAP_BTWN_UNI_MULTI if unibar or label else 0
+        
         # build and layout unibars
         self.unibars: List[Unibar] = []
         self.build_unibars(var_types=var_types,
@@ -87,15 +97,7 @@ class Figure:
         for i, v in enumerate(self.var_list):
             uni_series = self.data_df[v]
             dtype = var_types[v]
-
-            # ordering: use value_order if provided, else default sort
-            if self.value_order and v in self.value_order:
-                order = self.value_order[v]
-                if self.missing:
-                    order = [self.missing_placeholder] + order
-            else:
-                uniq = uni_series.dropna().unique().tolist()
-                order = uniq
+            order = self.value_order[v]
 
             display_type = "rugplot" # default
             if numerical_display_type and v in numerical_display_type:
