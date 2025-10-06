@@ -64,13 +64,14 @@ class Figure:
         
         # create data df based on parameters
         data_df = df.copy()
-        data_df = data_df[var_list]
-        if missing_placeholder is not None:
+        
+        if missing:
             data_df = data_df.fillna(missing_placeholder)
         else:
             data_df = data_df.dropna(subset=var_list)
-        data_df = self.assign_color_index(data_df, var_list)
-        self.data_df = data_df
+        
+        # for colouring
+        self.data_df = self.assign_color_index(data_df, var_list)
 
         self.width = width
         self.height = height
@@ -98,47 +99,6 @@ class Figure:
                            violin_bw_method=violin_bw_method)
 
         self.layout_unibars()
-
-    # -----------------------------
-    # Highlight helpers (instance methods)
-    # -----------------------------
-    def check_hi_var(self, varname: str) -> bool:
-        """Return True if this variable should be highlighted."""
-        return varname in self.hi_var
-
-    def check_hi_value(self, value: Any) -> bool:
-        """
-        Return True if this value should be highlighted.
-        Supports:
-          - list of literal values
-          - regex pattern (if hi_value is a string and compiles as regex)
-          - logical expression (if hi_value is a string that looks like an expression)
-        """
-        if self.hi_value is None:
-            return False
-
-        # Case 1: Literal list
-        if isinstance(self.hi_value, list):
-            return value in self.hi_value
-
-        # Case 2: Regex string
-        if isinstance(self.hi_value, str):
-            try:
-                regex = re.compile(self.hi_value)
-                if isinstance(value, str) and regex.search(value):
-                    return True
-            except re.error:
-                pass  # not valid regex, try as expression instead
-
-            # Case 3: Expression string
-            try:
-                if isinstance(value, (int, float)):
-                    return is_in_range(value, self.hi_value)
-            except ValueError:
-                return False
-
-        return False
-    
     # -----------------------------
     # Color indexing helpers
     # -----------------------------
@@ -160,9 +120,7 @@ class Figure:
                 mask = df["color_index"] == 0
                 df.loc[mask, "color_index"] = df.loc[mask, v].apply(self._compute_color_index)
 
-        #print(df[[self.hi_var, "color_index"]])
         return df
-
 
     def _compute_color_index(self, val: Any) -> int:
         # if hi_missing is true, increase each index by 1
@@ -183,13 +141,13 @@ class Figure:
                     return 1 + missing_buffer
             except re.error:
                 pass
-            # expression
+            # numeric expression
             try:
-                if isinstance(val, (int, float)) and is_in_range(val, self.hi_value):
+                numeric_val = float(val) if isinstance(val, str) else val
+                if isinstance(numeric_val, (int, float)) and is_in_range(numeric_val, self.hi_value):
                     return 1 + missing_buffer
             except ValueError:
                 return 0
-
         return 0
     
     def add_unibar(self, unibar: Unibar):

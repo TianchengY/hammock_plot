@@ -65,16 +65,25 @@ def is_in_range(x: float, expr: str) -> bool:
     except Exception as e:
         raise ValueError(f"Invalid expression: '{expr}'") from e
 
-
 def validate_expression(expr: str) -> bool:
     """
     Validates whether an expression string can be parsed and evaluated safely.
-    Returns True if valid, False if not.
+    Returns True if it's either:
+      - A valid numeric range expression for `is_in_range`
+      - A valid regex pattern
     """
+    # First, check if it can be evaluated as a numeric range
     try:
         _ = is_in_range(0, expr)
         return True
     except Exception:
+        pass
+
+    # Next, check if it's a valid regex
+    try:
+        re.compile(expr)
+        return True
+    except re.error:
         return False
     
 def safe_numeric(val):

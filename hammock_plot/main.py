@@ -245,11 +245,11 @@ class Hammock:
                     raise ValueError(
                         f'Invalid expression: {hi_value}.'
                     )
-                else:
-                    if var_types[hi_var] == np.str_:
-                        raise ValueError(
-                            "Range based highlighting for categorical variables is not allowed."
-                        )
+                # else:
+                #     if var_types[hi_var] == np.str_:
+                #         raise ValueError(
+                #             "Range based highlighting for categorical variables is not allowed."
+                #         )
 
         num_hi_colors = len(hi_value) if isinstance(hi_value, list) else 0
         num_hi_colors = 1 if isinstance(hi_value, str) else num_hi_colors
@@ -284,7 +284,7 @@ class Hammock:
 
         fig = Figure(
             # general
-            self.data_df[var],
+            self.data_df,
             var_list=var,
             value_order=value_order,
             numerical_var_levels=numerical_var_levels,
