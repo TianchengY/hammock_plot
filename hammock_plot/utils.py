@@ -2,6 +2,8 @@ import re
 from collections import defaultdict, deque
 import colorsys
 import matplotlib.colors as mcolors
+import pandas as pd
+from typing import List, Dict, Any
 
 class Defaults:
     # General
@@ -159,3 +161,53 @@ def edge_color_from_face(facecolor, delta=0.5):
     # Convert back to RGB
     edge_rgb = colorsys.hsv_to_rgb(h, s, v)
     return edge_rgb
+
+# -----------------------------
+# Color indexing helpers
+# -----------------------------
+def _compute_color_index(val: Any, hi_missing, hi_value) -> int:
+    # if hi_missing is true, increase each index by 1
+    missing_buffer = 1 if hi_missing else 0
+
+    if isinstance(hi_value, list):
+        try:
+            idx = hi_value.index(val) + 1 + missing_buffer
+            return idx
+        except ValueError:
+            return 0
+
+    if isinstance(hi_value, str):
+        # regex
+        try:
+            regex = re.compile(hi_value)
+            if isinstance(val, str) and regex.search(val):
+                return 1 + missing_buffer
+        except re.error:
+            pass
+        # numeric expression
+        try:
+            numeric_val = float(val) if isinstance(val, str) else val
+            if isinstance(numeric_val, (int, float)) and is_in_range(numeric_val, hi_value):
+                return 1 + missing_buffer
+        except ValueError:
+            return 0
+    return 0
+
+def assign_color_index(df: pd.DataFrame, var_list: List[str], hi_missing, missing_placeholder, hi_var, hi_value) -> pd.DataFrame:
+    df["color_index"] = 0  # default
+
+    # Highlight missing values first
+    if hi_missing and missing_placeholder is not None:
+        for v in var_list:
+            if v != hi_var:
+                continue
+            df.loc[df[v] == missing_placeholder, "color_index"] = 1
+
+    # Then apply hi_value highlighting, but only where color_index is still 0
+    if hi_var and hi_value is not None:
+        for v in var_list:
+            if v != hi_var:
+                continue
+            mask = df["color_index"] == 0
+            df.loc[mask, "color_index"] = df.loc[mask, v].apply(lambda val: _compute_color_index(val, hi_missing, hi_value))
+    return df

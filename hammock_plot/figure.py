@@ -1,19 +1,15 @@
 # figure.py
-from typing import List, Dict, Tuple, Optional, Any
+from typing import List, Dict, Tuple, Any
 import matplotlib.pyplot as plt
-import numpy as np
 from hammock_plot.shapes import Rectangle, Parallelogram, FigureBase
 from hammock_plot.unibar import Unibar
-from hammock_plot.value import Value
 import pandas as pd
-from hammock_plot.utils import clean_expression, is_in_range, validate_expression
 from hammock_plot.utils import Defaults
-import re
 
 class Figure:
     def __init__(self,
                 # general
-                df: "pd.DataFrame",
+                df: pd.DataFrame,
                 var_list: List[str],
                 value_order: Dict[str, List[str]],
                 numerical_var_levels:  Dict[str, int],
@@ -24,11 +20,7 @@ class Figure:
                 unibar: bool,
 
                 # highlighting
-                hi_var: str,
-                hi_value,
-                hi_missing: bool,
                 hi_box: str,
-                default_color: str,
                 colors: List[str],
 
                 # Layout
@@ -55,23 +47,10 @@ class Figure:
         self.label = label
         self.unibar = unibar
 
-        self.hi_var = hi_var
-        self.hi_value = hi_value
-        self.hi_missing = hi_missing
         self.hi_box = hi_box
-        # initialize colours
-        self.colors = [default_color] + colors if colors else [default_color]
+        self.colors = colors
         
-        # create data df based on parameters
-        data_df = df.copy()
-        
-        if missing:
-            data_df = data_df.fillna(missing_placeholder)
-        else:
-            data_df = data_df.dropna(subset=var_list)
-        
-        # for colouring
-        self.data_df = self.assign_color_index(data_df, var_list)
+        self.data_df = df
 
         self.width = width
         self.height = height
@@ -99,56 +78,6 @@ class Figure:
                            violin_bw_method=violin_bw_method)
 
         self.layout_unibars()
-    # -----------------------------
-    # Color indexing helpers
-    # -----------------------------
-    def assign_color_index(self, df: pd.DataFrame, var_list: List[str]) -> pd.DataFrame:
-        df["color_index"] = 0  # default
-
-        # Highlight missing values first
-        if self.hi_missing and self.missing_placeholder is not None:
-            for v in var_list:
-                if v != self.hi_var:
-                    continue
-                df.loc[df[v] == self.missing_placeholder, "color_index"] = 1
-
-        # Then apply hi_value highlighting, but only where color_index is still 0
-        if self.hi_var and self.hi_value is not None:
-            for v in var_list:
-                if v != self.hi_var:
-                    continue
-                mask = df["color_index"] == 0
-                df.loc[mask, "color_index"] = df.loc[mask, v].apply(self._compute_color_index)
-
-        return df
-
-    def _compute_color_index(self, val: Any) -> int:
-        # if hi_missing is true, increase each index by 1
-        missing_buffer = 1 if self.hi_missing else 0
-
-        if isinstance(self.hi_value, list):
-            try:
-                idx = self.hi_value.index(val) + 1 + missing_buffer
-                return idx
-            except ValueError:
-                return 0
-
-        if isinstance(self.hi_value, str):
-            # regex
-            try:
-                regex = re.compile(self.hi_value)
-                if isinstance(val, str) and regex.search(val):
-                    return 1 + missing_buffer
-            except re.error:
-                pass
-            # numeric expression
-            try:
-                numeric_val = float(val) if isinstance(val, str) else val
-                if isinstance(numeric_val, (int, float)) and is_in_range(numeric_val, self.hi_value):
-                    return 1 + missing_buffer
-            except ValueError:
-                return 0
-        return 0
     
     def add_unibar(self, unibar: Unibar):
         self.unibars.append(unibar)

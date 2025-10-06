@@ -3,7 +3,7 @@ from typing import List, Dict, Tuple, Optional
 import numpy as np
 import matplotlib.pyplot as plt
 from hammock_plot.value import Value
-from hammock_plot.utils import Defaults, edge_color_from_face
+from hammock_plot.utils import edge_color_from_face
 
 class Unibar:
     def __init__(self,

@@ -1,14 +1,17 @@
-# hammock_plot.py
+import re
 import pandas as pd
 from typing import List, Dict, Tuple, Optional, Any
 import matplotlib.pyplot as plt
 from hammock_plot.figure import Figure
 from hammock_plot.utils import Defaults
 import numpy as np
-from hammock_plot.utils import safe_numeric, validate_expression, resolve_ordering
+from hammock_plot.utils import safe_numeric, validate_expression, resolve_ordering, assign_color_index
 import warnings
 
 class Hammock:
+    """
+        Initializes a Hammock plot with dataframe 
+    """
     def __init__(self, data_df: pd.DataFrame):
         if data_df is None or data_df.empty:
             raise ValueError("data_df must be provided and non-empty.")
@@ -50,6 +53,10 @@ class Hammock:
              save_path: str = None,
              violin_bw_method: float = 'scott'):
         
+        """
+            Error catches and setup to initialize a Figure
+        """
+
         data_df_columns = self.data_df.columns.tolist()
         
         # no variable names passed
@@ -245,11 +252,6 @@ class Hammock:
                     raise ValueError(
                         f'Invalid expression: {hi_value}.'
                     )
-                # else:
-                #     if var_types[hi_var] == np.str_:
-                #         raise ValueError(
-                #             "Range based highlighting for categorical variables is not allowed."
-                #         )
 
         num_hi_colors = len(hi_value) if isinstance(hi_value, list) else 0
         num_hi_colors = 1 if isinstance(hi_value, str) else num_hi_colors
@@ -281,6 +283,14 @@ class Hammock:
             raise ValueError(
                 f"Invalid shape {shape} provided. shape must be either 'parallelogram' or 'rectangle'."
             )
+        
+        # set up dataframe to be used in Figure
+        if missing:
+            self.data_df = self.data_df.fillna(missing_placeholder)
+        else:
+            self.data_df = self.data_df.dropna(subset=var)
+
+        self.data_df = assign_color_index(self.data_df, var, hi_missing, missing_placeholder, hi_var, hi_value)
 
         fig = Figure(
             # general
@@ -295,12 +305,8 @@ class Hammock:
             unibar=unibar,
 
             # highlighting
-            hi_var=hi_var,
-            hi_value=hi_value,
             hi_box=hi_box,
-            hi_missing=hi_missing,
-            default_color=default_color,
-            colors=colors,
+            colors=[default_color] + colors if colors else [default_color],
 
             # Layout
             width=width,
