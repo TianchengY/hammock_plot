@@ -145,7 +145,7 @@ class Figure:
             return
         
         # ------------------- ADJUST VARIABLES FOR DRAWING ---------------------------
-        available_height = self.height * self.scale * self.uni_fraction
+        available_height = (self.height - 2 * self.ymargin * self.height) * self.scale * self.uni_fraction
         total_occurrences = len(self.data_df)
         
         # avoid divide by 0
