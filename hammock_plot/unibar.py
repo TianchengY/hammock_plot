@@ -181,7 +181,7 @@ class Unibar:
                 for v, p in zip(vals, positions):
                     v.set_y(centre=p)
 
-        # --- String/Categorical values (without same_scale) ---
+        # --- String/Categorical values (with same_scale) ---
         elif self.val_type == np.str_ and self.non_missing_vals and self.min_max_pos:
             n = len(self.non_missing_vals)
 
@@ -193,7 +193,7 @@ class Unibar:
                 pos = bottom + (i + 0.5) * step
                 val.set_y(pos)
         
-        # --- String/Categorical values (with same_scale) ---
+        # --- String/Categorical values (without same_scale) ---
         elif self.val_type == np.str_ and self.non_missing_vals:
             n = len(self.non_missing_vals)
 
@@ -256,7 +256,8 @@ class Unibar:
         self.alpha = alpha
 
         # Step 1: Draw background based on display_type
-        self._draw_background(ax, rectangle_painter, bar_unit, y_start, y_end)
+        if self.unibar:
+            self._draw_background(ax, rectangle_painter, bar_unit, y_start, y_end)
 
         # Step 2: Draw labels
         if self.label:
@@ -288,9 +289,6 @@ class Unibar:
         """
         Draw rectangles
         """
-        if not values or not self.unibar or rectangle_painter is None:
-            return
-
         left_pts, right_pts, heights, weights = [], [], [], []
 
         for val in values:
