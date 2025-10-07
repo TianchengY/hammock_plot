@@ -38,9 +38,10 @@ class Unibar:
         self.missing_placeholder = missing_placeholder
         self.val_order = val_order
         self.min_bar_height = min_bar_height
+        self.label_options = label_options
+        self.violin_bw_method = violin_bw_method
 
-        self._build_values()
-        self.sort_values()
+        self._build_values() # build values list
 
         self.hi_box = hi_box
         self.colors = colors
@@ -48,9 +49,6 @@ class Unibar:
         # for same_scale variables
         self.range = None # if numerical, will be a min val and a max val
         self.min_max_pos = None # records the centre positions of the top and bottom values
-
-        self.label_options = label_options
-        self.violin_bw_method = violin_bw_method
 
     def _build_values(
         self,
@@ -102,7 +100,15 @@ class Unibar:
             self.label_type = "values"
 
         self.values = values
-        return values
+
+        # sort values before separating missing and non-missing values
+        self._sort_values()
+
+        # Separate missing and non-missing values
+        self.missing_vals = [v for v in self.values
+                            if self.missing_placeholder is not None and str(v.id) == str(self.missing_placeholder)]
+        self.non_missing_vals = [v for v in self.values if v not in self.missing_vals]
+
     
     def set_measurements(self, pos_x=None, width=None, bar_unit=None, missing_padding=None,
                         scale_ypos: Tuple[float, float] = None):
@@ -121,12 +127,7 @@ class Unibar:
         bottom = y_start
         top = y_end
 
-        # Separate missing and non-missing values
-        self.missing_vals = [v for v in self.values
-                            if self.missing_placeholder is not None and str(v.id) == str(self.missing_placeholder)]
-        self.non_missing_vals = [v for v in self.values if v not in self.missing_vals]
-
-        # --- Handle missing bar at bottom (only one missing value assumed) ---
+        # --- Handle missing bar at bottom ---
         if self.missing:
             mv = self.missing_vals[0] if self.missing_vals else None
             mv_height = max(self.min_bar_height, mv.occurrences * self.bar_unit) if mv else 0
@@ -191,6 +192,7 @@ class Unibar:
                 # place at center of each interval
                 pos = bottom + (i + 0.5) * step
                 val.set_y(pos)
+        
         # --- String/Categorical values (with same_scale) ---
         elif self.val_type == np.str_ and self.non_missing_vals:
             n = len(self.non_missing_vals)
@@ -228,7 +230,7 @@ class Unibar:
         self.y_bottom = y_start  # true bottom of the unibar
         self.y_top = top
     
-    def sort_values(self):
+    def _sort_values(self):
         # --- Categorical/string sorting ---
         if self.val_type == np.str_:
             if self.val_order is not None:
@@ -243,7 +245,6 @@ class Unibar:
             # Sort by .numeric from smallest to largest
             self.values.sort(key=lambda v: (v.numeric is None, v.numeric), reverse=False)
             
-
 
     def draw(self, ax, alpha, rectangle_painter=None,
              color="lightskyblue", bar_unit: float = 1.5, y_start: int = None, y_end: int = None):

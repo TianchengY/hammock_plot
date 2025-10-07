@@ -83,26 +83,24 @@ class Figure:
         self.build_unibars(var_types=var_types,
                            numerical_display_type=numerical_display_type,
                            numerical_var_levels=numerical_var_levels,
-                           same_scale=same_scale,
-                           same_scale_type=same_scale_type,
                            violin_bw_method=violin_bw_method)
 
-        self.layout_unibars()
+        self.layout_unibars(same_scale, same_scale_type)
     
     def add_unibar(self, unibar: Unibar):
         self.unibars.append(unibar)
     
-    def build_unibars(self, var_types, numerical_display_type, numerical_var_levels, same_scale, same_scale_type, violin_bw_method):
+    def build_unibars(self, var_types, numerical_display_type, numerical_var_levels, violin_bw_method):
         # Build unibars
         for i, v in enumerate(self.var_list):
-            uni_series = self.data_df[v]
             dtype = var_types[v]
             order = self.value_order[v]
+            label_opts = self.label_options[v] if self.label_options and v in self.label_options else None
 
+            # -------------- DETERMINE DISPLAY AND LABEL TYPES ---------------------
             display_type = "rugplot" # default
             if numerical_display_type and v in numerical_display_type:
                 display_type = numerical_display_type[v]
-            # display_type = numerical_display_type[i]
             label_type = "default"
 
             num_levels = Defaults.NUM_LEVELS # default num levels
@@ -116,8 +114,6 @@ class Figure:
                     num_levels = numerical_var_levels[v]
                 elif display_type == "rugplot": # v: None - labels are by value only if display is rugplot
                     label_type = "values"
-
-            label_opts = self.label_options[v] if self.label_options and v in self.label_options else None
 
             uni = Unibar(
                 df=self.data_df,
@@ -140,30 +136,36 @@ class Figure:
 
             self.add_unibar(uni)
 
+    """
+        Layout the unibars on the axes
+    """
+    def layout_unibars(self, same_scale, same_scale_type):
+        n = len(self.unibars)
+        if n == 0:
+            return
         
-        # adjust some variables for drawing
+        # ------------------- ADJUST VARIABLES FOR DRAWING ---------------------------
         available_height = self.height * self.scale * self.uni_fraction
-        max_total_occurrences = max(sum(v.occurrences for v in uni.values) for uni in self.unibars)
+        total_occurrences = len(self.data_df)
         
         # avoid divide by 0
-        if max_total_occurrences > 0:
-            self.bar_unit = available_height / max_total_occurrences
-        else:
-            self.bar_unit = 1.0
+        if total_occurrences > 0:
+            self.bar_unit = available_height / total_occurrences
 
         max_missing_occ = max(
             sum(v.occurrences for v in uni.values if str(v.id) == self.missing_placeholder)
             for uni in self.unibars
         )
-        missing_padding = max_missing_occ * self.bar_unit
+        missing_padding = (max_missing_occ / total_occurrences) * available_height
 
         for unibar in self.unibars:
             unibar.set_measurements(bar_unit=self.bar_unit,
                                     missing_padding=max(self.min_bar_height, missing_padding) + Defaults.SPACE_ABOVE_MISSING)
-            
+        
+        # determine same_scale positioning
         if same_scale_type and same_scale_type == "numerical":
             # Determine ranges for unibars that should use same_scale
-            range = None
+            global_range = None
             if same_scale:
                 # Collect all numeric values across the same_scale group
                 combined_vals = []
@@ -176,7 +178,7 @@ class Figure:
                     global_min, global_max = min(combined_vals), max(combined_vals)
                     # Assign the same global range to all unibars in same_scale
                     for uni_name in same_scale:
-                        range = (global_min, global_max)
+                        global_range = (global_min, global_max)
                 
                 max_min_occ = 0
                 max_max_occ = 0
@@ -191,7 +193,7 @@ class Figure:
 
                 for uni in self.unibars:
                     if uni.name in same_scale:
-                        uni.range = range
+                        uni.range = global_range
                         uni.min_max_pos = min_max_pos
 
         elif same_scale_type and same_scale_type == "categorical":
@@ -212,11 +214,7 @@ class Figure:
                     if uni.name in same_scale:
                         uni.min_max_pos = min_max_pos
 
-    def layout_unibars(self):
-        n = len(self.unibars)
-        if n == 0:
-            return
-
+        # ----------------------- set specific drawing parameters for the unibars --------------------------
         # Use margins as fractions of width/height
         edge_x = self.xmargin * self.width * self.scale
         edge_y = self.ymargin * self.height * self.scale
