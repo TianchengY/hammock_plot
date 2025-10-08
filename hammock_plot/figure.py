@@ -214,7 +214,6 @@ class Figure:
                                 max_max_occ = max(val.occurrences, max_max_occ)
                 # determine the centres of the items that should be at min, max
                 min_max_pos = (max_min_occ * self.bar_unit / 2, max_max_occ * self.bar_unit / 2)
-
                 # set the positions of the minimum and maximum values for each unibar in same_scale
                 for uni in self.unibars:
                     if uni.name in same_scale:

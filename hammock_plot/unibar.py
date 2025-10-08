@@ -228,7 +228,7 @@ class Unibar:
 
         # --- Set final unibar bounds ---
         self.y_bottom = y_start  # true bottom of the unibar
-        self.y_top = top
+        self.y_top = y_end # true top of the unibar
     
     def _sort_values(self):
         # --- Categorical/string sorting ---
