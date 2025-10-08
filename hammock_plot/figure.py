@@ -9,12 +9,22 @@ from hammock_plot.utils import Defaults
 class Figure:
     """
         Initializes a Figure.
-        Pre:
-        - df is computed to have a "color_index" column
-        - df either has missing variables labeled as missing_placeholder or missing values are dropped
-        - value_order is populated with each variable
-        - colors is a List: [default color] + highlight colors
-        - 
+        Parameters:
+        df:
+        - is computed to have a "color_index" column
+        - either has missing variables labeled as missing_placeholder or missing values are dropped
+        var_list: the variable list
+        value_order:
+        - dictionary that contains the order that variables are listed
+        - is populated with each variable
+        colors:
+        -  is a List: [default color] + highlight colors
+        same_scale_type:
+        - determines if same_scale is for numerical or categorical data
+        var_types:
+        - Dict of the types of each variable. Either: np.str_, np.floating, or np.integer
+
+        numerical_var_levels, numerical_display_type, missing, missing_placeholder, label, unibar, hi_box, width, height, uni_fraction, connector_fraction, min_bar_height, space, label_options, shape_type, same_scale, violin_bw_method: refer to README file
     """
     def __init__(self,
                 # general
@@ -57,12 +67,12 @@ class Figure:
         self.unibar = unibar
 
         self.hi_box = hi_box
-        self.colors = colors
+        self.colors = colors # is a List: [default color] + highlight colors
         
         self.data_df = df
 
-        self.width = width
-        self.height = height
+        self.width = width # width of the entire plot
+        self.height = height # height of the entire plot
         self.uni_fraction = uni_fraction
         self.connector_fraction = connector_fraction
         self.min_bar_height = min_bar_height
@@ -76,20 +86,30 @@ class Figure:
         self.ymargin = Defaults.YMARGIN
         self.bar_unit = Defaults.BAR_UNIT
 
+        # slight gap that should be in between unibars and multivariate connectors
         self.gap_btwn_uni_multi = Defaults.GAP_BTWN_UNI_MULTI if unibar or label else 0
         
         # build and layout unibars
         self.unibars: List[Unibar] = []
+
+        # initialize the unibars
         self.build_unibars(var_types=var_types,
                            numerical_display_type=numerical_display_type,
                            numerical_var_levels=numerical_var_levels,
                            violin_bw_method=violin_bw_method)
 
+        # layout the unibars
         self.layout_unibars(same_scale, same_scale_type)
     
+    """
+        adds a unibar to the list of unibars maintained in a Figure
+    """
     def add_unibar(self, unibar: Unibar):
         self.unibars.append(unibar)
     
+    """
+        initializes unibars with data
+    """
     def build_unibars(self, var_types, numerical_display_type, numerical_var_levels, violin_bw_method):
         # Build unibars
         for i, v in enumerate(self.var_list):
@@ -152,15 +172,17 @@ class Figure:
         if total_occurrences > 0:
             self.bar_unit = available_height / total_occurrences
 
+        # find the maximum missing occurrences to determine how large the missing padding should be
         max_missing_occ = max(
             sum(v.occurrences for v in uni.values if str(v.id) == self.missing_placeholder)
             for uni in self.unibars
         )
-        missing_padding = (max_missing_occ / total_occurrences) * available_height
+        max_missing_height = (max_missing_occ / total_occurrences) * available_height
 
+        # set bar_unit in unibars, set missing_padding in unibars
         for unibar in self.unibars:
             unibar.set_measurements(bar_unit=self.bar_unit,
-                                    missing_padding=max(self.min_bar_height, missing_padding) + Defaults.SPACE_ABOVE_MISSING)
+                                    missing_padding=max(self.min_bar_height, max_missing_height) + Defaults.SPACE_ABOVE_MISSING)
         
         # determine same_scale positioning
         if same_scale_type and same_scale_type == "numerical":
@@ -180,8 +202,9 @@ class Figure:
                     for uni_name in same_scale:
                         global_range = (global_min, global_max)
                 
-                max_min_occ = 0
-                max_max_occ = 0
+                # set variables so that same_scale variables align with each other
+                max_min_occ = 0 # maximum occurrences observed across all values that are at the minimum value on same_scale
+                max_max_occ = 0 # maximum occurrences observed across all values that are at the maximum value on same_scale
                 for uni in self.unibars:
                     if uni.name in same_scale:
                         for val in uni.values:
@@ -189,8 +212,10 @@ class Figure:
                                 max_min_occ = max(val.occurrences, max_min_occ)
                             if val.numeric == global_max:
                                 max_max_occ = max(val.occurrences, max_max_occ)
+                # determine the centres of the items that should be at min, max
                 min_max_pos = (max_min_occ * self.bar_unit / 2, max_max_occ * self.bar_unit / 2)
 
+                # set the positions of the minimum and maximum values for each unibar in same_scale
                 for uni in self.unibars:
                     if uni.name in same_scale:
                         uni.range = global_range
@@ -264,10 +289,12 @@ class Figure:
         self.scale_x = self.scale * self.width
         self.scale_y = self.scale * self.height
 
-
+    """
+        Draws the unibars at the appropriate spots on the axes
+    """
     def draw_unibars(self, alpha, ax=None):
         if ax is None:
-            fig, ax = plt.subplots(figsize=(self.width, self.height))
+            _, ax = plt.subplots(figsize=(self.width, self.height))
 
         # set axes limits
         ax.set_xlim(0, self.scale * self.width)
@@ -294,7 +321,6 @@ class Figure:
             uni.draw(
                 ax,
                 rectangle_painter=rect_painter,
-                bar_unit=self.bar_unit,
                 y_start=self.y_start,
                 y_end=self.y_end,
                 alpha=alpha,

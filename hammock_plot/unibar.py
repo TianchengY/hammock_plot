@@ -247,7 +247,7 @@ class Unibar:
             
 
     def draw(self, ax, alpha, rectangle_painter=None,
-             color="lightskyblue", bar_unit: float = 1.5, y_start: int = None, y_end: int = None):
+             color="lightskyblue", y_start: int = None, y_end: int = None):
         """
         Template Method for drawing a unibar:
         1. Draw the background according to display_type
@@ -257,7 +257,7 @@ class Unibar:
 
         # Step 1: Draw background based on display_type
         if self.unibar:
-            self._draw_background(ax, rectangle_painter, bar_unit, y_start, y_end)
+            self._draw_background(ax, rectangle_painter, y_start, y_end)
 
         # Step 2: Draw labels
         if self.label:
@@ -266,18 +266,18 @@ class Unibar:
         return ax
 
     # ---------- Template Method ----------
-    def _draw_background(self, ax, rectangle_painter, bar_unit, y_start, y_end):
+    def _draw_background(self, ax, rectangle_painter, y_start, y_end):
         if self.missing:
             y_start += self.missing_padding
             # draw missing values
-            self._draw_rectangles(ax, self.missing_vals, rectangle_painter, bar_unit)
+            self._draw_rectangles(ax, self.missing_vals, rectangle_painter)
 
         if self.display_type == "values" and self.non_missing_vals:
             y_start = self.non_missing_vals[0].vert_centre
             y_end = self.non_missing_vals[-1].vert_centre
 
         if self.display_type == "rugplot":
-            self._draw_rectangles(ax, self.non_missing_vals, rectangle_painter, bar_unit)
+            self._draw_rectangles(ax, self.non_missing_vals, rectangle_painter)
         elif self.display_type == "violin":
             self._draw_violin(ax, y_start, y_end)
         elif self.display_type == "box":
@@ -285,7 +285,7 @@ class Unibar:
         else:
             raise ValueError(f"Unknown display_type: {self.display_type}")
 
-    def _draw_rectangles(self, ax, values, rectangle_painter, bar_unit):
+    def _draw_rectangles(self, ax, values, rectangle_painter):
         """
         Draw rectangles
         """
@@ -293,7 +293,7 @@ class Unibar:
 
         for val in values:
             # Compute vertical bar height
-            bar_height = val.occurrences * bar_unit
+            bar_height = val.occurrences * self.bar_unit
             bar_height = max(bar_height, self.min_bar_height) if bar_height != 0 else 0 # enforce minimum bar height unless there are no such occurrences
 
             heights.append(bar_height)
@@ -332,7 +332,8 @@ class Unibar:
             val_numeric = v.numeric
             all_numeric_vals.append(val_numeric)
 
-        min_val, max_val = min(all_numeric_vals), max(all_numeric_vals)
+        
+        min_val, max_val = self.range if self.range else (min(all_numeric_vals), max(all_numeric_vals))
 
         # Scaling function
         def scale_y(val):
