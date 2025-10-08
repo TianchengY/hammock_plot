@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from typing import List, Tuple, Iterable
 import matplotlib.pyplot as plt
 from hammock_plot.utils import Defaults
+from matplotlib.path import Path
+import warnings
 
 class FigureBase(ABC):
     """
@@ -23,7 +25,9 @@ class FigureBase(ABC):
             colors: List[str],
             weights: List[List[float]],   # per-shape weights
             orientation: str = "vertical",
-            zorder: int = 0,):
+            zorder: int = 0,
+            check_overlap: bool = False,
+            unibar_name: str = None):
         """
         Draw polygons (rectangles or parallelograms) with segmented coloring.
 
@@ -36,7 +40,29 @@ class FigureBase(ABC):
         weights : list of weight lists, one per shape
                 (each list has same length as colors)
         orientation : "vertical" or "horizontal"
+        check_overlap : bool, optional
+            If True, checks for overlapping polygons among the provided coordinates
+            and highlights them in red on the plot.
+        unibar_name: str, optional
+            If provided, prints the specific name in the overlap warning message.
         """
+        xs, ys = self.get_coordinates(left_center_pts, right_center_pts, heights)
+
+        # --- Optional overlap detection ---
+        if check_overlap and len(xs) > 1:
+            polygons = [Path(np.column_stack((x, y))) for x, y in zip(xs, ys)]
+            overlap_found = False
+
+            for i in range(len(polygons)):
+                for j in range(i + 1, len(polygons)):
+                    pi, pj = polygons[i], polygons[j]
+
+                    # Check if any vertex of one polygon is inside the other
+                    if np.any(pj.contains_points(np.column_stack((xs[i], ys[i])))) or \
+                    np.any(pi.contains_points(np.column_stack((xs[j], ys[j])))):
+                        warnings.warn(f"Overlap detected in unibar {unibar_name}", UserWarning)
+                        break
+    
         xs, ys = self.get_coordinates(left_center_pts, right_center_pts, heights)
 
         for (poly_x, poly_y, wts) in zip(xs, ys, weights):
@@ -98,8 +124,6 @@ class FigureBase(ABC):
 
         return ax
 
-
-
     @abstractmethod
     def get_coordinates(self, left_center_pts, right_center_pts, heights):
         pass
@@ -121,27 +145,6 @@ class Parallelogram(FigureBase):
             ys.append(y)
 
         return xs, ys
-    
-    # def get_coordinates(self, left_center_pts, right_center_pts, heights):
-    #     xs, ys = [], []
-    #     for l, r, h in zip(left_center_pts, right_center_pts, heights):
-    #         x = np.zeros(4)
-    #         y = np.zeros(4)
-
-    #         # left side (x stays l[0], y up/down by h/2)
-    #         x[0] = x[1] = l[0]
-    #         y[0] = l[1] + h / 2  # top
-    #         y[1] = l[1] - h / 2  # bottom
-
-    #         # right side (x stays r[0], y up/down by h/2)
-    #         x[2] = x[3] = r[0]
-    #         y[2] = r[1] + h / 2  # top
-    #         y[3] = r[1] - h / 2  # bottom
-
-    #         xs.append(x)
-    #         ys.append(y)
-
-    #     return xs, ys
 
 
 class Rectangle(FigureBase):

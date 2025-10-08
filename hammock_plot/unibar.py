@@ -304,7 +304,8 @@ class Unibar:
             right_pts.append((self.pos_x + half_label_space, val.vert_centre))
             weights.append(val.occ_by_colour)
 
-        rectangle_painter.plot(ax, self.alpha, left_pts, right_pts, heights, self.colors, weights, orientation=self.hi_box,zorder=1)
+        rectangle_painter.plot(ax, self.alpha, left_pts, right_pts, heights, self.colors, weights, orientation=self.hi_box,zorder=1, 
+                               check_overlap=True, unibar_name=self.name)
 
     def _prepare_scaled_data(self, y_start, y_end):
         """
