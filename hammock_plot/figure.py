@@ -302,6 +302,7 @@ class Figure:
 
         # xticks + labels
         ax.set_xticks([c.pos_x for c in self.unibars])
+        ax.tick_params(axis='x', length=0) 
         ax.set_xticklabels([c.name for c in self.unibars])
 
         # apply per-label formatting
