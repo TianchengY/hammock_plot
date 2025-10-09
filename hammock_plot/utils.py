@@ -27,6 +27,7 @@ class Defaults:
     SPACE_ABOVE_MISSING: float = 2
     NUM_LEVELS = 7
     ALPHA = 0.7
+    WHITE_DIVIDER_HEIGHT = 0.1
 
 # for future use
 class Options:
@@ -174,7 +175,14 @@ def _compute_color_index(val: Any, hi_missing, hi_value) -> int:
             idx = hi_value.index(val) + 1 + missing_buffer
             return idx
         except ValueError:
-            return 0
+            if not type(val) is str:
+                for i, value in enumerate(hi_value):
+                    try:
+                        match = float(value) == val
+                        if match:
+                            return i + 1 + missing_buffer
+                    except ValueError:
+                        return 0
 
     if isinstance(hi_value, str):
         # regex

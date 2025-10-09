@@ -70,9 +70,23 @@ class Hammock:
                 f'the variables: {error_values} in var_lst is not in data or value names user given does not match the data '
             )
         
+        if space < 0:
+            warnings.warn("space < 0. Value has been clamped to 0.")
+            space = 0
+        elif space > 1:
+            warnings.warn("space > 1. Value has been clamped to 1.")
+            space = 1
+
         if space == 1:
             warnings.warn("Tip: To leave a bit of a gap between the univariate bars, set space to something close to 1 but not quite one (ex 0.9)")
         
+        if uni_fraction < 0:
+            warnings.warn("uni_fraction < 0. Value has been clamped to 0.")
+            uni_fraction = 0
+        elif uni_fraction > 1:
+            warnings.warn("uni_fraction > 1. Value has been clamped to 1.")
+            uni_fraction = 1
+
         if alpha < 0:
             warnings.warn("alpha < 0. Value has been clamped to 0.")
             alpha = 0
@@ -161,12 +175,29 @@ class Hammock:
                 f'the variables: {error_values} in same_scale is not in var_lst or value names user given does not match the data '
             )
 
-        if value_order and not set(value_order.keys()) <= set(var):
-            # gets a list of the items that are in value_order but not in data_df_columns
-            error_values = set(value_order.keys()) - (set(value_order.keys()) & set(var))
-            raise ValueError(
-                f'the variables: {error_values} in value_order is not in var_lst or value names user given does not match the data '
-            )
+        if value_order:
+            if not set(value_order.keys()) <= set(var):
+                # gets a list of the items that are in value_order but not in data_df_columns
+                error_values = set(value_order.keys()) - (set(value_order.keys()) & set(var))
+                raise ValueError(
+                    f'the variables: {error_values} in value_order is not in var_lst or value names user given does not match the data '
+                )
+        
+            for variable, order in value_order.items():
+                df_values = set(self.data_df[variable].dropna())
+                order_values = set(order)
+                
+                error_values = df_values - order_values
+                
+                if error_values:
+                    raise ValueError(
+                        f"The following values in '{variable}' are not included in value_order: {error_values}"
+                    )
+
+            # NOTE: not sure if we should keep this. forces numerical data to be treated as categorical data
+            # BUG: when converting to categorical data, values don't match up when comparison is made (no matches when trying to put things in the right order)
+            for variable in value_order.keys():
+                var_types[variable] = np.str_
         
         same_scale_type = None
 

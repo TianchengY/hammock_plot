@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from hammock_plot.value import Value
 from hammock_plot.utils import edge_color_from_face
+from .utils import Defaults
 
 class Unibar:
     def __init__(self,
@@ -22,7 +23,8 @@ class Unibar:
                  display_type: str,
                  label_type: str,
                  label_options: dict,
-                 violin_bw_method,):
+                 violin_bw_method,
+                 draw_white_dividers):
         self.df = df
         self.name = name
         self.display_type = display_type
@@ -33,7 +35,7 @@ class Unibar:
         self.label = label
         self.missing = missing
         self.y_top = 0.0
-        self.y_bottom = 0.0
+        self.y_bottom = 0.0 # bottom of non missing values
         self.highlight_colors: Optional[List[str]] = None
         self.missing_placeholder = missing_placeholder
         self.val_order = val_order
@@ -49,6 +51,7 @@ class Unibar:
         # for same_scale variables
         self.range = None # if numerical, will be a min val and a max val
         self.min_max_pos = None # records the centre positions of the top and bottom values
+        self.draw_white_dividers = draw_white_dividers
 
     def _build_values(
         self,
@@ -207,7 +210,7 @@ class Unibar:
                 coloured_y_with_adjustments = total_coloured_y - bottom_adjustment - top_adjustment
 
                 # spacing between bars
-                space = (top - bottom - coloured_y_with_adjustments) / (n - 1)
+                gap = (top - bottom - coloured_y_with_adjustments) / (n - 1)
 
                 positions = []
                 cur_y = bottom
@@ -219,7 +222,7 @@ class Unibar:
                                     self.min_bar_height) / 2 if self.non_missing_vals[i-1].occurrences != 0 else 0
                     cur_half = max(self.non_missing_vals[i].occurrences * self.bar_unit,
                                 self.min_bar_height) / 2 if self.non_missing_vals[i].occurrences != 0 else 0
-                    cur_y += prev_half + cur_half + space
+                    cur_y += prev_half + cur_half + gap
                     positions.append(cur_y)
 
                 # --- assign positions ---
@@ -227,7 +230,7 @@ class Unibar:
                     v.set_y(centre=p)
 
         # --- Set final unibar bounds ---
-        self.y_bottom = y_start  # true bottom of the unibar
+        self.y_bottom = (y_start + self.missing_padding) if self.missing else y_start # bottom of the non-missing values in the unibar
         self.y_top = y_end # true top of the unibar
     
     def _sort_values(self):
@@ -272,10 +275,6 @@ class Unibar:
             # draw missing values
             self._draw_rectangles(ax, self.missing_vals, rectangle_painter)
 
-        if self.display_type == "values" and self.non_missing_vals:
-            y_start = self.non_missing_vals[0].vert_centre
-            y_end = self.non_missing_vals[-1].vert_centre
-
         if self.display_type == "rugplot":
             self._draw_rectangles(ax, self.non_missing_vals, rectangle_painter)
         elif self.display_type == "violin":
@@ -306,6 +305,41 @@ class Unibar:
 
         rectangle_painter.plot(ax, self.alpha, left_pts, right_pts, heights, self.colors, weights, orientation=self.hi_box,zorder=1, 
                                check_overlap=True, unibar_name=self.name)
+        
+        if self.draw_white_dividers and len(values) > 1:
+                divider_height = Defaults.WHITE_DIVIDER_HEIGHT
+
+                divider_left_pts = []
+                divider_right_pts = []
+                divider_heights = []
+                divider_weights = []
+
+                for i in range(len(values) - 1):
+                    top_of_i = values[i].vert_centre + heights[i] / 2
+                    bottom_of_next = values[i + 1].vert_centre - heights[i + 1] / 2
+                    divider_y = (top_of_i + bottom_of_next) / 2
+                    half_label_space = self.width / 2
+
+                    divider_left_pts.append((self.pos_x - half_label_space, divider_y))
+                    divider_right_pts.append((self.pos_x + half_label_space, divider_y))
+                    divider_heights.append(divider_height)
+
+                    # white divider bar (use 2D structure)
+                    divider_weights.append([1])
+
+                rectangle_painter.plot(
+                    ax, 
+                    alpha=1, 
+                    left_center_pts=divider_left_pts,
+                    right_center_pts=divider_right_pts,
+                    heights=divider_heights,
+                    colors=["white"],
+                    weights=divider_weights,
+                    orientation=self.hi_box,
+                    zorder=2,  # slightly above bars
+                    check_overlap=False,
+                    unibar_name=self.name + "_divider"
+                )
 
     def _prepare_scaled_data(self, y_start, y_end):
         """

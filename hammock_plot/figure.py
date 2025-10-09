@@ -5,6 +5,7 @@ from hammock_plot.shapes import Rectangle, Parallelogram, FigureBase
 from hammock_plot.unibar import Unibar
 import pandas as pd
 from hammock_plot.utils import Defaults
+import numpy as np
 
 class Figure:
     """
@@ -134,6 +135,9 @@ class Figure:
                     num_levels = numerical_var_levels[v]
                 elif display_type == "rugplot": # v: None - labels are by value only if display is rugplot
                     label_type = "values"
+                
+            # long boolean expression represents the conditions for drawing small white lines to divide rugplot rectangles
+            draw_white_dividers = display_type == "rugplot" and dtype == np.str_ and self.uni_fraction == 1 and not self.missing
 
             uni = Unibar(
                 df=self.data_df,
@@ -152,6 +156,7 @@ class Figure:
                 num_levels = num_levels,
                 label_options=label_opts,
                 violin_bw_method=violin_bw_method,
+                draw_white_dividers=draw_white_dividers
             )
 
             self.add_unibar(uni)
