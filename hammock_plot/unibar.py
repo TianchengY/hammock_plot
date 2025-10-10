@@ -531,6 +531,8 @@ class Unibar:
         # Draw missing labels first at proper bottom offset
         if self.missing:
             for mv in self.missing_vals:
+                # don't draw the labels if there are no missing values
+                if mv.occurrences == 0: continue
                 # Place missing labels just above the bottom with missing_padding
                 ax.text(x, mv.vert_centre, self.missing_placeholder, ha='center', va='center', **(self.label_options or {}))
         
