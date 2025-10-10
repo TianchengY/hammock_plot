@@ -51,7 +51,6 @@ class FigureBase(ABC):
         # --- Optional overlap detection ---
         if check_overlap and len(xs) > 1:
             polygons = [Path(np.column_stack((x, y))) for x, y in zip(xs, ys)]
-            overlap_found = False
 
             for i in range(len(polygons)):
                 for j in range(i + 1, len(polygons)):
@@ -60,7 +59,7 @@ class FigureBase(ABC):
                     # Check if any vertex of one polygon is inside the other
                     if np.any(pj.contains_points(np.column_stack((xs[i], ys[i])))) or \
                     np.any(pi.contains_points(np.column_stack((xs[j], ys[j])))):
-                        warnings.warn(f"Overlap detected in unibar {unibar_name}", UserWarning)
+                        warnings.warn(f"Overlap detected in unibar {unibar_name}.", UserWarning)
                         break
     
         xs, ys = self.get_coordinates(left_center_pts, right_center_pts, heights)
