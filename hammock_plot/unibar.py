@@ -255,6 +255,7 @@ class Unibar:
         Template Method for drawing a unibar:
         1. Draw the background according to display_type
         2. Draw the labels according to label_type
+        Assumes that compute_vertical_positions has already been called
         """
         self.alpha = alpha
 
@@ -270,6 +271,13 @@ class Unibar:
 
     # ---------- Template Method ----------
     def _draw_background(self, ax, rectangle_painter, y_start, y_end):
+        """
+        Template Method for drawing the backgrounds in a unibar
+        3 types of backgrounds:
+        1. rugplots (draws rectangles behind values)
+        2. violin plots (draws a violin plot)
+        3. boxplots (draws a boxplot)
+        """
         if self.missing:
             y_start += self.missing_padding
             # draw missing values
@@ -393,6 +401,9 @@ class Unibar:
         return data_scaled, self.colors, [edge_color_from_face(color) for color in self.colors]
 
     def _draw_violin(self, ax, y_start, y_end):
+        """
+        Draw a violin plot
+        """
         data_scaled, facecolors, edgecolors = self._prepare_scaled_data(y_start, y_end)
         if len(data_scaled) == 1:
             # no highlight variable (both halves)
@@ -456,6 +467,9 @@ class Unibar:
                     parts_left[key].set_color(edgecolors[1])
 
     def _draw_boxplot(self, ax, y_start, y_end, gap_ratio=0.02):
+        """
+        Draw a boxplot
+        """
         def rotate_left(lst):
             if len(lst) > 1:
                 return lst[1:] + lst[:1]
@@ -527,6 +541,12 @@ class Unibar:
 
     # ---------- Label Drawing ----------
     def _draw_labels(self, ax, y_start, y_end):
+        """
+        Draws labels depending on the display type.
+        2 types of labels:
+        1. Values (draws labels directly on values)
+        2. Levels (draws labels at even increments, depending on a predetermined number of levels (default 7))
+        """
         x = self.pos_x
         # Draw missing labels first at proper bottom offset
         if self.missing:
@@ -545,12 +565,23 @@ class Unibar:
 
     # --------- Label drawing directly onto values --------
     def _draw_value_labels(self, ax):
+        """
+        Draws labels directly on values
+        """
         for val in self.non_missing_vals:
             if val.occurrences > 0: # do not draw if no values exist
                 ax.text(self.pos_x, val.vert_centre, self._get_formatted_label(val.dtype, val.id), ha='center', va='center', **(self.label_options or {}))
 
     # -------- Label drawing - levels (starting from y_start and ending at y_end) ------
     def _draw_level_labels(self, ax, y_start, y_end):
+        """
+        2 ways to draw levels:
+        1. Display type == rugplot
+            - this means that the bottommost and topmost values are NOT centred at the bottom and the top of the drawable space.
+            - Labels must be offset slightly to accomodate for the adjustment made
+        2. Display type == box or violin
+            - this means that the labels should span the entire vertical range of the drawable area.
+        """
         # Draw numeric levels if display_type="levels"
         min_val, max_val = self.range if self.range else (min(v.numeric for v in self.non_missing_vals),
                                                         max(v.numeric for v in self.non_missing_vals))
@@ -590,12 +621,21 @@ class Unibar:
             ax.text(self.pos_x, tick_y, self._get_formatted_label(self.val_type, tick_val), ha='center', va='center', **(self.label_options or {}))
     
     def _get_formatted_label(self, datatype, value):
+        """
+        Determines how a label should be formatted.
+        Categorical Data:
+        - Strings are labeled as-is
+        Numerical Data:
+        - Scientific notation is used if the absolute value of a value is > 1000000 or < 0.01
+        - Floats are rounded to 2 decimal places
+        - Integers are written with no decimal places
+        """
         # if the label is a string
         if datatype == np.str_ or value == self.missing_placeholder:
             return value
         # otherwise, it should be a numerical value
         value = float(value)
-        if abs(value) >= 1000000 or (0 < abs(value) < 0.01): # threshold for displaying scientific notation
+        if abs(value) >= 1000000 or abs(value) < 0.01: # threshold for displaying scientific notation
             return f"{value:.2e}"
         if datatype == np.integer:
             return str(int(value))
@@ -603,6 +643,10 @@ class Unibar:
             return f"{value:.2f}" # round to 2 decimal places
 
     def get_value_by_id(self, id: str):
+        """
+        Returns a Value, given its id
+        Assumes that all ids are unique (true)
+        """
         for v in self.values:
             if v.id == id:
                 return v
