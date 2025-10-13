@@ -173,6 +173,17 @@ ax = hammock.plot(
 ```
 <img src="image/penguin_display_types.png" alt="Hammock plot for the penguin data, demonstrating numerical_display_type with multiple highlighting" width="600"/>
 
+## Explaining Jargon
+<img src="image/labeled_minimal.png" alt="Circled Hammock plot example" width="600"/>
+
+The **variable names** in this Hammock plot are "hospitalizations", "group", "gender", and "comorbidities".
+
+Each **variable** is represented by a corresponding **unibar** (circled in purple). **Unibar** is the shortened version of the term "univariate bar".
+
+The **values** in the **unibar** "group" are circled in orange. Each unibar has a corresponding set of values.
+
+We call the lines between each unibar **connectors**, since they connect adjacent unibars.
+
 ## API Reference
 
 ```
