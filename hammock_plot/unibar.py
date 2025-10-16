@@ -635,7 +635,7 @@ class Unibar:
             return value
         # otherwise, it should be a numerical value
         value = float(value)
-        if abs(value) >= 1000000 or abs(value) < 0.01: # threshold for displaying scientific notation
+        if abs(value) >= 1000000 or 0 < abs(value) < 0.01: # threshold for displaying scientific notation
             return f"{value:.2e}"
         if datatype == np.integer:
             return str(int(value))
