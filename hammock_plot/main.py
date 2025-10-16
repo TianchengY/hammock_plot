@@ -321,12 +321,14 @@ class Hammock:
 
         # set up value_order to be populated for each of the variables
         for v in var:
-            # ordering: use value_order if provided, else default sort
+            # ordering: use value_order if provided, else default sort - for categorical variables, nothing happens. For numerical variables, sorted by value.
             if v in value_order:
                 if missing:
                     value_order[v] = [missing_placeholder] + value_order[v]
             else:
                 uniq = self.data_df[v].dropna().unique().tolist()
+                if var_types[v] != np.str_:
+                    uniq.sort(reverse=False)
                 if missing:
                     value_order[v] = [missing_placeholder] + uniq
                 else:

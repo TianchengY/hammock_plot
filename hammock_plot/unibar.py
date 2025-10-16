@@ -233,20 +233,14 @@ class Unibar:
         self.y_bottom = (y_start + self.missing_padding) if self.missing else y_start # bottom of the non-missing values in the unibar
         self.y_top = y_end # true top of the unibar
     
+    """
+        sorts values based on val_order
+    """
     def _sort_values(self):
-        # --- Categorical/string sorting ---
-        if self.val_type == np.str_:
-            if self.val_order is not None:
-                # Map each name to its position in val_order
-                order_map = {name: i for i, name in enumerate(self.val_order)}
-                self.values.sort(key=lambda v: order_map.get(v.id, len(order_map)))
-            # If no val_order, leave values as-is
-            return
-
-        # --- Numeric sorting ---
-        if np.issubdtype(self.val_type, np.number):
-            # Sort by .numeric from smallest to largest
-            self.values.sort(key=lambda v: (v.numeric is None, v.numeric), reverse=False)
+        if self.val_order is not None:
+            # Map each name to its position in val_order
+            order_map = {name: i for i, name in enumerate(self.val_order)}
+            self.values.sort(key=lambda v: order_map.get(v.id, len(order_map)))
             
 
     def draw(self, ax, alpha, rectangle_painter=None,

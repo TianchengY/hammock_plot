@@ -6,6 +6,7 @@ from hammock_plot.unibar import Unibar
 import pandas as pd
 from hammock_plot.utils import Defaults
 import numpy as np
+from collections import defaultdict
 
 class Figure:
     """
@@ -356,53 +357,94 @@ class Figure:
                 .to_dict()
             )
 
-            # Aggregate into pair -> weight-vector
-            pairs: Dict[Tuple[Any, Any], List[float]] = {}
+            pairs = defaultdict(lambda: [0.0] * len(self.colors))
             for (lv, rv, color_idx), cnt in grouped.items():
-                key = (lv, rv)
-                if key not in pairs:
-                    pairs[key] = [0.0] * len(self.colors)
-                # ensure color_idx is an int and within range
-                try:
-                    ci = int(color_idx)
-                except Exception:
-                    ci = 0
-                if 0 <= ci < len(self.colors):
-                    pairs[key][ci] += float(cnt)
-                else:
-                    pairs[key][0] += float(cnt)
+                ci = int(color_idx) if str(color_idx).isdigit() else 0
+                ci = ci if 0 <= ci < len(self.colors) else 0
+                pairs[(lv, rv)][ci] += float(cnt)
 
-            # Build geometry arrays for this unibar pair
-            left_center_pts = []
-            right_center_pts = []
-            heights = []
-            weights = []
+            # Build outgoing (from left) and incoming (to right) connection maps
+            outgoing = defaultdict(list)
+            incoming = defaultdict(list)
+
+            for (lv, rv), wts in pairs.items():
+                total_cnt = sum(wts)
+                if total_cnt <= 0:
+                    continue
+                height = total_cnt * self.bar_unit * self.connector_fraction
+                outgoing[lv].append((rv, wts, height))
+                incoming[rv].append((lv, wts, height))
+
+            # Precompute index map for target values in the right unibar
+            right_index = {v.id: idx for idx, v in enumerate(right_uni.values)}
+
+            # --- Compute stacked vertical centers for left values ---
+            for lv, conns in outgoing.items():
+                lv_obj = left_uni.get_value_by_id(str(lv))
+                if lv_obj is None:
+                    continue
+
+                # Sort connections by the order of rv in right_uni.values
+                conns.sort(key=lambda c: right_index.get(str(c[0]), 0))
+
+                total_height = lv_obj.occurrences * self.bar_unit * self.connector_fraction
+                bottom_y = lv_obj.vert_centre - total_height / 2.0
+                current_y = bottom_y
+
+                new_conns = []
+                for rv, wts, height in conns:
+                    center_y = current_y + height / 2.0
+                    new_conns.append((rv, wts, height, center_y))
+                    current_y += height
+                outgoing[lv] = new_conns
+
+            # --- Compute stacked vertical centers for right values ---
+            left_index = {v.id: idx for idx, v in enumerate(left_uni.values)}
+
+            for rv, conns in incoming.items():
+                rv_obj = right_uni.get_value_by_id(str(rv))
+                if rv_obj is None:
+                    continue
+
+                # Sort connections by the order of lv in left_uni.values
+                conns.sort(key=lambda c: left_index.get(str(c[0]), 0))
+
+                total_height = rv_obj.occurrences * self.bar_unit * self.connector_fraction
+                bottom_y = rv_obj.vert_centre - total_height / 2.0
+                current_y = bottom_y
+
+                new_conns = []
+                for lv, wts, height in conns:
+                    center_y = current_y + height / 2.0
+                    new_conns.append((lv, wts, height, center_y))
+                    current_y += height
+                incoming[rv] = new_conns
+
+            # --- Draw connections ---
+            left_center_pts, right_center_pts, heights, weights = [], [], [], []
 
             for (lv, rv), wts in pairs.items():
                 total_cnt = sum(wts)
                 if total_cnt <= 0:
                     continue
 
-                # find corresponding Value objects to get vertical centres
                 lv_obj = left_uni.get_value_by_id(str(lv))
                 rv_obj = right_uni.get_value_by_id(str(rv))
                 if lv_obj is None or rv_obj is None:
-                    # If get_value_by_id fails, skip this pair
                     continue
 
-                # x positions: just inside each unibar toward the middle gap
+                # Use precomputed stacked centers
+                ly = next((c_y for r, _, _, c_y in outgoing[lv] if r == rv), lv_obj.vert_centre)
+                ry = next((c_y for l, _, _, c_y in incoming[rv] if l == lv), rv_obj.vert_centre)
+
                 lx = left_uni.pos_x + self.unibar_width / 2 + self.gap_btwn_uni_multi
                 rx = right_uni.pos_x - self.unibar_width / 2 - self.gap_btwn_uni_multi
-
-                ly = lv_obj.vert_centre
-                ry = rv_obj.vert_centre
 
                 left_center_pts.append((lx, ly))
                 right_center_pts.append((rx, ry))
                 heights.append(total_cnt * self.bar_unit * self.connector_fraction)
                 weights.append(wts)
 
-            # draw the batch for this adjacent pair
             if left_center_pts:
                 rect_painter.plot(
                     ax=ax,
@@ -416,3 +458,4 @@ class Figure:
                 )
 
         return ax
+
