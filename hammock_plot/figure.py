@@ -336,151 +336,126 @@ class Figure:
         return ax
 
     def draw_connections(self, alpha, ax=None):
+        # nothing to draw if no multi width (no room for connections)
         if self.multi_width == 0:
             return ax
 
         shape_painter = self.fig_painter
 
-        # Get geometry data depending on the shape type
-        if self.shape == "rectangle":
-            conn_data = self.get_connect_params()
-        elif self.shape == "parallelogram":
-            conn_data = self.get_connect_params()
-        else:
-            raise ValueError(f"Unknown connection shape: {self.shape}")
-
-        # Draw each connection group
-        for left_center_pts, right_center_pts, heights, weights in conn_data:
-            shape_painter.plot(
-                ax=ax,
-                alpha=alpha,
-                left_center_pts=left_center_pts,
-                right_center_pts=right_center_pts,
-                heights=heights,
-                colors=self.colors,
-                weights=weights,
-                orientation="horizontal",
-            )
-
-        return ax
-
-
-    def _group_pairs(self, left_uni, right_uni):
-        """Return a dictionary of connection pairs with color weights."""
-        grouped = (
-            self.data_df
-            .groupby([left_uni.name, right_uni.name, "color_index"], observed=True)
-            .size()
-            .to_dict()
-        )
-
-        pairs = defaultdict(lambda: [0.0] * len(self.colors))
-        for (lv, rv, color_idx), cnt in grouped.items():
-            ci = int(color_idx) if str(color_idx).isdigit() else 0
-            ci = ci if 0 <= ci < len(self.colors) else 0
-            pairs[(lv, rv)][ci] += float(cnt)
-
-        return pairs
-
-
-    def _compute_stacked_centers(self, left_uni, right_uni, pairs):
-        """
-        Compute vertical centers for each connection.
-        For parallelogram, spacing is expanded according to slope.
-        """
-        outgoing = defaultdict(list)
-        incoming = defaultdict(list)
-
-        right_index = {v.id: idx for idx, v in enumerate(right_uni.values)}
-        left_index = {v.id: idx for idx, v in enumerate(left_uni.values)}
-
-        # Prepare connections (keep zero heights)
-        for (lv, rv), wts in pairs.items():
-            height = sum(wts) * self.bar_unit * self.connector_fraction
-            outgoing[lv].append((rv, wts, height))
-            incoming[rv].append((lv, wts, height))
-
-        def stack_connections(conns, obj, index_map):
-            """Compute stacked centers for one side (left or right)."""
-            conns.sort(key=lambda c: index_map.get(str(c[0]), 0))
-            total_h = obj.occurrences * self.bar_unit * self.connector_fraction
-            bottom_y = obj.vert_centre - total_h / 2.0
-            current_y = bottom_y
-            new_conns = []
-
-            for other_id, wts, h in conns:
-                if self.shape == "parallelogram" and h > 0:
-                    # compute vertical spacing for parallelogram (centers only)
-                    # width along x will be used for slope, vertical_h used only for spacing
-                    center_y = current_y + h / 2.0
-                    current_y += h / np.cos(0)  # placeholder, actual slope used later
-                else:
-                    center_y = current_y + h / 2.0
-                    current_y += h
-
-                new_conns.append((other_id, wts, h, center_y))
-            return new_conns
-
-        # Stack left
-        for lv, conns in outgoing.items():
-            lv_obj = left_uni.get_value_by_id(str(lv))
-            if lv_obj is None:
-                continue
-            outgoing[lv] = stack_connections(conns, lv_obj, right_index)
-
-        # Stack right
-        for rv, conns in incoming.items():
-            rv_obj = right_uni.get_value_by_id(str(rv))
-            if rv_obj is None:
-                continue
-            incoming[rv] = stack_connections(conns, rv_obj, left_index)
-
-        return outgoing, incoming
-
-
-    def get_connect_params(self):
-        """
-        Generic method for both rectangle and parallelogram connections.
-        Returns a list of tuples: (left_pts, right_pts, heights, weights)
-        """
-        conn_data = []
-
+        # For each adjacent pair of unibars, build connection polygons
         for i in range(len(self.unibars) - 1):
             left_uni = self.unibars[i]
             right_uni = self.unibars[i + 1]
 
-            pairs = self._group_pairs(left_uni, right_uni)
-            outgoing, incoming = self._compute_stacked_centers(left_uni, right_uni, pairs)
+            left_name = left_uni.name
+            right_name = right_uni.name
 
+            # Group by left, right and color_index to get counts per colour for each pair
+            grouped = (
+                self.data_df
+                .groupby([left_name, right_name, "color_index"], observed=True)
+                .size()
+                .to_dict()
+            )
+
+            pairs = defaultdict(lambda: [0.0] * len(self.colors))
+            for (lv, rv, color_idx), cnt in grouped.items():
+                ci = int(color_idx) if str(color_idx).isdigit() else 0
+                ci = ci if 0 <= ci < len(self.colors) else 0
+                pairs[(lv, rv)][ci] += float(cnt)
+
+            # Build outgoing (from left) and incoming (to right) connection maps
+            outgoing = defaultdict(list)
+            incoming = defaultdict(list)
+
+            for (lv, rv), wts in pairs.items():
+                total_cnt = sum(wts)
+                if total_cnt <= 0:
+                    continue
+                height = total_cnt * self.bar_unit * self.connector_fraction
+                outgoing[lv].append((rv, wts, height))
+                incoming[rv].append((lv, wts, height))
+
+            # Precompute index map for target values in the right unibar
+            right_index = {v.id: idx for idx, v in enumerate(right_uni.values)}
+
+            # --- Compute stacked vertical centers for left values ---
+            for lv, conns in outgoing.items():
+                lv_obj = left_uni.get_value_by_id(str(lv))
+                if lv_obj is None:
+                    continue
+
+                # Sort connections by the order of rv in right_uni.values
+                conns.sort(key=lambda c: right_index.get(str(c[0]), 0))
+
+                total_height = lv_obj.occurrences * self.bar_unit * self.connector_fraction
+                bottom_y = lv_obj.vert_centre - total_height / 2.0
+                current_y = bottom_y
+
+                new_conns = []
+                for rv, wts, height in conns:
+                    center_y = current_y + height / 2.0
+                    new_conns.append((rv, wts, height, center_y))
+                    current_y += height
+                outgoing[lv] = new_conns
+
+            # --- Compute stacked vertical centers for right values ---
+            left_index = {v.id: idx for idx, v in enumerate(left_uni.values)}
+
+            for rv, conns in incoming.items():
+                rv_obj = right_uni.get_value_by_id(str(rv))
+                if rv_obj is None:
+                    continue
+
+                # Sort connections by the order of lv in left_uni.values
+                conns.sort(key=lambda c: left_index.get(str(c[0]), 0))
+
+                total_height = rv_obj.occurrences * self.bar_unit * self.connector_fraction
+                bottom_y = rv_obj.vert_centre - total_height / 2.0
+                current_y = bottom_y
+
+                new_conns = []
+                for lv, wts, height in conns:
+                    center_y = current_y + height / 2.0
+                    new_conns.append((lv, wts, height, center_y))
+                    current_y += height
+                incoming[rv] = new_conns
+
+            # --- Draw connections ---
             left_center_pts, right_center_pts, heights, weights = [], [], [], []
 
             for (lv, rv), wts in pairs.items():
                 total_cnt = sum(wts)
+                if total_cnt <= 0:
+                    continue
 
                 lv_obj = left_uni.get_value_by_id(str(lv))
                 rv_obj = right_uni.get_value_by_id(str(rv))
                 if lv_obj is None or rv_obj is None:
                     continue
 
-                # stacked centers
-                ly = next((cy for r, _, _, cy in outgoing[lv] if r == rv), lv_obj.vert_centre)
-                ry = next((cy for l, _, _, cy in incoming[rv] if l == lv), rv_obj.vert_centre)
+                # Use precomputed stacked centers
+                ly = next((c_y for r, _, _, c_y in outgoing[lv] if r == rv), lv_obj.vert_centre)
+                ry = next((c_y for l, _, _, c_y in incoming[rv] if l == lv), rv_obj.vert_centre)
 
                 lx = left_uni.pos_x + self.unibar_width / 2 + self.gap_btwn_uni_multi
                 rx = right_uni.pos_x - self.unibar_width / 2 - self.gap_btwn_uni_multi
 
-                if self.shape == "parallelogram" and total_cnt > 0:
-                    # adjust centers for slant
-                    alpha_local = np.arctan(abs(ly - ry) / abs(lx - rx)) if lx != rx else np.pi / 2
-                    vertical_h = (total_cnt * self.bar_unit * self.connector_fraction) / np.cos(alpha_local)
-                    ly += (vertical_h - total_cnt * self.bar_unit * self.connector_fraction)/2
-                    ry -= (vertical_h - total_cnt * self.bar_unit * self.connector_fraction)/2
-
                 left_center_pts.append((lx, ly))
                 right_center_pts.append((rx, ry))
-                heights.append(total_cnt * self.bar_unit * self.connector_fraction)  # true height
+                heights.append(total_cnt * self.bar_unit * self.connector_fraction)
                 weights.append(wts)
 
-            conn_data.append((left_center_pts, right_center_pts, heights, weights))
+            if left_center_pts:
+                shape_painter.plot(
+                    ax=ax,
+                    alpha=alpha,
+                    left_center_pts=left_center_pts,
+                    right_center_pts=right_center_pts,
+                    heights=heights,
+                    colors=self.colors,
+                    weights=weights,
+                    orientation="horizontal",
+                )
 
-        return conn_data
+        return ax
