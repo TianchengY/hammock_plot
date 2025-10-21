@@ -33,7 +33,7 @@ pip install hammock_plot
 
 ### Example: Asthma data
 
-We import the diabetes dataset:
+We import the asthma dataset (Schonlau 2024):
 
 ```python
 import hammock_plot
@@ -105,7 +105,7 @@ satisfied respondents simply choose the highest value.
 
 ### Example value_order for the Shakespeare data
 
-We import the Shakespeare dataset:
+We import the Shakespeare dataset (Schonlau 2024):
 
 ```python
 import hammock_plot
@@ -139,7 +139,7 @@ ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,color=color
 
 ### Example numerical_display_type using penguin data
 
-We import the Shakespeare dataset:
+We import the penguin dataset (Horst et al., 2020):
 
 ```python
 import hammock_plot
@@ -238,6 +238,8 @@ Bendix, F., Kosara, R., & Hauser, H. (2005). Parallel sets: visual analysis of c
 
 Hofmann, H., & Vendettuoli, M. (2013). Common angle plots as perception-true visualizations of categorical associations. IEEE transactions on visualization and computer graphics, 19(12), 2297-2305.
 
+Horst, A. M., Hill, A. P., & Gorman, K. B. (2020). palmerpenguins: Palmer Archipelago (Antarctica) penguin data} (Version 0.1.0) [R package ]. https://doi.org/10.5281/zenodo.3960218
+
 Inselberg, A., & Dimsdale, B. (2009). Parallel coordinates. Human-Machine Interactive Systems, 199-233.
 
 Rosvall, Martin, & Bergstrom, C.T. (2010) "Mapping change in large networks." PloS one 5.1: e8694.
@@ -247,6 +249,8 @@ the committee appointed on the 31st march, 1896, to consider and report to the c
 upon the subject of the definition of a standard or standards of thermal efficiency for
 steam-engines: With an introductory note. In Minutes of proceedings of the institution
 of civil engineers, Volume 134, pp. 278–283.
+
+Schonlau M. Hammock plots: visualizing categorical and numerical variables. Journal of Computational and Graphical Statistics, November 2024. 33(4), 1475-1487.
 
 Schonlau M. 
 *[Visualizing Categorical Data Arising in the Health Sciences Using Hammock Plots.](http://www.schonlau.net/publication/03jsm_hammockplot.pdf)* 
@@ -266,5 +270,6 @@ There is also a Stata implementation `hammock` (available from the Stata archive
 ## Authors
 
 - Tiancheng Yang t77yang@uwaterloo.ca
+- Sandra Huang s77huang@uwaterloo.ca
 
 

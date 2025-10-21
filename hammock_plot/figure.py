@@ -82,6 +82,7 @@ class Figure:
         
         self.label_options = label_options
         self.fig_painter: FigureBase = Rectangle() if shape_type == "rectangle" else Parallelogram()
+        self.shape = shape_type
 
         self.scale = Defaults.SCALE
         self.xmargin = Defaults.XMARGIN
@@ -339,7 +340,7 @@ class Figure:
         if self.multi_width == 0:
             return ax
 
-        rect_painter = self.fig_painter
+        shape_painter = self.fig_painter
 
         # For each adjacent pair of unibars, build connection polygons
         for i in range(len(self.unibars) - 1):
@@ -446,7 +447,7 @@ class Figure:
                 weights.append(wts)
 
             if left_center_pts:
-                rect_painter.plot(
+                shape_painter.plot(
                     ax=ax,
                     alpha=alpha,
                     left_center_pts=left_center_pts,
@@ -458,4 +459,20 @@ class Figure:
                 )
 
         return ax
+    
+    def get_rect_connect_params(self, alpha, ax=None):
+        """
+            Get the parameters needed to draw the rectangle connections
+        """
+        pass
+
+    def get_parallel_connect_params(self, alpha, ax=None):
+        """
+            Get the parameters needed to draw the parallelogram connections
+            (uses the vertical height instead of the actual 'height' of a connection)
+        """
+        pass
+        
+        # alpha = np.arctan(abs(l[1] - r[1]) / abs(l[0] - r[0])) if l[0] != r[0] else np.arctan(np.inf)
+        # vertical_w = w / np.cos(alpha)
 
