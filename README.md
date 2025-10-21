@@ -116,7 +116,7 @@ df = pd.read_csv('./data/data_shakespeare.csv')
 We use `speaker_dict` to map the values of the variables `speaker1` and `speaker2` according to the social class hierarchy.
 ```python
 var_lst = ["type","speaker1","speaker2","sex1"]
-color_lst = ["red","yellow","green"]
+color_lst = ["#fb9a99","#6a3d9a","#ff7f00"]
 hi_value = ["Beggars","Citizens","Gentry"]
 
 speaker_order=["Beggars", "Royalty", "Nobility", "Gentry", "Citizens", "Yeomanry"]
