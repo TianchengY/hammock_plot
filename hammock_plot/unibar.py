@@ -36,7 +36,6 @@ class Unibar:
         self.missing = missing
         self.y_top = 0.0
         self.y_bottom = 0.0 # bottom of non missing values
-        self.highlight_colors: Optional[List[str]] = None
         self.missing_placeholder = missing_placeholder
         self.val_order = val_order
         self.min_bar_height = min_bar_height
