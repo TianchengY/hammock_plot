@@ -189,11 +189,11 @@ class Unibar:
             n = len(self.non_missing_vals)
 
             # spacing between centers
-            step = (top - bottom) / n
+            step = (top - bottom) / (n - 1)
 
             for i, val in enumerate(self.non_missing_vals):
                 # place at center of each interval
-                pos = bottom + (i + 0.5) * step
+                pos = bottom + i * step
                 val.set_y(pos)
         
         # --- String/Categorical values (without same_scale) ---
