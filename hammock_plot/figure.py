@@ -388,15 +388,15 @@ class Figure:
                 # Sort connections by the order of rv in right_uni.values
                 conns.sort(key=lambda c: right_index.get(str(c[0]), 0))
 
-                total_height = lv_obj.occurrences * self.bar_unit * self.connector_fraction
+                total_height = lv_obj.occurrences * self.bar_unit
                 bottom_y = lv_obj.vert_centre - total_height / 2.0
                 current_y = bottom_y
 
                 new_conns = []
                 for rv, wts, height in conns:
-                    center_y = current_y + height / 2.0
+                    center_y = current_y + height / 2.0 / self.connector_fraction # distribute according to the lv height.
                     new_conns.append((rv, wts, height, center_y))
-                    current_y += height
+                    current_y += height / self.connector_fraction # distribute according to the lv height.
                 outgoing[lv] = new_conns
 
             # --- Compute stacked vertical centers for right values ---
@@ -410,15 +410,15 @@ class Figure:
                 # Sort connections by the order of lv in left_uni.values
                 conns.sort(key=lambda c: left_index.get(str(c[0]), 0))
 
-                total_height = rv_obj.occurrences * self.bar_unit * self.connector_fraction
+                total_height = rv_obj.occurrences * self.bar_unit # distribute according to the rv height.
                 bottom_y = rv_obj.vert_centre - total_height / 2.0
                 current_y = bottom_y
 
                 new_conns = []
                 for lv, wts, height in conns:
-                    center_y = current_y + height / 2.0
+                    center_y = current_y + height / 2.0 / self.connector_fraction # distribute according to the rv height.
                     new_conns.append((lv, wts, height, center_y))
-                    current_y += height
+                    current_y += height / self.connector_fraction # distribute according to the rv height.
                 incoming[rv] = new_conns
 
             # --- Draw connections ---
