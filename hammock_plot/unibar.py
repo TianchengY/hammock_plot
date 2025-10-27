@@ -395,11 +395,12 @@ class Unibar:
 
     def _draw_violin(self, ax, y_start, y_end):
         """
-        Draw a violin plot
+        Draw a violin plot with optional split halves and overlaid boxplots.
         """
         data_scaled, facecolors, edgecolors = self._prepare_scaled_data(y_start, y_end)
+
         if len(data_scaled) == 1:
-            # no highlight variable (both halves)
+            # Single violin (no split)
             parts = ax.violinplot(
                 dataset=[data_scaled[0]],
                 positions=[self.pos_x],
@@ -413,13 +414,24 @@ class Unibar:
                 pc.set_facecolor(facecolors[0])
                 pc.set_edgecolor('none')
                 pc.set_alpha(self.alpha)
-            # Set line colors
-            for key in ['cmeans', 'cmedians', 'cmins', 'cmaxes']:
-                if key in parts and parts[key] is not None:
-                    parts[key].set_color(edgecolors[0])
-        else: # draw one half
+
+            # Boxplot inside violin
+            box = ax.boxplot(
+                data_scaled[0],
+                positions=[self.pos_x],
+                widths=self.width * 0.25,
+                patch_artist=True,
+                showcaps=False,
+                boxprops=dict(facecolor='none', edgecolor=edgecolors[0], linewidth=1.2),
+                whiskerprops=dict(color=edgecolors[0], linewidth=1),
+                medianprops=dict(color=edgecolors[0], linewidth=1.5),
+            )
+
+        else:
+            # Split violin
             left_scaled = data_scaled[1]
             right_scaled = data_scaled[0]
+
             # Left half
             parts_left = ax.violinplot(
                 dataset=[left_scaled],
@@ -451,13 +463,41 @@ class Unibar:
                 pc.set_facecolor(facecolors[0])
                 pc.set_edgecolor('none')
                 pc.set_alpha(self.alpha)
-            
-            # set colour of means, medians, extrema
-            for key in ['cmeans', 'cmedians', 'cmins', 'cmaxes']:
-                if key in parts_right and parts_right[key] is not None:
-                    parts_right[key].set_color(edgecolors[0])
-                if key in parts_left and parts_left[key] is not None:
-                    parts_left[key].set_color(edgecolors[1])
+
+            # Offset for half-boxplots (move slightly away from center)
+            offset = self.width * 0.1
+
+            # Left half box (shift left)
+            left_box = ax.boxplot(
+                left_scaled,
+                positions=[self.pos_x - offset],
+                widths=self.width * 0.125,
+                patch_artist=True,
+                showcaps=False,
+                boxprops=dict(facecolor='none', edgecolor=edgecolors[1], linewidth=1.2),
+                whiskerprops=dict(color=edgecolors[1], linewidth=1),
+                medianprops=dict(color=edgecolors[1], linewidth=1.5),
+                manage_ticks=False
+            )
+            for patch in left_box['boxes']:
+                verts = patch.get_path().vertices
+                verts[:, 0] = np.clip(verts[:, 0], -np.inf, self.pos_x)
+
+            # Right half box (shift right)
+            right_box = ax.boxplot(
+                right_scaled,
+                positions=[self.pos_x + offset],
+                widths=self.width * 0.125,
+                patch_artist=True,
+                showcaps=False,
+                boxprops=dict(facecolor='none', edgecolor=edgecolors[0], linewidth=1.2),
+                whiskerprops=dict(color=edgecolors[0], linewidth=1),
+                medianprops=dict(color=edgecolors[0], linewidth=1.5),
+                manage_ticks=False
+            )
+            for patch in right_box['boxes']:
+                verts = patch.get_path().vertices
+                verts[:, 0] = np.clip(verts[:, 0], self.pos_x, np.inf)
 
     def _draw_boxplot(self, ax, y_start, y_end, gap_ratio=0.02):
         """
