@@ -4,6 +4,7 @@ import colorsys
 import matplotlib.colors as mcolors
 import pandas as pd
 from typing import List, Dict, Any
+import numpy as np
 
 class Defaults:
     # General
@@ -219,3 +220,16 @@ def assign_color_index(df: pd.DataFrame, var_list: List[str], hi_missing, missin
             mask = df["color_index"] == 0
             df.loc[mask, "color_index"] = df.loc[mask, v].apply(lambda val: _compute_color_index(val, hi_missing, hi_value))
     return df
+
+def get_formatted_label(datatype, value):
+    # if the label is a string
+    if datatype == np.str_:
+        return value
+    # otherwise, it should be a numerical value
+    value = float(value)
+    if abs(value) >= 1000000 or 0 < abs(value) < 0.01: # threshold for displaying scientific notation
+        return f"{value:.2e}"
+    if datatype == np.integer:
+        return str(int(value))
+    if datatype == np.floating:
+        return f"{value:.2f}" # round to 2 decimal places

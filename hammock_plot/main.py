@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from hammock_plot.figure import Figure
 from hammock_plot.utils import Defaults
 import numpy as np
-from hammock_plot.utils import safe_numeric, validate_expression, resolve_ordering, assign_color_index
+from hammock_plot.utils import safe_numeric, validate_expression, resolve_ordering, assign_color_index, get_formatted_label
 import warnings
 
 class Hammock:
@@ -182,6 +182,14 @@ class Hammock:
                 raise ValueError(
                     f'the variables: {error_values} in value_order is not in var_lst or value names user given does not match the data '
                 )
+            
+            # NOTE: not sure if we should keep this. forces numerical data to be treated as categorical data
+            # BUG: when converting to categorical data, values don't match up when comparison is made (no matches when trying to put things in the right order)
+            for variable in value_order.keys():
+                original_var_type = var_types[variable]
+                self.data_df[variable] = self.data_df[variable].apply(
+                    lambda value: get_formatted_label(original_var_type, value))
+                var_types[variable] = np.str_
         
             for variable, order in value_order.items():
                 df_values = set(self.data_df[variable].dropna())
@@ -193,11 +201,6 @@ class Hammock:
                     raise ValueError(
                         f"The following values in '{variable}' are not included in value_order: {error_values}"
                     )
-
-            # NOTE: not sure if we should keep this. forces numerical data to be treated as categorical data
-            # BUG: when converting to categorical data, values don't match up when comparison is made (no matches when trying to put things in the right order)
-            for variable in value_order.keys():
-                var_types[variable] = np.str_
         
         same_scale_type = None
 

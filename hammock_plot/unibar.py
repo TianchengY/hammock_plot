@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from hammock_plot.value import Value
 from hammock_plot.utils import edge_color_from_face
-from .utils import Defaults
+from .utils import Defaults, get_formatted_label
 
 class Unibar:
     def __init__(self,
@@ -66,7 +66,7 @@ class Unibar:
         dtype = self.val_type
 
         # global set of color indices
-        all_colors = sorted(self.df["color_index"].unique())
+        all_colors = list(range(self.df["color_index"].max() + 1))
 
         # Determine order
         order = self.val_order
@@ -623,17 +623,9 @@ class Unibar:
         - Floats are rounded to 2 decimal places
         - Integers are written with no decimal places
         """
-        # if the label is a string
-        if datatype == np.str_ or value == self.missing_placeholder:
+        if value == self.missing_placeholder:
             return value
-        # otherwise, it should be a numerical value
-        value = float(value)
-        if abs(value) >= 1000000 or 0 < abs(value) < 0.01: # threshold for displaying scientific notation
-            return f"{value:.2e}"
-        if datatype == np.integer:
-            return str(int(value))
-        if datatype == np.floating:
-            return f"{value:.2f}" # round to 2 decimal places
+        return get_formatted_label(datatype, value)
 
     def get_value_by_id(self, id: str):
         """
