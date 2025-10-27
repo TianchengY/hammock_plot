@@ -419,12 +419,13 @@ class Unibar:
             box = ax.boxplot(
                 data_scaled[0],
                 positions=[self.pos_x],
-                widths=self.width * 0.25,
+                widths=self.width * 0.1,
                 patch_artist=True,
                 showcaps=False,
                 boxprops=dict(facecolor='none', edgecolor=edgecolors[0], linewidth=1.2),
                 whiskerprops=dict(color=edgecolors[0], linewidth=1),
                 medianprops=dict(color=edgecolors[0], linewidth=1.5),
+                showfliers=False,
             )
 
         else:
@@ -465,19 +466,20 @@ class Unibar:
                 pc.set_alpha(self.alpha)
 
             # Offset for half-boxplots (move slightly away from center)
-            offset = self.width * 0.1
+            offset = self.width * 0.05
 
             # Left half box (shift left)
             left_box = ax.boxplot(
                 left_scaled,
                 positions=[self.pos_x - offset],
-                widths=self.width * 0.125,
+                widths=self.width * 0.05,
                 patch_artist=True,
                 showcaps=False,
                 boxprops=dict(facecolor='none', edgecolor=edgecolors[1], linewidth=1.2),
                 whiskerprops=dict(color=edgecolors[1], linewidth=1),
                 medianprops=dict(color=edgecolors[1], linewidth=1.5),
-                manage_ticks=False
+                manage_ticks=False,
+                showfliers=False,
             )
             for patch in left_box['boxes']:
                 verts = patch.get_path().vertices
@@ -487,13 +489,14 @@ class Unibar:
             right_box = ax.boxplot(
                 right_scaled,
                 positions=[self.pos_x + offset],
-                widths=self.width * 0.125,
+                widths=self.width * 0.05,
                 patch_artist=True,
                 showcaps=False,
                 boxprops=dict(facecolor='none', edgecolor=edgecolors[0], linewidth=1.2),
                 whiskerprops=dict(color=edgecolors[0], linewidth=1),
                 medianprops=dict(color=edgecolors[0], linewidth=1.5),
-                manage_ticks=False
+                manage_ticks=False,
+                showfliers=False,
             )
             for patch in right_box['boxes']:
                 verts = patch.get_path().vertices
