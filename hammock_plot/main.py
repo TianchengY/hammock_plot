@@ -343,8 +343,9 @@ class Hammock:
         else:
             self.data_df = self.data_df.dropna(subset=var)
 
-        self.data_df = assign_color_index(self.data_df, var, hi_missing, missing_placeholder, hi_var, hi_value)
+        self.data_df = assign_color_index(self.data_df, var + [hi_var] if hi_var not in var else [], hi_missing, missing_placeholder, hi_var, hi_value)
 
+        print(self.data_df)
         fig = Figure(
             # general
             self.data_df,
