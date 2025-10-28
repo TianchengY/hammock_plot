@@ -378,6 +378,7 @@ class Hammock:
         )
 
         ax = fig.draw_unibars(alpha=alpha)
+
         ax = fig.draw_connections(ax=ax, alpha=alpha)
 
         # Hide borders

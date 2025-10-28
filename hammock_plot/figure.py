@@ -324,6 +324,7 @@ class Figure:
 
         # draw the unibars
         rect_painter = self.fig_painter
+        
         for uni in self.unibars:
             uni.draw(
                 ax,
@@ -332,7 +333,7 @@ class Figure:
                 y_end=self.y_end,
                 alpha=alpha,
             )
-
+        
         return ax
 
     def draw_connections(self, alpha, ax=None):

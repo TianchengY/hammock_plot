@@ -426,6 +426,7 @@ class Unibar:
                 whiskerprops=dict(color=edgecolors[0], linewidth=1),
                 medianprops=dict(color=edgecolors[0], linewidth=1.5),
                 showfliers=False,
+                manage_ticks=False,
             )
 
         else:
