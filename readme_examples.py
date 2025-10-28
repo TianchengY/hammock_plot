@@ -94,3 +94,13 @@ def numerical_display_violin():
         save_path="image/penguin_display_violin.png",
         numerical_display_type={"bill_length_mm":"box", "bill_depth_mm": "rugplot", "flipper_length_mm": "violin", "body_mass_g":"box"},
     )
+
+minimal_example()
+numeric_var_levels()
+value_order()
+highlighting()
+missing_true()
+speaker_order()
+same_scale()
+numerical_display_type()
+numerical_display_violin()
