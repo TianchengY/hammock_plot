@@ -113,7 +113,6 @@ class Hammock:
                 var_types[varname] = np.str_
             else:
                 raise RuntimeError("Invalid dtype detected - logic error in code. dtype: ", dtype)
-                return
         
         if numerical_display_type:
             # invalid variable name passed to numerical_display_type dictionary
