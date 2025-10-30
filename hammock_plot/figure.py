@@ -26,7 +26,7 @@ class Figure:
         var_types:
         - Dict of the types of each variable. Either: np.str_, np.floating, or np.integer
 
-        numerical_var_levels, numerical_display_type, missing, missing_placeholder, label, unibar, hi_box, width, height, uni_fraction, connector_fraction, min_bar_height, space, label_options, shape_type, same_scale, violin_bw_method: refer to README file
+        numerical_var_levels, numerical_display_type, missing, missing_placeholder, label, unibar, hi_box, width, height, uni_vfill, connector_fraction, min_bar_height, uni_hfill, label_options, shape_type, same_scale, violin_bw_method: refer to README file
     """
     def __init__(self,
                 # general
@@ -47,10 +47,10 @@ class Figure:
                 # Layout
                 width: float,
                 height: float,
-                uni_fraction: float,
+                uni_vfill: float,
                 connector_fraction: float,
                 min_bar_height: float,
-                space: float,
+                uni_hfill: float,
 
                 # Other
                 label_options: dict,
@@ -75,10 +75,10 @@ class Figure:
 
         self.width = width # width of the entire plot
         self.height = height # height of the entire plot
-        self.uni_fraction = uni_fraction
+        self.uni_vfill = uni_vfill
         self.connector_fraction = connector_fraction
         self.min_bar_height = min_bar_height
-        self.space = space
+        self.uni_hfill = uni_hfill
         
         self.label_options = label_options
         self.fig_painter: FigureBase = Rectangle() if shape_type == "rectangle" else Parallelogram()
@@ -139,7 +139,7 @@ class Figure:
                     label_type = "values"
                 
             # long boolean expression represents the conditions for drawing small white lines to divide rugplot rectangles
-            draw_white_dividers = display_type == "rugplot" and dtype == np.str_ and self.uni_fraction == 1 and not self.missing
+            draw_white_dividers = display_type == "rugplot" and dtype == np.str_ and self.uni_vfill == 1 and not self.missing
 
             uni = Unibar(
                 df=self.data_df,
@@ -172,7 +172,7 @@ class Figure:
             return
         
         # ------------------- ADJUST VARIABLES FOR DRAWING ---------------------------
-        available_height = (self.height - 2 * self.ymargin * self.height) * self.scale * self.uni_fraction
+        available_height = (self.height - 2 * self.ymargin * self.height) * self.scale * self.uni_vfill
         total_occurrences = len(self.data_df)
         
         # avoid divide by 0
@@ -260,7 +260,7 @@ class Figure:
 
         # --- slot-based unibar math ---
         raw_width = x_total / n                     # slot width for each unibar
-        unibar_width = raw_width * self.space
+        unibar_width = raw_width * self.uni_hfill
 
         self.unibar_width = unibar_width if self.unibar or self.label else 0
 
@@ -380,7 +380,7 @@ class Figure:
             # Precompute index map for target values in the right unibar
             right_index = {v.id: idx for idx, v in enumerate(right_uni.values)}
 
-            # --- Compute stacked vertical centers for left values ---
+            # --- Compute horizontal vertical centers for left values ---
             for lv, conns in outgoing.items():
                 lv_obj = left_uni.get_value_by_id(str(lv))
                 if lv_obj is None:
@@ -456,7 +456,7 @@ class Figure:
                     heights=heights,
                     colors=self.colors,
                     weights=weights,
-                    orientation="horizontal",
+                    orientation="stacked",
                 )
 
         return ax

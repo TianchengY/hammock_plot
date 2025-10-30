@@ -201,13 +201,13 @@ We call the lines between each unibar **connectors**, since they connect adjacen
 | |             `unibar`| `bool` | Whether or not to display unibars between the plotting segments |
 | Highlighting | `hi_var` | `str` |  Variable to be highlighted. Default is none. |
 | | `hi_value` | `List[str or int] or str or int` | Value(s) of `hi_var` to be highlighted. You can highlighted one or multiple values. You can also pass an expression (e.g. "x>1 and (x>5 or x<4)") in string when you want to specify a range for a numeric hi_var.|
-| | `hi_box` | `str` | Controls how highlighted values are displayed within category labels. Options are "vertical" for vertically stacked color segments or "horizontal" for horizontally split color segments. Default is "vertical".|
+| | `hi_box` | `str` | Controls how highlighted values are displayed within category labels. Options are "side-by-side" for side-by-side color segments or "stacked" for horizontally split color segments. Default is "side-by-side".|
 | | `hi_missing` | `bool` | Whether or not missing values for `hi_var` should be highlighted. |
 | | `colors` | `List[str]` | List of colors corresponding to the list of values to be highlighted. Each color can be specified as a plain color name (e.g., `"red"`, `"yellow"`) or in the format `"color=alpha"` (e.g., `"red=0.5"`) to control transparency/intensity, where `alpha` is a decimal between 0 and 1. The default highlight color list is `["red", "green", "yellow", "lightblue", "orange", "gray", "brown", "olive", "pink", "cyan", "magenta"]`. |
 | | `default_color` | `str` |  Default color of plotting elements for boxes that are not highlighted. Default is "blue" |
-| Manipulating Spacing and Layout |   `uni_fraction` | `float`  | Fraction of vertical space that should be populated by data. Adjusts the height of the data points. Defaults is 0.08. Note: When missing=True and uni_fraction=1, there may be some overlap in unibars.| 
-| | `connector_fraction` | `float` | Fraction of the `uni_fraction` height used for drawing connectors between unibars. Controls how tall the connectors are relative to the bar height. Default is 1. |
-| |              `space` |  `float`  |Fraction of horizontal space allocated to labels/univ. bars rather than to connecting boxes. Default is 0.3 | 
+| Manipulating Spacing and Layout |   `uni_vfill` | `float`  | Fraction of vertical space that should be populated by data. Adjusts the height of the data points. Defaults is 0.08. Note: When missing=True and uni_vfill=1, there may be some overlap in unibars.| 
+| | `connector_fraction` | `float` | Fraction of the `uni_vfill` height used for drawing connectors between unibars. Controls how tall the connectors are relative to the bar height. Default is 1. |
+| |              `uni_hfill` |  `float`  |Fraction of horizontal space allocated to labels/univ. bars rather than to connecting boxes. Default is 0.3 | 
 | |              `label_options` |  `Dict[str, Dict[str, Any]]`  | Manipulates the size and look of the labels. Args following the options in the website: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.text.html Example:{"ExampleVarname":{"fontsize":12,"fontstyle":"italic","fontweight":"black","color":"b"}}  Default is None. | 
 | |              `height` |  `float`  | Height of the plot in inches. Default is 10. | 
 | |              `width` |  `float`  |  Width of the plot in inches. Default is 15. Caution: Width too narrow may distort the plot. | 

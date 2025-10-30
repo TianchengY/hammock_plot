@@ -15,9 +15,9 @@ class Defaults:
     DEFAULT_COLOR: str = "#a6cee3"
 
     # Layout
-    UNI_FRACTION: float = 0.08
+    UNI_VFILL: float = 0.08
     CONNECTOR_FRACTION: float = 1
-    SPACE: float = 0.3
+    UNI_HFILL: float = 0.3
     MIN_BAR_HEIGHT: float = 0.15
     BAR_UNIT: float = 1.0
     XMARGIN: float = 0.02

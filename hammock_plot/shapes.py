@@ -24,7 +24,7 @@ class FigureBase(ABC):
             heights: List[float],
             colors: List[str],
             weights: List[List[float]],   # per-shape weights
-            orientation: str = "vertical",
+            orientation: str = "side-by-side",
             zorder: int = 0,
             check_overlap: bool = False,
             unibar_name: str = None):
@@ -39,7 +39,7 @@ class FigureBase(ABC):
         colors : global list of color strings
         weights : list of weight lists, one per shape
                 (each list has same length as colors)
-        orientation : "vertical" or "horizontal"
+        orientation : "side-by-side" or "stacked"
         check_overlap : bool, optional
             If True, checks for overlapping polygons among the provided coordinates
             and highlights them in red on the plot.
@@ -70,7 +70,7 @@ class FigureBase(ABC):
                 arr = np.ones(len(colors))
             fracs = arr / arr.sum()
 
-            if orientation == "horizontal":
+            if orientation == "stacked":
                 # edges: left_top→left_bottom, right_top→right_bottom
                 left_top  = np.array([poly_x[0], poly_y[0]])
                 left_bot  = np.array([poly_x[1], poly_y[1]])

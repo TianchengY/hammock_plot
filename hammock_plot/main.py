@@ -31,15 +31,15 @@ class Hammock:
              # Highlighting
              hi_var: str = None,
              hi_value=None,
-             hi_box: str = "vertical",
+             hi_box: str = "side-by-side",
              hi_missing: bool = False,
              colors: list = Defaults.COLORS,
              default_color: str = Defaults.DEFAULT_COLOR,
 
              # Layout
-             uni_fraction: float = Defaults.UNI_FRACTION,
+             uni_vfill: float = Defaults.UNI_VFILL,
              connector_fraction: float = Defaults.CONNECTOR_FRACTION, 
-             space: float = Defaults.SPACE, 
+             uni_hfill: float = Defaults.UNI_HFILL, 
              label_options: dict = None,
              height: float = 10,
              width: float = 15,
@@ -70,22 +70,22 @@ class Hammock:
                 f'the variables: {error_values} in var_lst is not in data or value names user given does not match the data '
             )
         
-        if space < 0:
-            warnings.warn("space < 0. Value has been clamped to 0.")
-            space = 0
-        elif space > 1:
-            warnings.warn("space > 1. Value has been clamped to 1.")
-            space = 1
+        if uni_hfill < 0:
+            warnings.warn("uni_hfill < 0. Value has been clamped to 0.")
+            uni_hfill = 0
+        elif uni_hfill > 1:
+            warnings.warn("uni_hfill > 1. Value has been clamped to 1.")
+            uni_hfill = 1
 
-        if space == 1:
-            warnings.warn("Tip: To leave a bit of a gap between the univariate bars, set space to something close to 1 but not quite one (ex 0.9)")
+        if uni_hfill == 1:
+            warnings.warn("Tip: To leave a bit of a gap between the univariate bars, set uni_hfill to something close to 1 but not quite one (ex 0.9)")
         
-        if uni_fraction < 0:
-            warnings.warn("uni_fraction < 0. Value has been clamped to 0.")
-            uni_fraction = 0
-        elif uni_fraction > 1:
-            warnings.warn("uni_fraction > 1. Value has been clamped to 1.")
-            uni_fraction = 1
+        if uni_vfill < 0:
+            warnings.warn("uni_vfill < 0. Value has been clamped to 0.")
+            uni_vfill = 0
+        elif uni_vfill > 1:
+            warnings.warn("uni_vfill > 1. Value has been clamped to 1.")
+            uni_vfill = 1
 
         if alpha < 0:
             warnings.warn("alpha < 0. Value has been clamped to 0.")
@@ -363,10 +363,10 @@ class Hammock:
             # Layout
             width=width,
             height=height,
-            uni_fraction=uni_fraction,
+            uni_vfill=uni_vfill,
             connector_fraction=connector_fraction,
             min_bar_height=min_bar_height,
-            space=space,
+            uni_hfill=uni_hfill,
             
             # Other
             label_options=label_options,
