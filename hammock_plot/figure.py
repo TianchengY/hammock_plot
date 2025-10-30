@@ -338,7 +338,7 @@ class Figure:
 
     def draw_connections(self, alpha, ax=None):
         # nothing to draw if no multi width (no room for connections)
-        if self.multi_width == 0:
+        if self.multi_width == 0 or self.connector_fraction == 0:
             return ax
 
         shape_painter = self.fig_painter
