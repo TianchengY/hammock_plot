@@ -139,7 +139,7 @@ class Figure:
                     label_type = "values"
                 
             # long boolean expression represents the conditions for drawing small white lines to divide rugplot rectangles
-            draw_white_dividers = display_type == "rugplot" and dtype == np.str_ and self.uni_vfill == 1 and not self.missing
+            draw_white_dividers = display_type == "rugplot" and dtype == np.str_ and self.uni_vfill == 1
 
             uni = Unibar(
                 df=self.data_df,
@@ -172,24 +172,30 @@ class Figure:
             return
         
         # ------------------- ADJUST VARIABLES FOR DRAWING ---------------------------
-        available_height = (self.height - 2 * self.ymargin * self.height) * self.scale * self.uni_vfill
+        available_height = (self.height - 2 * self.ymargin * self.height) * self.scale * self.uni_vfill - (Defaults.SPACE_ABOVE_MISSING if self.missing else 0)
         total_occurrences = len(self.data_df)
         
         # avoid divide by 0
         if total_occurrences > 0:
             self.bar_unit = available_height / total_occurrences
 
-        # find the maximum missing occurrences to determine how large the missing padding should be
-        max_missing_occ = max(
-            sum(v.occurrences for v in uni.values if str(v.id) == self.missing_placeholder)
-            for uni in self.unibars
-        )
-        max_missing_height = (max_missing_occ / total_occurrences) * available_height
+        if self.missing:
+            missing_occ_sums = [
+                sum(v.occurrences for v in uni.values if str(v.id) == self.missing_placeholder)
+                for uni in self.unibars
+            ]
+
+            max_missing_occ = max(missing_occ_sums)
+            max_nonmissing_occ = total_occurrences - min(missing_occ_sums)
+
+            self.bar_unit = available_height / (max_nonmissing_occ + max_missing_occ)
+
+            max_missing_height = max_missing_occ * self.bar_unit
 
         # set bar_unit in unibars, set missing_padding in unibars
         for unibar in self.unibars:
             unibar.set_measurements(bar_unit=self.bar_unit,
-                                    missing_padding=max(self.min_bar_height, max_missing_height) + Defaults.SPACE_ABOVE_MISSING)
+                                    missing_padding=((max(self.min_bar_height, max_missing_height) + Defaults.SPACE_ABOVE_MISSING) if self.missing else 0))
         
         # determine same_scale positioning
         if same_scale_type and same_scale_type == "numerical":

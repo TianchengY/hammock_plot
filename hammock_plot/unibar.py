@@ -308,39 +308,39 @@ class Unibar:
                                check_overlap=True, unibar_name=self.name)
         
         if self.draw_white_dividers and len(values) > 1:
-                divider_height = Defaults.WHITE_DIVIDER_HEIGHT
+            divider_height = Defaults.WHITE_DIVIDER_HEIGHT
 
-                divider_left_pts = []
-                divider_right_pts = []
-                divider_heights = []
-                divider_weights = []
+            divider_left_pts = []
+            divider_right_pts = []
+            divider_heights = []
+            divider_weights = []
 
-                for i in range(len(values) - 1):
-                    top_of_i = values[i].vert_centre + heights[i] / 2
-                    bottom_of_next = values[i + 1].vert_centre - heights[i + 1] / 2
-                    divider_y = (top_of_i + bottom_of_next) / 2
-                    half_label_space = self.width / 2
+            for i in range(len(values) - 1):
+                top_of_i = values[i].vert_centre + heights[i] / 2
+                bottom_of_next = values[i + 1].vert_centre - heights[i + 1] / 2
+                divider_y = (top_of_i + bottom_of_next) / 2
+                half_label_space = self.width / 2
 
-                    divider_left_pts.append((self.pos_x - half_label_space, divider_y))
-                    divider_right_pts.append((self.pos_x + half_label_space, divider_y))
-                    divider_heights.append(divider_height)
+                divider_left_pts.append((self.pos_x - half_label_space, divider_y))
+                divider_right_pts.append((self.pos_x + half_label_space, divider_y))
+                divider_heights.append(divider_height)
 
-                    # white divider bar (use 2D structure)
-                    divider_weights.append([1])
+                # white divider bar (use 2D structure)
+                divider_weights.append([1])
 
-                rectangle_painter.plot(
-                    ax, 
-                    alpha=1, 
-                    left_center_pts=divider_left_pts,
-                    right_center_pts=divider_right_pts,
-                    heights=divider_heights,
-                    colors=["white"],
-                    weights=divider_weights,
-                    orientation=self.hi_box,
-                    zorder=2,  # slightly above bars
-                    check_overlap=False,
-                    unibar_name=self.name + "_divider"
-                )
+            rectangle_painter.plot(
+                ax, 
+                alpha=1, 
+                left_center_pts=divider_left_pts,
+                right_center_pts=divider_right_pts,
+                heights=divider_heights,
+                colors=["white"],
+                weights=divider_weights,
+                orientation=self.hi_box,
+                zorder=2,  # slightly above bars
+                check_overlap=False,
+                unibar_name=self.name + "_divider"
+            )
 
     def _prepare_scaled_data(self, y_start, y_end):
         """
