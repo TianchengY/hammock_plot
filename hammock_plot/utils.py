@@ -28,7 +28,7 @@ class Defaults:
     SPACE_ABOVE_MISSING: float = 2
     NUM_LEVELS = 7
     ALPHA = 0.7
-    WHITE_DIVIDER_HEIGHT = 0.1
+    WHITE_DIVIDER_HEIGHT = 0.2
 
 # for future use
 class Options:
