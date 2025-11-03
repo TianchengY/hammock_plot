@@ -342,7 +342,7 @@ class Figure:
         
         return ax
 
-    def draw_connections(self, alpha, ax=None):
+    def draw_connections(self, alpha, color, ax=None):
         # nothing to draw if no multi width (no room for connections)
         if self.multi_width == 0 or self.connector_fraction == 0:
             return ax
@@ -454,13 +454,14 @@ class Figure:
                 weights.append(wts)
 
             if left_center_pts:
+                colors = [color] * len(self.colors) if color else self.colors
                 shape_painter.plot(
                     ax=ax,
                     alpha=alpha,
                     left_center_pts=left_center_pts,
                     right_center_pts=right_center_pts,
                     heights=heights,
-                    colors=self.colors,
+                    colors=colors,
                     weights=weights,
                     orientation="stacked",
                 )

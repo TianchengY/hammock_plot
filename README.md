@@ -205,6 +205,7 @@ We call the lines between each unibar **connectors**, since they connect adjacen
 | | `hi_missing` | `bool` | Whether or not missing values for `hi_var` should be highlighted. |
 | | `colors` | `List[str]` | List of colors corresponding to the list of values to be highlighted. Each color can be specified as a plain color name (e.g., `"red"`, `"yellow"`) or in the format `"color=alpha"` (e.g., `"red=0.5"`) to control transparency/intensity, where `alpha` is a decimal between 0 and 1. The default highlight color list is `["red", "green", "yellow", "lightblue", "orange", "gray", "brown", "olive", "pink", "cyan", "magenta"]`. |
 | | `default_color` | `str` |  Default color of plotting elements for boxes that are not highlighted. Default is "blue" |
+| | `connector_color` | `str` | The color of the connectors. Default matches the default color + highlight colors. Specifying a connector color removes the highlighting from the connectors. | |
 | Manipulating Spacing and Layout |   `uni_vfill` | `float`  | Fraction of vertical space that should be populated by data. Adjusts the height of the data points. Defaults is 0.08. Note: When missing=True and uni_vfill=1, there may be some overlap in unibars.| 
 | | `connector_fraction` | `float` | Fraction of the `uni_vfill` height used for drawing connectors between unibars. Controls how tall the connectors are relative to the bar height. Default is 1. |
 | |              `uni_hfill` |  `float`  |Fraction of horizontal space allocated to labels/univ. bars rather than to connecting boxes. Default is 0.3 | 

@@ -30,18 +30,6 @@ class Defaults:
     ALPHA = 0.7
     WHITE_DIVIDER_HEIGHT = 0.2
 
-# for future use
-class Options:
-    # some static variables
-    @staticmethod
-    def set_global_options(zz):
-        pass
-
-    # some instance variables
-    def __init__():
-        pass
-
-
 def clean_expression(expr: str) -> str:
     """
     Cleans up a logical expression string by inserting necessary spaces

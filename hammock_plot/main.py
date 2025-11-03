@@ -35,6 +35,7 @@ class Hammock:
              hi_missing: bool = False,
              colors: list = Defaults.COLORS,
              default_color: str = Defaults.DEFAULT_COLOR,
+             connector_color: str = None,
 
              # Layout
              uni_vfill: float = Defaults.UNI_VFILL,
@@ -300,7 +301,7 @@ class Hammock:
             raise ValueError(
                 f'The current highlight colors {colors} conflict with the default color {default_color}. Please choose another default color or other highlight colors'
             )
-        
+
         # automatically extend colors
         if hi_var != None:
             if num_hi_colors > len(colors):
@@ -379,7 +380,7 @@ class Hammock:
 
         ax = fig.draw_unibars(alpha=alpha)
 
-        ax = fig.draw_connections(ax=ax, alpha=alpha)
+        ax = fig.draw_connections(ax=ax, alpha=alpha, color=connector_color)
 
         # Hide borders
         for border in ['right', 'left', 'top', 'bottom']:
