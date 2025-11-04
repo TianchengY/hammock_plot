@@ -23,8 +23,9 @@
 
 
 ## Getting started
+The hammock plot package is accessible for use from [this website](https://hammock-plot.streamlit.app/).
 
-You can install hammock from `pip`:
+You can also install hammock from `pip`:
 
 ```shell
 pip install hammock_plot
