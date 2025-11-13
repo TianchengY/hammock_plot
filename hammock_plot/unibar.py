@@ -534,7 +534,8 @@ class Unibar:
         if total_points == 0:
             return
         gap = self.width * gap_ratio
-        box_widths = [self.width * (cnt / total_points) for cnt in num_points]
+        num_boxes = len(data_scaled)
+        box_widths = [(self.width - gap *  (num_boxes - 1))* (cnt / total_points) for cnt in num_points]
 
         # Compute total width including gaps
         total_width = sum(box_widths) + gap * (n - 1)
