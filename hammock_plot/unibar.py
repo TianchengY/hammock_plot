@@ -125,7 +125,7 @@ class Unibar:
         if scale_ypos is not None:
             self.scale_ypos = scale_ypos
 
-    def compute_vertical_positions(self, y_start: float, y_end: float):
+    def compute_vertical_positions(self, y_start: float, y_end: float):    
         bottom = y_start
         top = y_end
 
@@ -137,18 +137,29 @@ class Unibar:
             if mv: mv.set_y(centre=missing_center)
             # Update bottom for non-missing values: start above missing bar + padding
             bottom += self.missing_padding
+        
+        if self.display_type == "hbar":
+            self.hbar_height = (top - bottom) / len(self.non_missing_vals) * Defaults.HBAR_HEIGHT_FRAC
 
         # --- Adjust top for last non-missing bar ---
         if self.min_max_pos:
             top_adjustment =  max(self.min_bar_height / 2, self.min_max_pos[1]) if self.min_max_pos[1] != 0 else 0
         else:
-            top_adjustment = max(self.min_bar_height, self.non_missing_vals[-1].occurrences * self.bar_unit) / 2 if self.non_missing_vals and self.non_missing_vals[-1].occurrences != 0 else 0
+            if self.display_type != "hbar":
+                top_height = self.non_missing_vals[-1].occurrences * self.bar_unit
+            else:
+                top_height = self.hbar_height
+            top_adjustment = max(self.min_bar_height, top_height) / 2 if self.non_missing_vals and self.non_missing_vals[-1].occurrences != 0 else 0
         top -= top_adjustment
         
         if self.min_max_pos:
             bottom_adjustment = max(self.min_bar_height / 2, self.min_max_pos[0]) if self.min_max_pos[0] != 0 else 0
         else:
-            bottom_adjustment =  max(self.min_bar_height, self.non_missing_vals[0].occurrences * self.bar_unit) / 2 if self.non_missing_vals and self.non_missing_vals[0].occurrences != 0 else 0
+            if self.display_type != "hbar":
+                bottom_height = self.non_missing_vals[0].occurrences * self.bar_unit
+            else:
+                bottom_height = self.hbar_height
+            bottom_adjustment =  max(self.min_bar_height, bottom_height) / 2 if self.non_missing_vals and self.non_missing_vals[0].occurrences != 0 else 0
         bottom += bottom_adjustment
 
         # --- Numeric values ---
@@ -184,7 +195,7 @@ class Unibar:
                     v.set_y(centre=p)
 
         # --- String/Categorical values (with same_scale) ---
-        elif self.val_type == np.str_ and self.non_missing_vals and self.min_max_pos:
+        elif self.val_type == np.str_ and self.non_missing_vals and (self.min_max_pos or self.display_type == "hbar"):
             n = len(self.non_missing_vals)
 
             # spacing between centers
@@ -282,6 +293,8 @@ class Unibar:
             self._draw_violin(ax, y_start, y_end)
         elif self.display_type == "box":
             self._draw_boxplot(ax, y_start, y_end)
+        elif self.display_type == "hbar":
+            self._draw_hbar(ax, rectangle_painter)
         else:
             raise ValueError(f"Unknown display_type: {self.display_type}")
 
@@ -575,7 +588,35 @@ class Unibar:
                 patch.set_facecolor(facecolors[i])
                 patch.set_edgecolor(edgecolors[i])
                 patch.set_alpha(self.alpha)
+    
+    # draws missing values as well
+    def _draw_hbar(self, ax, rectangle_painter):
+        n = len(self.values)
+        
+        max_val_occ = max([v.occurrences for v in self.values])
 
+        bar_unit = self.width / max_val_occ # this is the horizontal bar unit (how much "width" a value occurrence should contribute)
+
+        left_pts, right_pts, weights = [], [], []
+        # determine value coordinates for drawing
+        left_xpos = self.pos_x - self.width / 2
+        heights = [self.hbar_height] * n # constant height
+
+        for v in self.values:
+            hbar_width = bar_unit * v.occurrences
+            left_pts.append((left_xpos, v.vert_centre))
+            right_pts.append((left_xpos + hbar_width, v.vert_centre))
+            weights.append(v.occ_by_colour)
+
+        # draw values        
+        rectangle_painter.plot(ax, self.alpha,
+                               left_pts,
+                               right_pts,
+                               heights,
+                               self.colors,
+                               weights,
+                               orientation=self.hi_box,
+                               zorder=1)
 
     # ---------- Label Drawing ----------
     def _draw_labels(self, ax, y_start, y_end):

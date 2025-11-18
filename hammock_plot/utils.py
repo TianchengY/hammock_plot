@@ -29,6 +29,7 @@ class Defaults:
     NUM_LEVELS = 7
     ALPHA = 0.7
     WHITE_DIVIDER_HEIGHT = 0.2
+    HBAR_HEIGHT_FRAC = 0.9
 
 def clean_expression(expr: str) -> str:
     """

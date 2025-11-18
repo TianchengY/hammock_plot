@@ -171,6 +171,20 @@ class Figure:
         if n == 0:
             return
         
+        
+        # ----------------------- set specific drawing parameters for the unibars --------------------------
+        # Use margins as fractions of width/height
+        edge_x = self.xmargin * self.width * self.scale
+        edge_y = self.ymargin * self.height * self.scale
+
+        # Plotting extents
+        x_start = edge_x
+        x_end = self.width * self.scale - edge_x
+        y_start = edge_y
+        y_end = self.height * self.scale - edge_y
+
+        x_total = x_end - x_start  # total drawable width
+        
         # ------------------- ADJUST VARIABLES FOR DRAWING ---------------------------
         available_height = (self.height - 2 * self.ymargin * self.height) * self.scale * self.uni_vfill - (Defaults.SPACE_ABOVE_MISSING if self.missing else 0)
         total_occurrences = len(self.data_df)
@@ -198,6 +212,7 @@ class Figure:
                                     missing_padding=((max(self.min_bar_height, max_missing_height) + Defaults.SPACE_ABOVE_MISSING) if self.missing else 0))
         
         # determine same_scale positioning
+        # BUG: same_scale and missing=True and same_scale_type == "numerical"
         if same_scale_type and same_scale_type == "numerical":
             # Determine ranges for unibars that should use same_scale
             global_range = None
@@ -221,6 +236,7 @@ class Figure:
                 for uni in self.unibars:
                     if uni.name in same_scale:
                         for val in uni.values:
+                            if val.id == self.missing_placeholder: continue #skip missing placeholder
                             if val.numeric == global_min:
                                 max_min_occ = max(val.occurrences, max_min_occ)
                             if val.numeric == global_max:
@@ -236,33 +252,30 @@ class Figure:
         elif same_scale_type and same_scale_type == "categorical":
             # determine the positions of the first and last categories to make them line up
             if same_scale:
-                max_btm_occ = 0
-                max_top_occ = 0
+                max_btm_height = 0
+                max_top_height = 0
                 for uni in self.unibars:
+                    # note: there may be a bug with same_scale and missing=True - need to test
                     if uni.name in same_scale:
-                        for val in uni.values:
-                            if val.id == self.value_order[uni.name][0]:
-                                max_btm_occ = max(max_btm_occ, val.occurrences)
-                            if val.id == self.value_order[uni.name][-1]:
-                                max_top_occ = max(max_top_occ, val.occurrences)
-                min_max_pos = (max_btm_occ * self.bar_unit / 2, max_top_occ * self.bar_unit / 2)
+                        if uni.display_type == "hbar":
+                            height = (y_end - y_start) / len(uni.values) * Defaults.HBAR_HEIGHT_FRAC
+                            max_btm_height = max(max_btm_height, height)
+                            max_top_height = max(max_top_height, height)
+                        else:
+                            bottommost_val = self.value_order[uni.name][0]
+                            if bottommost_val == self.missing_placeholder:
+                                bottommost_val = self.value_order[uni.name][1]
+                            topmost_val = self.value_order[uni.name][-1]
+                            for val in uni.values:
+                                if val.id == bottommost_val:
+                                    max_btm_height = max(max_btm_height, val.occurrences * self.bar_unit)
+                                if val.id == topmost_val:
+                                    max_top_height = max(max_top_height, val.occurrences * self.bar_unit)
+                min_max_pos = (max_btm_height / 2, max_top_height / 2)
 
                 for uni in self.unibars:
                     if uni.name in same_scale:
                         uni.min_max_pos = min_max_pos
-
-        # ----------------------- set specific drawing parameters for the unibars --------------------------
-        # Use margins as fractions of width/height
-        edge_x = self.xmargin * self.width * self.scale
-        edge_y = self.ymargin * self.height * self.scale
-
-        # Plotting extents
-        x_start = edge_x
-        x_end = self.width * self.scale - edge_x
-        y_start = edge_y
-        y_end = self.height * self.scale - edge_y
-
-        x_total = x_end - x_start  # total drawable width
 
         # --- slot-based unibar math ---
         raw_width = x_total / n                     # slot width for each unibar

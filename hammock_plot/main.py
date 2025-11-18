@@ -128,9 +128,9 @@ class Hammock:
                     raise ValueError(
                         f'Cannot assign display type {display_type} to categorical variable {variable}.'
                     )
-                if not display_type in ["violin", "box", "rugplot"]:
+                if not display_type in ["violin", "box", "rugplot", "hbar"]:
                     raise ValueError(
-                        f'All display types must be one of: ["violin", "box", "rugplot"]; invalid display type {display_type}'
+                        f'All display types must be one of: ["violin", "box", "rugplot", "hbar"]; invalid display type {display_type}'
                     )
     
         if numerical_var_levels:
