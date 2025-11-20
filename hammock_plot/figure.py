@@ -211,6 +211,40 @@ class Figure:
             unibar.set_measurements(bar_unit=self.bar_unit,
                                     missing_padding=((max(self.min_bar_height, max_missing_height) + Defaults.SPACE_ABOVE_MISSING) if self.missing else 0))
         
+        # --- slot-based unibar math ---
+        raw_width = x_total / n                     # slot width for each unibar
+        unibar_width = raw_width * self.uni_hfill
+
+        self.unibar_width = unibar_width if self.unibar or self.label else 0
+
+        # Compute leftover spacing inside each slot for connections
+        multi_width = raw_width - unibar_width - 2 * self.gap_btwn_uni_multi
+
+        if multi_width < Defaults.MIN_MULTI_WIDTH:
+            multi_width = 0
+        
+        self.multi_width = multi_width
+
+        # Centers of slots (always fill x_start..x_end)
+        xs = [x_start + raw_width/2 + i * raw_width for i in range(n)]
+
+        # Assign positions
+        for uni, x in zip(self.unibars, xs):
+            uni.set_measurements(pos_x=x)
+            uni.missing_placeholder = self.missing_placeholder
+        
+        # determine horizontal bar chart height
+        # TODO!!!!
+        max_val_occ = 0
+        for uni in self.unibars:
+            if uni.display_type == "bar chart":
+                max_val_occ = max(max_val_occ, max(val.occurrences for val in uni.values))
+        hbar_height = max_val_occ * self.bar_unit # area of the largest # of occurrences, divided by the width of a unibar
+
+        # Compute vertical layout with consistent margins
+        for uni in self.unibars:
+            uni.set_measurements(width = unibar_width, hbar_height=hbar_height)
+        
         # determine same_scale positioning
         # BUG: same_scale and missing=True and same_scale_type == "numerical"
         if same_scale_type and same_scale_type == "numerical":
@@ -258,9 +292,8 @@ class Figure:
                     # note: there may be a bug with same_scale and missing=True - need to test
                     if uni.name in same_scale:
                         if uni.display_type == "bar chart":
-                            height = (y_end - y_start) / len(uni.values) * Defaults.HBAR_HEIGHT_FRAC
-                            max_btm_height = max(max_btm_height, height)
-                            max_top_height = max(max_top_height, height)
+                            max_btm_height = max(max_btm_height, hbar_height)
+                            max_top_height = max(max_top_height, hbar_height)
                         else:
                             bottommost_val = self.value_order[uni.name][0]
                             if bottommost_val == self.missing_placeholder:
@@ -276,32 +309,9 @@ class Figure:
                 for uni in self.unibars:
                     if uni.name in same_scale:
                         uni.min_max_pos = min_max_pos
-
-        # --- slot-based unibar math ---
-        raw_width = x_total / n                     # slot width for each unibar
-        unibar_width = raw_width * self.uni_hfill
-
-        self.unibar_width = unibar_width if self.unibar or self.label else 0
-
-        # Compute leftover spacing inside each slot for connections
-        multi_width = raw_width - unibar_width - 2 * self.gap_btwn_uni_multi
-
-        if multi_width < Defaults.MIN_MULTI_WIDTH:
-            multi_width = 0
         
-        self.multi_width = multi_width
-
-        # Centers of slots (always fill x_start..x_end)
-        xs = [x_start + raw_width/2 + i * raw_width for i in range(n)]
-
-        # Assign positions
-        for uni, x in zip(self.unibars, xs):
-            uni.set_measurements(pos_x=x)
-            uni.missing_placeholder = self.missing_placeholder
-
-        # Compute vertical layout with consistent margins
+        # finally, compute the vertical positions
         for uni in self.unibars:
-            uni.set_measurements(width = unibar_width)
             uni.compute_vertical_positions(
                 y_start=y_start,
                 y_end=y_end

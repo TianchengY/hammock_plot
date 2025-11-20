@@ -113,7 +113,7 @@ class Unibar:
 
     
     def set_measurements(self, pos_x=None, width=None, bar_unit=None, missing_padding=None,
-                        scale_ypos: Tuple[float, float] = None):
+                        scale_ypos: Tuple[float, float] = None, hbar_height=None):
         if pos_x is not None:
             self.pos_x = pos_x
         if width is not None:
@@ -124,6 +124,8 @@ class Unibar:
             self.missing_padding = missing_padding
         if scale_ypos is not None:
             self.scale_ypos = scale_ypos
+        if hbar_height is not None:
+            self.hbar_height = hbar_height
 
     def compute_vertical_positions(self, y_start: float, y_end: float):    
         bottom = y_start
@@ -137,9 +139,6 @@ class Unibar:
             if mv: mv.set_y(centre=missing_center)
             # Update bottom for non-missing values: start above missing bar + padding
             bottom += self.missing_padding
-        
-        if self.display_type == "bar chart":
-            self.hbar_height = (top - bottom) / len(self.non_missing_vals) * Defaults.HBAR_HEIGHT_FRAC
 
         # --- Adjust top for last non-missing bar ---
         if self.min_max_pos:
@@ -595,7 +594,7 @@ class Unibar:
         
         max_val_occ = max([v.occurrences for v in self.values])
 
-        bar_unit = self.width / max_val_occ # this is the horizontal bar unit (how much "width" a value occurrence should contribute)
+        # bar_unit = self.width / max_val_occ # this is the horizontal bar unit (how much "width" a value occurrence should contribute)
 
         left_pts, right_pts, weights = [], [], []
         # determine value coordinates for drawing
@@ -603,7 +602,8 @@ class Unibar:
         heights = [self.hbar_height] * n # constant height
 
         for v in self.values:
-            hbar_width = bar_unit * v.occurrences
+            total_area = self.bar_unit * v.occurrences * self.width
+            hbar_width = total_area / self.hbar_height
             left_pts.append((left_xpos, v.vert_centre))
             right_pts.append((left_xpos + hbar_width, v.vert_centre))
             weights.append(v.occ_by_colour)
