@@ -138,14 +138,14 @@ class Unibar:
             # Update bottom for non-missing values: start above missing bar + padding
             bottom += self.missing_padding
         
-        if self.display_type == "hbar":
+        if self.display_type == "bar chart":
             self.hbar_height = (top - bottom) / len(self.non_missing_vals) * Defaults.HBAR_HEIGHT_FRAC
 
         # --- Adjust top for last non-missing bar ---
         if self.min_max_pos:
             top_adjustment =  max(self.min_bar_height / 2, self.min_max_pos[1]) if self.min_max_pos[1] != 0 else 0
         else:
-            if self.display_type != "hbar":
+            if self.display_type != "bar chart":
                 top_height = self.non_missing_vals[-1].occurrences * self.bar_unit
             else:
                 top_height = self.hbar_height
@@ -155,7 +155,7 @@ class Unibar:
         if self.min_max_pos:
             bottom_adjustment = max(self.min_bar_height / 2, self.min_max_pos[0]) if self.min_max_pos[0] != 0 else 0
         else:
-            if self.display_type != "hbar":
+            if self.display_type != "bar chart":
                 bottom_height = self.non_missing_vals[0].occurrences * self.bar_unit
             else:
                 bottom_height = self.hbar_height
@@ -195,7 +195,7 @@ class Unibar:
                     v.set_y(centre=p)
 
         # --- String/Categorical values (with same_scale) ---
-        elif self.val_type == np.str_ and self.non_missing_vals and (self.min_max_pos or self.display_type == "hbar"):
+        elif self.val_type == np.str_ and self.non_missing_vals and (self.min_max_pos or self.display_type == "bar chart"):
             n = len(self.non_missing_vals)
 
             # spacing between centers
@@ -287,13 +287,13 @@ class Unibar:
             # draw missing values
             self._draw_rectangles(ax, self.missing_vals, rectangle_painter)
 
-        if self.display_type == "rugplot":
+        if self.display_type == "rugplot" or self.display_type == "stacked bar":
             self._draw_rectangles(ax, self.non_missing_vals, rectangle_painter)
         elif self.display_type == "violin":
             self._draw_violin(ax, y_start, y_end)
         elif self.display_type == "box":
             self._draw_boxplot(ax, y_start, y_end)
-        elif self.display_type == "hbar":
+        elif self.display_type == "bar chart":
             self._draw_hbar(ax, rectangle_painter)
         else:
             raise ValueError(f"Unknown display_type: {self.display_type}")

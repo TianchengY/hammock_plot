@@ -26,7 +26,7 @@ class Figure:
         var_types:
         - Dict of the types of each variable. Either: np.str_, np.floating, or np.integer
 
-        numerical_var_levels, numerical_display_type, missing, missing_placeholder, label, unibar, hi_box, width, height, uni_vfill, connector_fraction, min_bar_height, uni_hfill, label_options, shape_type, same_scale, violin_bw_method: refer to README file
+        numerical_var_levels, display_type, missing, missing_placeholder, label, unibar, hi_box, width, height, uni_vfill, connector_fraction, min_bar_height, uni_hfill, label_options, shape_type, same_scale, violin_bw_method: refer to README file
     """
     def __init__(self,
                 # general
@@ -34,7 +34,7 @@ class Figure:
                 var_list: List[str],
                 value_order: Dict[str, List[str]],
                 numerical_var_levels:  Dict[str, int],
-                numerical_display_type,#: Dict[str, str],
+                display_type,#: Dict[str, str],
                 missing: bool,
                 missing_placeholder: str,
                 label: bool,
@@ -97,7 +97,7 @@ class Figure:
 
         # initialize the unibars
         self.build_unibars(var_types=var_types,
-                           numerical_display_type=numerical_display_type,
+                           display_type=display_type,
                            numerical_var_levels=numerical_var_levels,
                            violin_bw_method=violin_bw_method)
 
@@ -113,7 +113,7 @@ class Figure:
     """
         initializes unibars with data
     """
-    def build_unibars(self, var_types, numerical_display_type, numerical_var_levels, violin_bw_method):
+    def build_unibars(self, var_types, display_type, numerical_var_levels, violin_bw_method):
         # Build unibars
         for i, v in enumerate(self.var_list):
             dtype = var_types[v]
@@ -121,25 +121,25 @@ class Figure:
             label_opts = self.label_options[v] if self.label_options and v in self.label_options else None
 
             # -------------- DETERMINE DISPLAY AND LABEL TYPES ---------------------
-            display_type = "rugplot" # default
-            if numerical_display_type and v in numerical_display_type:
-                display_type = numerical_display_type[v]
+            uni_display_type = "rugplot" if dtype != np.str_ else "stacked bar" # default
+            if display_type and v in display_type:
+                uni_display_type = display_type[v]
             label_type = "default"
 
             num_levels = Defaults.NUM_LEVELS # default num levels
 
-            if display_type == "violin" or display_type == "box":
+            if uni_display_type == "violin" or uni_display_type == "box":
                 label_type = "levels"
 
             if numerical_var_levels and v in numerical_var_levels.keys():
                 if numerical_var_levels[v]:
                     label_type="levels"
                     num_levels = numerical_var_levels[v]
-                elif display_type == "rugplot": # v: None - labels are by value only if display is rugplot
+                elif uni_display_type == "rugplot": # v: None - labels are by value only if display is rugplot
                     label_type = "values"
                 
             # long boolean expression represents the conditions for drawing small white lines to divide rugplot rectangles
-            draw_white_dividers = display_type == "rugplot" and dtype == np.str_ and self.uni_vfill == 1
+            draw_white_dividers = uni_display_type == "stacked bar" and dtype == np.str_ and self.uni_vfill == 1
 
             uni = Unibar(
                 df=self.data_df,
@@ -153,7 +153,7 @@ class Figure:
                 min_bar_height=self.min_bar_height,
                 colors=self.colors,
                 hi_box=self.hi_box,
-                display_type = display_type,
+                display_type = uni_display_type,
                 label_type = label_type,
                 num_levels = num_levels,
                 label_options=label_opts,
@@ -257,7 +257,7 @@ class Figure:
                 for uni in self.unibars:
                     # note: there may be a bug with same_scale and missing=True - need to test
                     if uni.name in same_scale:
-                        if uni.display_type == "hbar":
+                        if uni.display_type == "bar chart":
                             height = (y_end - y_start) / len(uni.values) * Defaults.HBAR_HEIGHT_FRAC
                             max_btm_height = max(max_btm_height, height)
                             max_top_height = max(max_top_height, height)

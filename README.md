@@ -138,7 +138,7 @@ ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,color=color
 ```
 <img src="image/shakespeare_scale.png" alt="Hammock plot for the Shakespeare data, with same_scale specified" width="600"/>
 
-### Example numerical_display_type using penguin data
+### Example display_type using penguin data
 
 We import the penguin dataset (Horst et al., 2020):
 
@@ -148,7 +148,7 @@ import pandas as pd
 df = pd.read_csv('./data/data_penguins.csv')
 ```
 
-We use `numerical_display_type` to control how we want to display our numerical data.
+We use `display_type` to control how we want to display our data.
 
 ```python
 hammock = hammock_plot.Hammock(df)
@@ -157,10 +157,10 @@ ax = hammock.plot(
     hi_var="island",
     hi_value=["Torgersen"],
     missing=True,
-    numerical_display_type={"bill_length_mm":"box", "bill_depth_mm": "rugplot", "flipper_length_mm": "violin", "body_mass_g":"box"},
+    display_type={"bill_length_mm":"box", "bill_depth_mm": "rugplot", "flipper_length_mm": "violin", "body_mass_g":"box"},
 )
 ```
-<img src="image/penguin_display_violin.png" alt="Hammock plot for the penguin data, demonstrating numerical_display_type" width="600"/>
+<img src="image/penguin_display_violin.png" alt="Hammock plot for the penguin data, demonstrating display_type" width="600"/>
 
 Box plots support multiple highlight values. Violin plots only support one highlight value.
 ```python
@@ -169,10 +169,10 @@ ax = hammock.plot(
   hi_var="island",
   hi_value=["Torgersen", "Biscoe"],
   missing=True,
-  numerical_display_type={"bill_length_mm":"box", "bill_depth_mm": "box", "flipper_length_mm": "box", "body_mass_g":"box"},
+  display_type={"bill_length_mm":"box", "bill_depth_mm": "box", "flipper_length_mm": "box", "body_mass_g":"box"},
 )
 ```
-<img src="image/penguin_display_types.png" alt="Hammock plot for the penguin data, demonstrating numerical_display_type with multiple highlighting" width="600"/>
+<img src="image/penguin_display_types.png" alt="Hammock plot for the penguin data, demonstrating display_type with multiple highlighting" width="600"/>
 
 ## Explaining Jargon
 <img src="image/labeled_minimal.png" alt="Circled Hammock plot example" width="600"/>
@@ -196,7 +196,7 @@ We call the lines between each unibar **connectors**, since they connect adjacen
 | General |     `var` | `List[str]` | List of variables to display. |
 | |             `value_order` | `Dict[str, List[int]]`  |  If specified, the order of the values in the plot follows the order of values in the list supplied in the dictionary. Only applicable to categorical variables. If a value_order is given to a numerical variable, it will behave like categorical data instead. |
 | |            `numerical_var_levels` | `Dict[str, int \| None]` | Specifies the number of subdivisions in the y-axis for numerical variables. Example: {"NumericalVarname": 9, "NumericalVarname2": None}. Default is 7. |
-| |            `numerical_display_type` | `Dict[str, str]` | Specifies the type of plot (rugplot, box plot, violin plot) for numerical variable display. Example: {"NumericalVarname": "rugplot", "NumericalVarname2": "violin", "NumericalVarname3": "box"}. Default is "rugplot". |
+| |            `display_type` | `Dict[str, str]` | Specifies the type of plot. "rugplot", "box", and "violin" are the options for numerical data, and "stacked bar", "bar chart" are the options for categorical data. Example: {"NumericalVarname": "rugplot", "NumericalVarname2": "violin", "NumericalVarname3": "box"}. Default is "rugplot" for numerical data and "stacked bar" for categorical data. |
 | |             `missing` | `bool` | Whether or not to add a category for missing values at the bottom of the plot.  If False, observations that have a missing value for any variable in the data frame (even those not used in the hammock plot) are removed.  Default is False. |
 | |             `label` | `bool` | Whether or not to display labels between the plotting segments |
 | |             `unibar`| `bool` | Whether or not to display unibars between the plotting segments |
