@@ -211,6 +211,8 @@ def assign_color_index(df: pd.DataFrame, var_list: List[str], hi_missing, missin
     return df
 
 def get_formatted_label(datatype, value):
+    if value is None:
+        return value
     # if the label is a string
     if datatype == np.str_:
         return value

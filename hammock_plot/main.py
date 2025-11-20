@@ -95,6 +95,10 @@ class Hammock:
             warnings.warn("alpha > 1. Value has been clamped to 1.")
             alpha = 1
 
+        # drop missing values if missing values should not be plotted
+        if not missing:
+            self.data_df = self.data_df.dropna()
+
         # make dictionary with variable types
         var_types = {}
             
