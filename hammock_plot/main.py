@@ -115,6 +115,31 @@ class Hammock:
             else:
                 raise RuntimeError("Invalid dtype detected - logic error in code. dtype: ", dtype)
         
+        if value_order:
+            if not set(value_order.keys()) <= set(var):
+                # gets a list of the items that are in value_order but not in data_df_columns
+                error_values = set(value_order.keys()) - (set(value_order.keys()) & set(var))
+                raise ValueError(
+                    f'the variables: {error_values} in value_order is not in var_lst or value names user given does not match the data '
+                )
+            
+            for variable in value_order.keys():
+                original_var_type = var_types[variable]
+                self.data_df[variable] = self.data_df[variable].apply(
+                    lambda value: get_formatted_label(original_var_type, value))
+                var_types[variable] = np.str_
+        
+            for variable, order in value_order.items():
+                df_values = set(self.data_df[variable].dropna())
+                order_values = set(order)
+                
+                error_values = df_values - order_values
+                
+                if error_values:
+                    raise ValueError(
+                        f"The following values in '{variable}' are not included in value_order: {error_values}"
+                    )
+    
         if display_type:
             # invalid variable name passed to display_type dictionary
             if not set(display_type.keys()).issubset(set(var)):
@@ -180,33 +205,6 @@ class Hammock:
             raise ValueError(
                 f'the variables: {error_values} in same_scale is not in var_lst or value names user given does not match the data '
             )
-
-        if value_order:
-            if not set(value_order.keys()) <= set(var):
-                # gets a list of the items that are in value_order but not in data_df_columns
-                error_values = set(value_order.keys()) - (set(value_order.keys()) & set(var))
-                raise ValueError(
-                    f'the variables: {error_values} in value_order is not in var_lst or value names user given does not match the data '
-                )
-            
-            # NOTE: not sure if we should keep this. forces numerical data to be treated as categorical data
-            # BUG: when converting to categorical data, values don't match up when comparison is made (no matches when trying to put things in the right order)
-            for variable in value_order.keys():
-                original_var_type = var_types[variable]
-                self.data_df[variable] = self.data_df[variable].apply(
-                    lambda value: get_formatted_label(original_var_type, value))
-                var_types[variable] = np.str_
-        
-            for variable, order in value_order.items():
-                df_values = set(self.data_df[variable].dropna())
-                order_values = set(order)
-                
-                error_values = df_values - order_values
-                
-                if error_values:
-                    raise ValueError(
-                        f"The following values in '{variable}' are not included in value_order: {error_values}"
-                    )
         
         same_scale_type = None
 
