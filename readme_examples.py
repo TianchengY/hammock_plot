@@ -68,7 +68,7 @@ def same_scale():
                     value_order ={"speaker1":speaker_order}, same_scale=["speaker1", "speaker2"],
                     save_path="image/shakespeare_scale.png")
 
-def numerical_display_type():
+def display_type():
     df = df_penguins
     hammock = hammock_plot.Hammock(df)
 
@@ -79,7 +79,7 @@ def numerical_display_type():
         hi_value=["Torgersen", "Biscoe"],
         missing=True,
         save_path="image/penguin_display_types.png",
-        numerical_display_type={"bill_length_mm":"box", "bill_depth_mm": "box", "flipper_length_mm": "box", "body_mass_g":"box"},
+        display_type={"bill_length_mm":"box", "bill_depth_mm": "box", "flipper_length_mm": "box", "body_mass_g":"box"},
     )
 
 def numerical_display_violin():
@@ -92,7 +92,7 @@ def numerical_display_violin():
         hi_value=["Torgersen"],
         missing=True,
         save_path="image/penguin_display_violin.png",
-        numerical_display_type={"bill_length_mm":"box", "bill_depth_mm": "rugplot", "flipper_length_mm": "violin", "body_mass_g":"box"},
+        display_type={"bill_length_mm":"box", "bill_depth_mm": "rugplot", "flipper_length_mm": "violin", "body_mass_g":"box"},
     )
 
 minimal_example()
@@ -102,5 +102,5 @@ highlighting()
 missing_true()
 speaker_order()
 same_scale()
-numerical_display_type()
+display_type()
 numerical_display_violin()
