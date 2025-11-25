@@ -137,7 +137,7 @@ class Hammock:
                 df_values = set(self.data_df[variable].dropna())
                 order_values = set(order)
                 
-                error_values = df_values - order_values
+                error_values = df_values - order_values - (set([missing_placeholder]) if missing else set([""]))
                 
                 if error_values:
                     raise ValueError(

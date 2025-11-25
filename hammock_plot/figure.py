@@ -252,7 +252,7 @@ class Figure:
             if (hbar_height * max_num_categories > available_height - missing_padding) or only_hbars:
                 # recalculate bar unit and hbar_height
                 # some algebra
-                self.bar_unit = (available_height * self.uni_vfill) / (max_val_occ * max_num_categories)
+                self.bar_unit = (available_height * self.uni_vfill) / (max_val_occ)
                 if self.missing:
                     self.bar_unit = self.bar_unit / (1 + max_missing_occ * self.uni_vfill)
                     max_missing_height = max_missing_occ * self.bar_unit
