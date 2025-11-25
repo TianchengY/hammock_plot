@@ -293,7 +293,7 @@ class Unibar:
         elif self.display_type == "box":
             self._draw_boxplot(ax, y_start, y_end)
         elif self.display_type == "bar chart":
-            self._draw_hbar(ax, rectangle_painter)
+            self._draw_hbar(ax, self.non_missing_vals, rectangle_painter)
         else:
             raise ValueError(f"Unknown display_type: {self.display_type}")
 
@@ -350,8 +350,7 @@ class Unibar:
                 weights=divider_weights,
                 orientation=self.hi_box,
                 zorder=2,  # slightly above bars
-                check_overlap=False,
-                unibar_name=self.name + "_divider"
+                check_overlap=False
             )
 
     def _prepare_scaled_data(self, y_start, y_end):
@@ -589,19 +588,15 @@ class Unibar:
                 patch.set_alpha(self.alpha)
     
     # draws missing values as well
-    def _draw_hbar(self, ax, rectangle_painter):
-        n = len(self.values)
+    def _draw_hbar(self, ax, values, rectangle_painter):
+        n = len(values)
         
-        max_val_occ = max([v.occurrences for v in self.values])
-
-        # bar_unit = self.width / max_val_occ # this is the horizontal bar unit (how much "width" a value occurrence should contribute)
-
         left_pts, right_pts, weights = [], [], []
         # determine value coordinates for drawing
         left_xpos = self.pos_x - self.width / 2
         heights = [self.hbar_height] * n # constant height
 
-        for v in self.values:
+        for v in values:
             total_area = self.bar_unit * v.occurrences * self.width
             hbar_width = total_area / self.hbar_height
             left_pts.append((left_xpos, v.vert_centre))
@@ -617,7 +612,42 @@ class Unibar:
                                weights,
                                orientation=self.hi_box,
                                zorder=1)
+        
+        if self.draw_white_dividers and len(values) > 1:
+            divider_height = Defaults.WHITE_DIVIDER_HEIGHT
 
+            divider_left_pts = []
+            divider_right_pts = []
+            divider_heights = []
+            divider_weights = []
+
+            space_between_dividers = self.hbar_height / 2
+
+            for i in range(len(values) - 1):
+                top_of_i = values[i].vert_centre + space_between_dividers
+                bottom_of_next = values[i + 1].vert_centre - space_between_dividers
+                divider_y = (top_of_i + bottom_of_next) / 2
+                half_label_space = self.width / 2
+
+                divider_left_pts.append((self.pos_x - half_label_space, divider_y))
+                divider_right_pts.append((self.pos_x + half_label_space, divider_y))
+                divider_heights.append(divider_height)
+                
+                # white divider bar (use 2D structure)
+                divider_weights.append([1])
+            
+            rectangle_painter.plot(
+                ax, 
+                alpha=1, 
+                left_center_pts=divider_left_pts,
+                right_center_pts=divider_right_pts,
+                heights=divider_heights,
+                colors=["white"],
+                weights=divider_weights,
+                orientation=self.hi_box,
+                zorder=2,  # slightly above bars
+                check_overlap=False
+            )
     # ---------- Label Drawing ----------
     def _draw_labels(self, ax, y_start, y_end):
         """

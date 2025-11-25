@@ -139,7 +139,7 @@ class Figure:
                     label_type = "values"
                 
             # long boolean expression represents the conditions for drawing small white lines to divide rugplot rectangles
-            draw_white_dividers = uni_display_type == "stacked bar" and dtype == np.str_ and self.uni_vfill == 1
+            draw_white_dividers = (uni_display_type == "stacked bar" or uni_display_type == "bar chart") and self.uni_vfill == 1
 
             uni = Unibar(
                 df=self.data_df,
@@ -186,32 +186,7 @@ class Figure:
         x_total = x_end - x_start  # total drawable width
         
         # ------------------- ADJUST VARIABLES FOR DRAWING ---------------------------
-        available_height = (self.height - 2 * self.ymargin * self.height) * self.scale * self.uni_vfill - (Defaults.SPACE_ABOVE_MISSING if self.missing else 0)
-        total_occurrences = len(self.data_df)
-        
-        # avoid divide by 0
-        if total_occurrences > 0:
-            self.bar_unit = available_height / total_occurrences
-
-        if self.missing:
-            missing_occ_sums = [
-                sum(v.occurrences for v in uni.values if str(v.id) == self.missing_placeholder)
-                for uni in self.unibars
-            ]
-
-            max_missing_occ = max(missing_occ_sums)
-            max_nonmissing_occ = total_occurrences - min(missing_occ_sums)
-
-            self.bar_unit = available_height / (max_nonmissing_occ + max_missing_occ)
-
-            max_missing_height = max_missing_occ * self.bar_unit
-
-        # set bar_unit in unibars, set missing_padding in unibars
-        for unibar in self.unibars:
-            unibar.set_measurements(bar_unit=self.bar_unit,
-                                    missing_padding=((max(self.min_bar_height, max_missing_height) + Defaults.SPACE_ABOVE_MISSING) if self.missing else 0))
-        
-        # --- slot-based unibar math ---
+        # --- WIDTHS ----
         raw_width = x_total / n                     # slot width for each unibar
         unibar_width = raw_width * self.uni_hfill
 
@@ -233,20 +208,73 @@ class Figure:
             uni.set_measurements(pos_x=x)
             uni.missing_placeholder = self.missing_placeholder
         
-        # determine horizontal bar chart height
-        # TODO!!!!
+        available_height = (self.height - 2 * self.ymargin * self.height) * self.scale * self.uni_vfill - (Defaults.SPACE_ABOVE_MISSING if self.missing else 0)
+        total_occurrences = len(self.data_df)
+        
+        # avoid divide by 0
+        if total_occurrences > 0:
+            self.bar_unit = available_height / total_occurrences
+
+        missing_padding = 0
+
+        if self.missing:
+            missing_occ_sums = [
+                sum(v.occurrences for v in uni.values if str(v.id) == self.missing_placeholder)
+                for uni in self.unibars
+            ]
+
+            max_missing_occ = max(missing_occ_sums)
+            max_nonmissing_occ = total_occurrences - min(missing_occ_sums)
+
+            self.bar_unit = available_height / (max_nonmissing_occ + max_missing_occ)
+
+            max_missing_height = max_missing_occ * self.bar_unit
+
+            missing_padding = (max(self.min_bar_height, max_missing_height) + Defaults.SPACE_ABOVE_MISSING)
+
+        # if there are horizontal bar charts, calculate the bar unit differently.
+        max_num_categories = 0
         max_val_occ = 0
+        hbar_height = 0
+        only_hbars = True
+
         for uni in self.unibars:
+            if uni.display_type == "stacked bar" or uni.display_type == "rugplot":
+                only_hbars = False
             if uni.display_type == "bar chart":
                 max_val_occ = max(max_val_occ, max(val.occurrences for val in uni.values))
-        hbar_height = max_val_occ * self.bar_unit # area of the largest # of occurrences, divided by the width of a unibar
+                max_num_categories = max(max_num_categories, len(uni.non_missing_vals))
+        if max_num_categories > 0:
+            hbar_height = max_val_occ * self.bar_unit
+            # if the horizontal bar charts overlap
+            available_height = (self.height - 2 * self.ymargin * self.height) * self.scale
+        
+            if (hbar_height * max_num_categories > available_height - missing_padding) or only_hbars:
+                # recalculate bar unit and hbar_height
+                # some algebra
+                self.bar_unit = (available_height * self.uni_vfill) / (max_val_occ * max_num_categories)
+                if self.missing:
+                    self.bar_unit = self.bar_unit / (1 + max_missing_occ * self.uni_vfill)
+                    max_missing_height = max_missing_occ * self.bar_unit
+                
+                nonmissing_height = available_height
+                if self.missing:
+                    max_missing_height = max_missing_occ * self.bar_unit
+                    missing_padding = (max(self.min_bar_height, max_missing_height) + Defaults.SPACE_ABOVE_MISSING)
+                    nonmissing_height -= missing_padding
+                
+                hbar_height = nonmissing_height * self.uni_vfill / max_num_categories
 
-        # Compute vertical layout with consistent margins
+        # set bar_unit in unibars, set missing_padding in unibars, set hbar heights, set unibar widths
         for uni in self.unibars:
-            uni.set_measurements(width = unibar_width, hbar_height=hbar_height)
+            uni.set_measurements(width = unibar_width,
+                                 hbar_height=hbar_height,
+                                 bar_unit=self.bar_unit,
+                                 missing_padding=missing_padding)
         
         # determine same_scale positioning
         # BUG: same_scale and missing=True and same_scale_type == "numerical"
+        # BUG: this should be determined BEFORE bar_unit and stuff is calculated
         if same_scale_type and same_scale_type == "numerical":
             # Determine ranges for unibars that should use same_scale
             global_range = None
