@@ -68,7 +68,20 @@ def same_scale():
                     value_order ={"speaker1":speaker_order}, same_scale=["speaker1", "speaker2"],
                     save_path="image/shakespeare_scale.png")
 
-def display_type():
+def display_type_numerical():
+    df = df_penguins
+    hammock = hammock_plot.Hammock(df)
+    ax = hammock.plot(
+        var= ["species", "island", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"],
+        display_figure=False,
+        hi_var="island",
+        hi_value=["Torgersen"],
+        missing=True,
+        save_path="image/penguin_display_numerical.png",
+        display_type={"bill_length_mm":"box", "bill_depth_mm": "rugplot", "flipper_length_mm": "violin", "body_mass_g":"box"},
+    )
+
+def display_type_mult_highlight():
     df = df_penguins
     hammock = hammock_plot.Hammock(df)
 
@@ -78,21 +91,24 @@ def display_type():
         hi_var="island",
         hi_value=["Torgersen", "Biscoe"],
         missing=True,
-        save_path="image/penguin_display_types.png",
+        save_path="image/penguin_display_types_mult_highlight.png",
         display_type={"bill_length_mm":"box", "bill_depth_mm": "box", "flipper_length_mm": "box", "body_mass_g":"box"},
     )
 
-def numerical_display_violin():
+def display_type_categorical():
     df = df_penguins
     hammock = hammock_plot.Hammock(df)
+
     ax = hammock.plot(
         var= ["species", "island", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"],
         display_figure=False,
+        uni_vfill=0.7,
+        connector_fraction=0.1,
         hi_var="island",
-        hi_value=["Torgersen"],
+        hi_value=["Torgersen", "Biscoe"],
         missing=True,
-        save_path="image/penguin_display_violin.png",
-        display_type={"bill_length_mm":"box", "bill_depth_mm": "rugplot", "flipper_length_mm": "violin", "body_mass_g":"box"},
+        save_path="image/penguin_display_horizontal_barchart.png",
+        display_type={"species": "bar chart", "island": "bar chart", "bill_length_mm":"box", "bill_depth_mm": "box", "flipper_length_mm": "box", "body_mass_g":"box"},
     )
 
 minimal_example()
@@ -102,5 +118,6 @@ highlighting()
 missing_true()
 speaker_order()
 same_scale()
-display_type()
-numerical_display_violin()
+display_type_mult_highlight()
+display_type_numerical()
+display_type_categorical()

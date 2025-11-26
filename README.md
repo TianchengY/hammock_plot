@@ -150,6 +150,8 @@ df = pd.read_csv('./data/data_penguins.csv')
 
 We use `display_type` to control how we want to display our data.
 
+#### Numerical display types
+Numerical data has three display options: "box", "rugplot", and "violin".
 ```python
 hammock = hammock_plot.Hammock(df)
 ax = hammock.plot(
@@ -160,7 +162,7 @@ ax = hammock.plot(
     display_type={"bill_length_mm":"box", "bill_depth_mm": "rugplot", "flipper_length_mm": "violin", "body_mass_g":"box"},
 )
 ```
-<img src="image/penguin_display_violin.png" alt="Hammock plot for the penguin data, demonstrating display_type" width="600"/>
+<img src="image/penguin_display_numerical.png" alt="Hammock plot for the penguin data, demonstrating display_type for numerical data" width="600"/>
 
 Box plots support multiple highlight values. Violin plots only support one highlight value.
 ```python
@@ -172,7 +174,25 @@ ax = hammock.plot(
   display_type={"bill_length_mm":"box", "bill_depth_mm": "box", "flipper_length_mm": "box", "body_mass_g":"box"},
 )
 ```
-<img src="image/penguin_display_types.png" alt="Hammock plot for the penguin data, demonstrating display_type with multiple highlighting" width="600"/>
+<img src="image/penguin_display_types_mult_highlight.png" alt="Hammock plot for the penguin data, demonstrating display_type with multiple highlighting" width="600"/>
+
+#### Categorical display types
+Categorical data has two display options: "stacked bar" (default), and "bar chart" (horizontal bar chart)
+
+For horizontal bar charts, set uni_vfill to a higher value for better visuals. When uni_vfill is high, lower the connector_fraction
+```python
+hammock = hammock_plot.Hammock(df)
+ax = hammock.plot(
+    var= ["species", "island", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"],
+    uni_vfill=0.7,
+    connector_fraction=0.1,
+    hi_var="island",
+    hi_value=["Torgersen", "Biscoe"],
+    missing=True,
+    display_type={"species": "bar chart", "island": "bar chart", "bill_length_mm":"box", "bill_depth_mm": "box", "flipper_length_mm": "box", "body_mass_g":"box"},
+)
+```
+<img src="image/penguin_display_horizontal_barchart.png" alt="Hammock plot for the penguin data, demonstrating display_type for categorical data" width="600"/>
 
 ## Explaining Jargon
 <img src="image/labeled_minimal.png" alt="Circled Hammock plot example" width="600"/>
