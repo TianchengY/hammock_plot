@@ -153,7 +153,7 @@ class Hammock:
                 )
 
             for variable, cur_display_type in display_type.items():
-                numerical_display_types = ["box", "violin", "rugplot"]
+                numerical_display_types = ["box", "violin", "rugplot"] # , "beanplot"
                 categorical_display_types = ["bar chart", "stacked bar"]
                 if cur_display_type in numerical_display_types and var_types[variable] == np.str_:
                     raise ValueError(
@@ -295,12 +295,17 @@ class Hammock:
                     raise ValueError(
                         f'Invalid expression: {hi_value}.'
                     )
+        
+        if hi_box and hi_box not in ["side-by-side", "stacked"]:
+            raise ValueError(
+                f'The hi_box: {hi_box} is invalid. hi_box must be either "side-by-side" or "stacked".'
+            )
 
         num_hi_colors = len(hi_value) if isinstance(hi_value, list) else 0
         num_hi_colors = 1 if isinstance(hi_value, str) else num_hi_colors
         num_hi_colors += 1 if hi_missing else 0
 
-        if display_type and"violin" in display_type.values() and num_hi_colors > 2:
+        if display_type and ("violin" in display_type.values() or "beanplot" in display_type.values()) and num_hi_colors > 2:
             warnings.warn("Violin plots will only display unhighlighted values and ONE highlighted value.")
 
         colors = colors[0:num_hi_colors] if len(colors) >= num_hi_colors else colors

@@ -127,8 +127,8 @@ class Figure:
             label_type = "default"
 
             num_levels = Defaults.NUM_LEVELS # default num levels
-
-            if uni_display_type == "violin" or uni_display_type == "box":
+            
+            if uni_display_type == "violin" or uni_display_type == "box" or uni_display_type == "beanplot":
                 label_type = "levels"
 
             if numerical_var_levels and v in numerical_var_levels.keys():
@@ -245,14 +245,14 @@ class Figure:
                 max_val_occ = max(max_val_occ, max(val.occurrences for val in uni.values))
                 max_num_categories = max(max_num_categories, len(uni.non_missing_vals))
         if max_num_categories > 0:
-            hbar_height = max_val_occ * self.bar_unit
+            hbar_height = max(max_val_occ * self.bar_unit, self.min_bar_height)
             # if the horizontal bar charts overlap
             available_height = (self.height - 2 * self.ymargin * self.height) * self.scale
         
             if (hbar_height * max_num_categories > available_height - missing_padding) or only_hbars:
                 # recalculate bar unit and hbar_height
                 # some algebra
-                self.bar_unit = (available_height * self.uni_vfill) / (max_val_occ)
+                self.bar_unit = (available_height * self.uni_vfill) / (max_val_occ * max_num_categories)
                 if self.missing:
                     self.bar_unit = self.bar_unit / (1 + max_missing_occ * self.uni_vfill)
                     max_missing_height = max_missing_occ * self.bar_unit
@@ -263,7 +263,7 @@ class Figure:
                     missing_padding = (max(self.min_bar_height, max_missing_height) + Defaults.SPACE_ABOVE_MISSING)
                     nonmissing_height -= missing_padding
                 
-                hbar_height = nonmissing_height * self.uni_vfill / max_num_categories
+                hbar_height = max(nonmissing_height * self.uni_vfill / max_num_categories, self.min_bar_height)
 
         # set bar_unit in unibars, set missing_padding in unibars, set hbar heights, set unibar widths
         for uni in self.unibars:

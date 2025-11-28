@@ -280,6 +280,7 @@ class Unibar:
         1. rugplots (draws rectangles behind values)
         2. violin plots (draws a violin plot)
         3. boxplots (draws a boxplot)
+        4. beanplots (draws a bean plot)
         """
         if self.missing:
             y_start += self.missing_padding
@@ -292,16 +293,21 @@ class Unibar:
             self._draw_violin(ax, y_start, y_end)
         elif self.display_type == "box":
             self._draw_boxplot(ax, y_start, y_end)
+        elif self.display_type == "beanplot":
+            self._draw_beanplot(ax, rectangle_painter)
         elif self.display_type == "bar chart":
             self._draw_hbar(ax, self.non_missing_vals, rectangle_painter)
         else:
             raise ValueError(f"Unknown display_type: {self.display_type}")
 
-    def _draw_rectangles(self, ax, values, rectangle_painter):
+    def _draw_rectangles(self, ax, values, rectangle_painter, width=None):
         """
         Draw rectangles
         """
         left_pts, right_pts, heights, weights = [], [], [], []
+
+        if not width:
+            width = self.width
 
         for val in values:
             # Compute vertical bar height
@@ -331,7 +337,7 @@ class Unibar:
                 top_of_i = values[i].vert_centre + heights[i] / 2
                 bottom_of_next = values[i + 1].vert_centre - heights[i + 1] / 2
                 divider_y = (top_of_i + bottom_of_next) / 2
-                half_label_space = self.width / 2
+                half_label_space = width / 2
 
                 divider_left_pts.append((self.pos_x - half_label_space, divider_y))
                 divider_right_pts.append((self.pos_x + half_label_space, divider_y))
@@ -404,7 +410,7 @@ class Unibar:
 
         return data_scaled, self.colors, [edge_color_from_face(color) for color in self.colors]
 
-    def _draw_violin(self, ax, y_start, y_end):
+    def _draw_violin(self, ax, y_start, y_end, draw_boxplot=True):
         """
         Draw a violin plot with optional split halves and overlaid boxplots.
         """
@@ -426,19 +432,20 @@ class Unibar:
                 pc.set_edgecolor('none')
                 pc.set_alpha(self.alpha)
 
-            # Boxplot inside violin
-            box = ax.boxplot(
-                data_scaled[0],
-                positions=[self.pos_x],
-                widths=self.width * 0.1,
-                patch_artist=True,
-                showcaps=False,
-                boxprops=dict(facecolor='none', edgecolor=edgecolors[0], linewidth=1.2),
-                whiskerprops=dict(color=edgecolors[0], linewidth=1),
-                medianprops=dict(color=edgecolors[0], linewidth=1.5),
-                showfliers=False,
-                manage_ticks=False,
-            )
+            if draw_boxplot:
+                # Boxplot inside violin
+                box = ax.boxplot(
+                    data_scaled[0],
+                    positions=[self.pos_x],
+                    widths=self.width * 0.1,
+                    patch_artist=True,
+                    showcaps=False,
+                    boxprops=dict(facecolor='none', edgecolor=edgecolors[0], linewidth=1.2),
+                    whiskerprops=dict(color=edgecolors[0], linewidth=1),
+                    medianprops=dict(color=edgecolors[0], linewidth=1.5),
+                    showfliers=False,
+                    manage_ticks=False,
+                )
 
         else:
             # Split violin
@@ -480,39 +487,40 @@ class Unibar:
             # Offset for half-boxplots (move slightly away from center)
             offset = self.width * 0.05
 
-            # Left half box (shift left)
-            left_box = ax.boxplot(
-                left_scaled,
-                positions=[self.pos_x - offset],
-                widths=self.width * 0.05,
-                patch_artist=True,
-                showcaps=False,
-                boxprops=dict(facecolor='none', edgecolor=edgecolors[1], linewidth=1.2),
-                whiskerprops=dict(color=edgecolors[1], linewidth=1),
-                medianprops=dict(color=edgecolors[1], linewidth=1.5),
-                manage_ticks=False,
-                showfliers=False,
-            )
-            for patch in left_box['boxes']:
-                verts = patch.get_path().vertices
-                verts[:, 0] = np.clip(verts[:, 0], -np.inf, self.pos_x)
+            if draw_boxplot:
+                # Left half box (shift left)
+                left_box = ax.boxplot(
+                    left_scaled,
+                    positions=[self.pos_x - offset],
+                    widths=self.width * 0.05,
+                    patch_artist=True,
+                    showcaps=False,
+                    boxprops=dict(facecolor='none', edgecolor=edgecolors[1], linewidth=1.2),
+                    whiskerprops=dict(color=edgecolors[1], linewidth=1),
+                    medianprops=dict(color=edgecolors[1], linewidth=1.5),
+                    manage_ticks=False,
+                    showfliers=False,
+                )
+                for patch in left_box['boxes']:
+                    verts = patch.get_path().vertices
+                    verts[:, 0] = np.clip(verts[:, 0], -np.inf, self.pos_x)
 
-            # Right half box (shift right)
-            right_box = ax.boxplot(
-                right_scaled,
-                positions=[self.pos_x + offset],
-                widths=self.width * 0.05,
-                patch_artist=True,
-                showcaps=False,
-                boxprops=dict(facecolor='none', edgecolor=edgecolors[0], linewidth=1.2),
-                whiskerprops=dict(color=edgecolors[0], linewidth=1),
-                medianprops=dict(color=edgecolors[0], linewidth=1.5),
-                manage_ticks=False,
-                showfliers=False,
-            )
-            for patch in right_box['boxes']:
-                verts = patch.get_path().vertices
-                verts[:, 0] = np.clip(verts[:, 0], self.pos_x, np.inf)
+                # Right half box (shift right)
+                right_box = ax.boxplot(
+                    right_scaled,
+                    positions=[self.pos_x + offset],
+                    widths=self.width * 0.05,
+                    patch_artist=True,
+                    showcaps=False,
+                    boxprops=dict(facecolor='none', edgecolor=edgecolors[0], linewidth=1.2),
+                    whiskerprops=dict(color=edgecolors[0], linewidth=1),
+                    medianprops=dict(color=edgecolors[0], linewidth=1.5),
+                    manage_ticks=False,
+                    showfliers=False,
+                )
+                for patch in right_box['boxes']:
+                    verts = patch.get_path().vertices
+                    verts[:, 0] = np.clip(verts[:, 0], self.pos_x, np.inf)
 
     def _draw_boxplot(self, ax, y_start, y_end, gap_ratio=0.02):
         """
@@ -587,6 +595,15 @@ class Unibar:
                 patch.set_edgecolor(edgecolors[i])
                 patch.set_alpha(self.alpha)
     
+    def _draw_beanplot(self, ax, rectangle_painter):
+        self._draw_violin(ax,
+                          y_start = self.non_missing_vals[0].vert_centre,
+                          y_end = self.non_missing_vals[-1].vert_centre,
+                          draw_boxplot=False)
+        self._draw_rectangles(ax,
+                             self.non_missing_vals,
+                             rectangle_painter)
+    
     # draws missing values as well
     def _draw_hbar(self, ax, values, rectangle_painter):
         n = len(values)
@@ -598,7 +615,7 @@ class Unibar:
 
         for v in values:
             total_area = self.bar_unit * v.occurrences * self.width
-            hbar_width = total_area / self.hbar_height
+            hbar_width = max(total_area / self.hbar_height, self.min_bar_height)
             left_pts.append((left_xpos, v.vert_centre))
             right_pts.append((left_xpos + hbar_width, v.vert_centre))
             weights.append(v.occ_by_colour)
@@ -707,7 +724,7 @@ class Unibar:
                 indices = np.linspace(0, len(possible_vals) - 1, num_levels, dtype=int)
                 level_vals = possible_vals[indices]
         
-        if self.display_type == "rugplot":
+        if self.display_type == "rugplot" or self.display_type == "beanplot":
             # Compute coordinate range based on first and last non-missing bar centers
             first_center = self.non_missing_vals[0].vert_centre
             last_center = self.non_missing_vals[-1].vert_centre
