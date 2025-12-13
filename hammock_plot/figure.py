@@ -127,8 +127,10 @@ class Figure:
             label_type = "default"
 
             num_levels = Defaults.NUM_LEVELS # default num levels
+
+            level_display_types = ["violin", "box", "lumpy beanplot", "spiky beanplot"]
             
-            if uni_display_type == "violin" or uni_display_type == "box" or uni_display_type == "beanplot":
+            if uni_display_type in level_display_types:
                 label_type = "levels"
 
             if numerical_var_levels and v in numerical_var_levels.keys():

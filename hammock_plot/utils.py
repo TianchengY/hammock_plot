@@ -29,6 +29,7 @@ class Defaults:
     NUM_LEVELS = 7
     ALPHA = 0.7
     WHITE_DIVIDER_HEIGHT = 0.3
+    SPIKE_THICKNESS = 0.3
 
 def clean_expression(expr: str) -> str:
     """

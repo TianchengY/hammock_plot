@@ -280,7 +280,8 @@ class Unibar:
         1. rugplots (draws rectangles behind values)
         2. violin plots (draws a violin plot)
         3. boxplots (draws a boxplot)
-        4. beanplots (draws a bean plot)
+        4. lumpy beanplots (draws a bean plot with a lumpy rugplot inside)
+        5. spiky beanplots (draws a bean plot with a spikeplot inside)
         """
         if self.missing:
             y_start += self.missing_padding
@@ -293,8 +294,10 @@ class Unibar:
             self._draw_violin(ax, y_start, y_end)
         elif self.display_type == "box":
             self._draw_boxplot(ax, y_start, y_end)
-        elif self.display_type == "beanplot":
-            self._draw_beanplot(ax, rectangle_painter)
+        elif self.display_type == "lumpy beanplot":
+            self._draw_lumpy_beanplot(ax, rectangle_painter)
+        elif self.display_type == "spiky beanplot":
+            self._draw_spiky_beanplot(ax, y_start, y_end, rectangle_painter)
         elif self.display_type == "bar chart":
             self._draw_hbar(ax, self.non_missing_vals, rectangle_painter)
         else:
@@ -308,6 +311,8 @@ class Unibar:
 
         if not width:
             width = self.width
+        
+        half_label_space = width / 2
 
         for val in values:
             # Compute vertical bar height
@@ -315,9 +320,8 @@ class Unibar:
             bar_height = max(bar_height, self.min_bar_height) if bar_height != 0 else 0 # enforce minimum bar height unless there are no such occurrences
 
             heights.append(bar_height)
-
             # Horizontal coordinates
-            half_label_space = self.width / 2
+            
             left_pts.append((self.pos_x - half_label_space, val.vert_centre))
             right_pts.append((self.pos_x + half_label_space, val.vert_centre))
             weights.append(val.occ_by_colour)
@@ -595,7 +599,7 @@ class Unibar:
                 patch.set_edgecolor(edgecolors[i])
                 patch.set_alpha(self.alpha)
     
-    def _draw_beanplot(self, ax, rectangle_painter):
+    def _draw_lumpy_beanplot(self, ax, rectangle_painter):
         self._draw_violin(ax,
                           y_start = self.non_missing_vals[0].vert_centre,
                           y_end = self.non_missing_vals[-1].vert_centre,
@@ -603,6 +607,31 @@ class Unibar:
         self._draw_rectangles(ax,
                              self.non_missing_vals,
                              rectangle_painter)
+    
+    def _draw_spiky_beanplot(self, ax, y_start, y_end, rectangle_painter, bins=14):
+        self._draw_violin(ax, y_start, y_end, draw_boxplot=False)
+
+        heights = [Defaults.SPIKE_THICKNESS] * len(self.non_missing_vals)
+        left_pts, right_pts, weights = [], [], []   
+
+        max_occ = max(val.occurrences for val in self.non_missing_vals)
+        width_per_occ = self.width / max_occ
+        color = [edge_color_from_face(self.colors[0])] # darker/lighter colour based on face color
+
+        for val in self.non_missing_vals:
+            half_label_space = width_per_occ * val.occurrences / 2
+            left_pts.append((self.pos_x - half_label_space, val.vert_centre))
+            right_pts.append((self.pos_x + half_label_space, val.vert_centre))
+            weights.append([val.occurrences])
+        
+        rectangle_painter.plot(ax, alpha=self.alpha,
+                               left_center_pts=left_pts,
+                               right_center_pts=right_pts,
+                               heights=heights,
+                               colors=color,
+                               weights=weights,
+                               zorder=1)
+        
     
     # draws missing values as well
     def _draw_hbar(self, ax, values, rectangle_painter):
@@ -615,7 +644,7 @@ class Unibar:
 
         for v in values:
             total_area = self.bar_unit * v.occurrences * self.width
-            hbar_width = max(total_area / self.hbar_height, self.min_bar_height)
+            hbar_width = max(total_area / self.hbar_height, self.min_bar_height) if total_area != 0 else 0
             left_pts.append((left_xpos, v.vert_centre))
             right_pts.append((left_xpos + hbar_width, v.vert_centre))
             weights.append(v.occ_by_colour)
@@ -724,7 +753,7 @@ class Unibar:
                 indices = np.linspace(0, len(possible_vals) - 1, num_levels, dtype=int)
                 level_vals = possible_vals[indices]
         
-        if self.display_type == "rugplot" or self.display_type == "beanplot":
+        if self.display_type == "rugplot" or self.display_type == "lumpy beanplot":
             # Compute coordinate range based on first and last non-missing bar centers
             first_center = self.non_missing_vals[0].vert_centre
             last_center = self.non_missing_vals[-1].vert_centre
@@ -737,7 +766,7 @@ class Unibar:
     
         if self.missing and self.min_max_pos and bottom_coord == self.y_bottom + self.min_max_pos[0]:
             bottom_coord += self.missing_padding
-        elif self.missing and self.display_type in ["violin", "box"]:
+        elif self.missing and self.display_type in ["violin", "box", "spiky beanplot"]:
             bottom_coord += self.missing_padding
         
         level_coords = [bottom_coord + (top_coord - bottom_coord) * (v - min_val) / (max_val - min_val) 
