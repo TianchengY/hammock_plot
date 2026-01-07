@@ -609,29 +609,141 @@ class Unibar:
                              rectangle_painter)
     
     def _draw_spiky_beanplot(self, ax, y_start, y_end, rectangle_painter, bins=14):
+        # draw violin
         self._draw_violin(ax, y_start, y_end, draw_boxplot=False)
 
-        heights = [Defaults.SPIKE_THICKNESS] * len(self.non_missing_vals)
-        left_pts, right_pts, weights = [], [], []   
+        # draw spike plot
+        n_colors = len(self.colors)
 
-        max_occ = max(val.occurrences for val in self.non_missing_vals)
-        width_per_occ = self.width / max_occ
-        color = [edge_color_from_face(self.colors[0])] # darker/lighter colour based on face color
+        # only one colour
+        if n_colors == 1:
+            heights = [Defaults.SPIKE_THICKNESS] * len(self.non_missing_vals)
+            left_pts, right_pts, weights = [], [], []   
 
-        for val in self.non_missing_vals:
-            half_label_space = width_per_occ * val.occurrences / 2
-            left_pts.append((self.pos_x - half_label_space, val.vert_centre))
-            right_pts.append((self.pos_x + half_label_space, val.vert_centre))
-            weights.append([val.occurrences])
-        
-        rectangle_painter.plot(ax, alpha=self.alpha,
-                               left_center_pts=left_pts,
-                               right_center_pts=right_pts,
-                               heights=heights,
-                               colors=color,
-                               weights=weights,
-                               zorder=1)
-        
+            max_occ = max(val.occurrences for val in self.non_missing_vals)
+            width_per_occ = self.width / max_occ
+            color = [edge_color_from_face(self.colors[0])] # darker/lighter colour based on face color
+
+            for val in self.non_missing_vals:
+                half_label_space = width_per_occ * val.occurrences / 2
+                left_pts.append((self.pos_x - half_label_space, val.vert_centre))
+                right_pts.append((self.pos_x + half_label_space, val.vert_centre))
+                weights.append([val.occurrences])
+            
+            rectangle_painter.plot(ax, alpha=self.alpha,
+                                left_center_pts=left_pts,
+                                right_center_pts=right_pts,
+                                heights=heights,
+                                colors=color,
+                                weights=weights,
+                                zorder=1)
+            
+            # draw the mean line
+            total_weight = sum(val.occurrences for val in self.non_missing_vals)
+            mean_y = sum(
+                val.vert_centre * val.occurrences
+                for val in self.non_missing_vals
+            ) / total_weight
+
+            rectangle_painter.plot(ax, alpha=1,
+                                   left_center_pts=[(self.pos_x - self.width / 2, mean_y)], 
+                                   right_center_pts=[(self.pos_x + self.width / 2, mean_y)],
+                                   heights=[Defaults.SPIKE_THICKNESS],
+                                   colors=["#000000"], # black
+                                   weights=[[1]],
+                                   zorder=3)
+        else: # divide two halves
+            # colors
+            l_color = [edge_color_from_face(self.colors[1])]
+            r_color = [edge_color_from_face(self.colors[0])]
+
+            l_left_pts, l_right_pts, l_weights = [], [], [] # highlighted colour
+            r_left_pts, r_right_pts, r_weights = [], [], [] # non highlighted colour
+
+            l_max_occ, r_max_occ = 0, 0
+
+            for val in self.non_missing_vals:
+                l_max_occ = max(val.occ_by_colour[1], l_max_occ)
+                r_max_occ = max(val.occ_by_colour[0], r_max_occ)
+            
+            max_occ = max(l_max_occ, r_max_occ)
+            width_per_occ = self.width / max_occ
+            
+            # spike lengths (left and right)
+            for val in self.non_missing_vals:
+                l_label_space = width_per_occ * val.occ_by_colour[1] / 2
+                if l_label_space > 0:
+                    l_left_pts.append((self.pos_x - l_label_space, val.vert_centre))
+                    l_right_pts.append((self.pos_x, val.vert_centre))
+                    l_weights.append([val.occ_by_colour[1]])
+
+                r_label_space = width_per_occ * val.occ_by_colour[0] / 2
+                if r_label_space > 0:
+                    r_left_pts.append((self.pos_x, val.vert_centre))
+                    r_right_pts.append((self.pos_x + r_label_space, val.vert_centre))
+                    r_weights.append([val.occ_by_colour[0]])
+            
+            # heights
+            l_heights = [Defaults.SPIKE_THICKNESS] * len(l_left_pts)
+            r_heights = [Defaults.SPIKE_THICKNESS] * len(r_left_pts)
+
+            # draw left
+            rectangle_painter.plot(ax, alpha=self.alpha,
+                                left_center_pts=l_left_pts,
+                                right_center_pts=l_right_pts,
+                                heights=l_heights,
+                                colors=l_color,
+                                weights=l_weights,
+                                zorder=1)
+
+            # draw right
+            rectangle_painter.plot(ax, alpha=self.alpha,
+                                left_center_pts=r_left_pts,
+                                right_center_pts=r_right_pts,
+                                heights=r_heights,
+                                colors=r_color,
+                                weights=r_weights,
+                                zorder=1)
+            
+            # draw the mean lines
+            # LEFT (highlighted)
+            l_total = sum(val.occ_by_colour[1] for val in self.non_missing_vals)
+            if l_total > 0:
+                l_mean_y = sum(
+                    val.vert_centre * val.occ_by_colour[1]
+                    for val in self.non_missing_vals
+                ) / l_total
+
+                rectangle_painter.plot(
+                    ax,
+                    alpha=1,
+                    left_center_pts=[(self.pos_x - self.width / 2, l_mean_y)],
+                    right_center_pts=[(self.pos_x, l_mean_y)],
+                    heights=[Defaults.SPIKE_THICKNESS],
+                    colors=["#000000"],  # black
+                    weights=[[1]],
+                    zorder=3,
+                )
+
+            # RIGHT (non-highlighted)
+            r_total = sum(val.occ_by_colour[0] for val in self.non_missing_vals)
+            if r_total > 0:
+                r_mean_y = sum(
+                    val.vert_centre * val.occ_by_colour[0]
+                    for val in self.non_missing_vals
+                ) / r_total
+
+                rectangle_painter.plot(
+                    ax,
+                    alpha=1,
+                    left_center_pts=[(self.pos_x, r_mean_y)],
+                    right_center_pts=[(self.pos_x + self.width / 2, r_mean_y)],
+                    heights=[Defaults.SPIKE_THICKNESS],
+                    colors=["#000000"],  # black
+                    weights=[[1]],
+                    zorder=3
+                )
+
     
     # draws missing values as well
     def _draw_hbar(self, ax, values, rectangle_painter):

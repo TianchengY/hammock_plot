@@ -153,7 +153,7 @@ class Hammock:
                 )
 
             for variable, cur_display_type in display_type.items():
-                numerical_display_types = ["box", "violin", "rugplot"] #, "lumpy beanplot", "spiky beanplot"]
+                numerical_display_types = ["box", "violin", "rugplot"]#, "lumpy beanplot", "spiky beanplot"]
                 categorical_display_types = ["bar chart", "stacked bar"]
                 if cur_display_type in numerical_display_types and var_types[variable] == np.str_:
                     raise ValueError(
