@@ -15,7 +15,7 @@ class Hammock:
     def __init__(self, data_df: pd.DataFrame):
         if data_df is None or data_df.empty:
             raise ValueError("data_df must be provided and non-empty.")
-        self.data_df = data_df.copy()
+        self.original_data_df = data_df.copy()
 
     def plot(self,
              # General
@@ -57,6 +57,7 @@ class Hammock:
         """
             Error catches and setup to initialize a Figure
         """
+        self.data_df = self.original_data_df
 
         data_df_columns = self.data_df.columns.tolist()
         
