@@ -132,6 +132,11 @@ class Hammock:
                 original_var_type = var_types[variable]
                 self.data_df[variable] = self.data_df[variable].apply(
                     lambda value: get_formatted_label(original_var_type, value))
+                if(original_var_type != np.str_):
+                    value_order[variable] = [
+                        get_formatted_label(original_var_type, value)
+                        for value in value_order[variable]
+                    ]
                 var_types[variable] = np.str_
         
             for variable, order in value_order.items():
