@@ -57,7 +57,7 @@ class Hammock:
         """
             Error catches and setup to initialize a Figure
         """
-        self.data_df = self.original_data_df
+        self.data_df = self.original_data_df.copy()
 
         data_df_columns = self.data_df.columns.tolist()
         
