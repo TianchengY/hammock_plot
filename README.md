@@ -75,7 +75,7 @@ ax = hammock.plot(var=var, value_order=value_order, numerical_var_levels=numeric
 We highlight observations with comorbidities=0  in red:
 
 ```python
-ax = hammock.plot(var=var ,hi_var="comorbidities", hi_value=[0], colors=["red"], numerical_var_levels=numeric_levels)
+ax = hammock.plot(var=var ,hi_var="comorbidities", hi_value=[0], colors=["orange"], numerical_var_levels=numeric_levels)
 ```
 
 <!---   ![Hammock plot with highlighting](image/asthma_highlighting.png)    --->
@@ -117,7 +117,7 @@ df = pd.read_csv('./data/data_shakespeare.csv')
 We use `speaker_dict` to map the values of the variables `speaker1` and `speaker2` according to the social class hierarchy.
 ```python
 var_lst = ["type","speaker1","speaker2","sex1"]
-color_lst = ["#fb9a99","#6a3d9a","#ff7f00"]
+color_lst = ["#fdc086",  "#386cb0", "#7fc97f"]
 hi_value = ["Beggars","Citizens","Gentry"]
 
 speaker_order=["Beggars", "Royalty", "Nobility", "Gentry", "Citizens", "Yeomanry"]
@@ -224,7 +224,7 @@ We call the lines between each unibar **connectors**, since they connect adjacen
 | | `hi_value` | `List[str or int] or str or int` | Value(s) of `hi_var` to be highlighted. You can highlighted one or multiple values. You can also pass an expression (e.g. "x>1 and (x>5 or x<4)") in string when you want to specify a range for a numeric hi_var.|
 | | `hi_box` | `str` | Controls how highlighted values are displayed within category labels. Options are "side-by-side" for side-by-side color segments or "stacked" for horizontally split color segments. Default is "side-by-side".|
 | | `hi_missing` | `bool` | Whether or not missing values for `hi_var` should be highlighted. |
-| | `colors` | `List[str]` | List of colors corresponding to the list of values to be highlighted. Each color can be specified as a plain color name (e.g., `"red"`, `"yellow"`) or in the format `"color=alpha"` (e.g., `"red=0.5"`) to control transparency/intensity, where `alpha` is a decimal between 0 and 1. The default highlight color list is `["red", "green", "yellow", "lightblue", "orange", "gray", "brown", "olive", "pink", "cyan", "magenta"]`. |
+| | `colors` | `List[str]` | List of colors corresponding to the list of values to be highlighted. Each color can be specified as a plain color name (e.g., `"red"`, `"yellow"`) or in the format `"color=alpha"` (e.g., `"red=0.5"`) to control transparency/intensity, where `alpha` is a decimal between 0 and 1.|
 | | `default_color` | `str` |  Default color of plotting elements for boxes that are not highlighted. Default is "blue" |
 | | `connector_color` | `str` | The color of the connectors. Default matches the default color + highlight colors. Specifying a connector color removes the highlighting from the connectors. | |
 | Manipulating Spacing and Layout |   `uni_vfill` | `float`  | Fraction of vertical space that should be populated by data. Adjusts the height of the data points. Defaults is 0.08.| 

@@ -34,7 +34,7 @@ def highlighting():
     df = df_asthma
     var = ["hospitalizations","group","gender","comorbidities"]
     hammock = hammock_plot.Hammock(data_df = df)
-    ax = hammock.plot(var=var ,hi_var="comorbidities", hi_value=[0], colors=["red"], numerical_var_levels={"comorbidities": None, "hospitalizations": None}, save_path="image/asthma_highlighting.png")
+    ax = hammock.plot(var=var ,hi_var="comorbidities", hi_value=[0], colors=["orange"], numerical_var_levels={"comorbidities": None, "hospitalizations": None}, save_path="image/asthma_highlighting.png")
 
 def missing_true():
     df = df_diabetes
@@ -45,7 +45,7 @@ def missing_true():
 def speaker_order():
     df = df_shakespeare
     var_lst = ["type","speaker1","speaker2","sex1"]
-    color_lst = ["#fb9a99","#6a3d9a","#ff7f00"]
+    color_lst = ["#fdc086",  "#386cb0", "#7fc97f"]
     hi_value = ["Beggars","Citizens","Gentry"]
 
     speaker_order=["Beggars", "Royalty", "Nobility", "Gentry", "Citizens", "Yeomanry"]
@@ -58,7 +58,7 @@ def speaker_order():
 def same_scale():
     df = df_shakespeare
     var_lst = ["type","speaker1","speaker2","sex1"]
-    color_lst = ["#fb9a99","#6a3d9a","#ff7f00"]
+    color_lst = ["#fdc086",  "#386cb0", "#7fc97f"]
     hi_value = ["Beggars","Citizens","Gentry"]
 
     speaker_order=["Beggars", "Royalty", "Nobility", "Gentry", "Citizens", "Yeomanry"]

@@ -324,13 +324,22 @@ class Hammock:
         # automatically extend colors
         if hi_var != None:
             if num_hi_colors > len(colors):
-                for _ in range(num_hi_colors - len(colors)):
+                num_add = num_hi_colors - len(colors)
+
+                for _ in range(num_add):
+                    added = False
+
                     for c in Defaults.COLORS:
                         if c not in colors:
                             colors.append(c)
+                            added = True
                             break
+                    # if Defaults.COLORS is exhausted, add bright green
+                    if not added:
+                        colors.append("#00FF00")  # bright green
+
                 warnings.warn(
-                    f"Warning: The length of color is less than the total number of (hi values and missing), color was automatically extended to {colors}")
+                    f"Warning: The length of color is less than the total number of (hi values and missing), color was automatically extended")
 
         # shape check
         if shape != "parallelogram" and shape != "rectangle":

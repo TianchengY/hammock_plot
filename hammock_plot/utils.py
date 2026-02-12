@@ -11,8 +11,11 @@ class Defaults:
     MISSING_PLACEHOLDER: str = "missing"
 
     # Colours
-    COLORS: list = ["#e31a1c", "#fb9a99", "#33a02c", "#b2df8a", "#ff7f00", "#fdbf6f", "#6a3d9a", "#cab2d6", "#b15928", "#1f78b4"]
-    DEFAULT_COLOR: str = "#a6cee3"
+    COLORS: list = [ "#fdc086",  "#386cb0", "#7fc97f", "#f0027f"]
+    DEFAULT_COLOR: str = "#beaed4"
+
+    # COLORS: list = ["#e06a85", "#aa9000", "#00aa5a", "#00a6c9"]
+    # DEFAULT_COLOR: str = "#b675df"
 
     # Layout
     UNI_VFILL: float = 0.08
