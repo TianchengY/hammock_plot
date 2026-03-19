@@ -20,6 +20,7 @@ class Hammock:
     def plot(self,
              # General
              var: List[str] = None,
+             weights: str = None,
              value_order: Dict[str, List[str]] = None,
              numerical_var_levels: Dict[str, int] = None,
              display_type: Dict[str, str] = None,
@@ -71,7 +72,28 @@ class Hammock:
             raise ValueError(
                 f'the variables: {error_values} in var_lst is not in data or value names user given does not match the data '
             )
-        
+
+        if weights:
+            if weights in var:
+                raise ValueError(
+                    f'The weight variable {weights} should not be in var_lst'
+                )
+            
+            if not weights in set(data_df_columns):
+                raise ValueError(
+                    f'The weight variable must be a column in the dataframe.'
+                )
+            
+            if self.data_df[weights].isna().any():
+                raise ValueError(
+                    f'The weight variable {weights} should not have missing values.'
+                )
+            
+            if not pd.api.types.is_numeric_dtype(self.data_df[weights]):
+                raise ValueError(
+                    f'The weight variable {weights} must be numeric.'
+                )
+            
         if uni_hfill < 0:
             warnings.warn("uni_hfill < 0. Value has been clamped to 0.")
             uni_hfill = 0
@@ -377,6 +399,7 @@ class Hammock:
             # general
             self.data_df,
             var_list=var,
+            weights=weights,
             value_order=value_order,
             numerical_var_levels=numerical_var_levels,
             display_type=display_type,

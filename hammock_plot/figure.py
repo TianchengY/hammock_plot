@@ -32,6 +32,7 @@ class Figure:
                 # general
                 df: pd.DataFrame,
                 var_list: List[str],
+                weights: str,
                 value_order: Dict[str, List[str]],
                 numerical_var_levels:  Dict[str, int],
                 display_type,#: Dict[str, str],
@@ -67,6 +68,7 @@ class Figure:
         self.missing_placeholder = missing_placeholder
         self.label = label
         self.unibar = unibar
+        self.weights = weights
 
         self.hi_box = hi_box
         self.colors = colors # is a List: [default color] + highlight colors
@@ -145,6 +147,7 @@ class Figure:
 
             uni = Unibar(
                 df=self.data_df,
+                weights=self.weights,
                 name=v,
                 val_type=dtype,
                 unibar=self.unibar,
@@ -211,7 +214,7 @@ class Figure:
             uni.missing_placeholder = self.missing_placeholder
         
         available_height = (self.height - 2 * self.ymargin * self.height) * self.scale * self.uni_vfill - (Defaults.SPACE_ABOVE_MISSING if self.missing else 0)
-        total_occurrences = len(self.data_df)
+        total_occurrences = self.data_df[self.weights].sum() if self.weights else len(self.data_df)
         
         # avoid divide by 0
         if total_occurrences > 0:

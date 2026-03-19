@@ -9,6 +9,7 @@ from .utils import Defaults, get_formatted_label
 class Unibar:
     def __init__(self,
                  df,
+                 weights: str,
                  name: str,
                  val_type,
                  unibar: bool,
@@ -26,6 +27,7 @@ class Unibar:
                  violin_bw_method,
                  draw_white_dividers):
         self.df = df
+        self.weights = weights
         self.name = name
         self.display_type = display_type
         self.label_type = label_type
@@ -72,16 +74,29 @@ class Unibar:
         order = self.val_order
 
         for val in order:
-            cnt = int(counts.get(val, 0))
+            if self.weights is None:
+                cnt = int(counts.get(val, 0))
+            else:
+                mask = self.df[self.name] == val
+                cnt = self.df.loc[mask, self.weights].sum()
+
             if cnt > 0:
                 subset = self.df[self.df[self.name] == val]
-                # reindex to cover all colors (missing → 0)
-                occ_by_colour = (
-                    subset["color_index"]
-                    .value_counts()
-                    .reindex(all_colors, fill_value=0)
-                    .tolist()
-                )
+
+                if self.weights is None:
+                    occ_by_colour = (
+                        subset["color_index"]
+                        .value_counts()
+                        .reindex(all_colors, fill_value=0)
+                        .tolist()
+                    )
+                else:
+                    occ_by_colour = (
+                        subset.groupby("color_index")[self.weights]
+                        .sum()
+                        .reindex(all_colors, fill_value=0)
+                        .tolist()
+                    )
             else:
                 occ_by_colour = [0] * len(all_colors)
 

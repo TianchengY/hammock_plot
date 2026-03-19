@@ -214,6 +214,7 @@ We call the lines between each unibar **connectors**, since they connect adjacen
 | Category | Parameter | Type     | Description                |
 | --- | :-------- | :------- | :-------------------------  |
 | General |     `var` | `List[str]` | List of variables to display. |
+| |             `weights` | `str` | Weight variable (must be a numeric variable not in `var`). |
 | |             `value_order` | `Dict[str, List[int]]`  |  If specified, the order of the values in the plot follows the order of values in the list supplied in the dictionary. Only applicable to categorical variables. If a value_order is given to a numerical variable, it will behave like categorical data instead. |
 | |            `numerical_var_levels` | `Dict[str, int \| None]` | Specifies the number of subdivisions in the y-axis for numerical variables. Example: {"NumericalVarname": 9, "NumericalVarname2": None}. Default is 7. |
 | |            `display_type` | `Dict[str, str]` | Specifies the type of plot. "rugplot", "box", and "violin" are the options for numerical data, and "stacked bar", "bar chart" are the options for categorical data. Example: {"NumericalVarname": "rugplot", "NumericalVarname2": "violin", "NumericalVarname3": "box"}. Default is "rugplot" for numerical data and "stacked bar" for categorical data. |
