@@ -414,12 +414,20 @@ class Figure:
             right_name = right_uni.name
 
             # Group by left, right and color_index to get counts per colour for each pair
-            grouped = (
-                self.data_df
-                .groupby([left_name, right_name, "color_index"], observed=True)
-                .size()
-                .to_dict()
-            )
+            if self.weights is None:
+                grouped = (
+                    self.data_df
+                    .groupby([left_name, right_name, "color_index"], observed=True)
+                    .size()
+                    .to_dict()
+                )
+            else:
+                grouped = (
+                    self.data_df
+                    .groupby([left_name, right_name, "color_index"], observed=True)[self.weights]
+                    .sum()
+                    .to_dict()
+                )
 
             pairs = defaultdict(lambda: [0.0] * len(self.colors))
             for (lv, rv, color_idx), cnt in grouped.items():
