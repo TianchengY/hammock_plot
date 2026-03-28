@@ -127,7 +127,7 @@ class Hammock:
 
         # drop missing values if missing values should not be plotted
         if not missing:
-            self.data_df = self.data_df.dropna()
+            self.data_df = self.data_df.dropna(subset=var)
 
         # make dictionary with variable types
         var_types = {}
@@ -396,7 +396,7 @@ class Hammock:
     
         # set up dataframe to be used in Figure
         if missing:
-            self.data_df = self.data_df.fillna(missing_placeholder)
+            self.data_df[var] = self.data_df[var].fillna(missing_placeholder)
         else:
             self.data_df = self.data_df.dropna(subset=var)
 

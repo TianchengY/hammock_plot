@@ -834,9 +834,9 @@ class Unibar:
         if self.missing:
             for mv in self.missing_vals:
                 # don't draw the labels if there are no missing values
-                if mv.occurrences == 0: continue
-                # Place missing labels just above the bottom with missing_padding
-                ax.text(x, mv.vert_centre, self.missing_placeholder, ha='center', va='center', **(self.label_options or {}))
+                if mv.occurrences > 0: 
+                    # Place missing labels just above the bottom with missing_padding
+                    ax.text(x, mv.vert_centre, self.missing_placeholder, ha='center', va='center', **(self.label_options or {}))
         
         if self.label_type == "values":
             self._draw_value_labels(ax) #draws labels directly according to the values

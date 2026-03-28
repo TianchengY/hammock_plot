@@ -3,10 +3,10 @@ from typing import Dict, List, Optional
 import numpy as np
 
 class Value:
-    def __init__(self, id: str, occurrences: int = 0, occ_by_colour: Optional[List[int]] = None, dtype = np.str_):
+    def __init__(self, id: str, occurrences = 0, occ_by_colour: Optional[List[int]] = None, dtype = np.str_):
         self.dtype = dtype
         self.id = id
-        self.occurrences = int(occurrences)
+        self.occurrences = occurrences
         # occ_by_colour: [non_highlight_count, hi_count_1, hi_count_2, ...]
         self.occ_by_colour = occ_by_colour if occ_by_colour is not None else [self.occurrences]
         self.vert_centre: float = 0.0
