@@ -5,6 +5,8 @@ import matplotlib.pyplot as plt
 from hammock_plot.value import Value
 from hammock_plot.utils import edge_color_from_face
 from .utils import Defaults, get_formatted_label
+from fractions import Fraction
+import math
 
 class Unibar:
     def __init__(self,
@@ -399,6 +401,7 @@ class Unibar:
 
         # Collect all numeric values to compute global min/max
         all_numeric_vals = []
+        
         for v in self.non_missing_vals:
             val_numeric = v.numeric
             all_numeric_vals.append(val_numeric)
@@ -412,6 +415,18 @@ class Unibar:
                 return (y_start + y_end) / 2
             return y_start + (val - min_val) / (max_val - min_val) * (y_end - y_start)
 
+        # Find multiplier to convert float weights to integers
+        all_occs = []
+        for v in self.non_missing_vals:
+            all_occs.extend(v.occ_by_colour)
+        all_occs = [o for o in all_occs if o > 0]
+
+        if all_occs:
+            fracs = [Fraction(o).limit_denominator(1000) for o in all_occs]
+            multiplier = math.lcm(*[f.denominator for f in fracs])
+        else:
+            multiplier = 1
+
         # Expand each Value according to occ_by_colour
         for v in self.non_missing_vals:
             val_numeric = v.numeric
@@ -422,7 +437,7 @@ class Unibar:
                 occs = occs + [0]*(n_colors - len(occs))
 
             for i, occ in enumerate(occs):
-                data_expanded[i].extend([val_numeric] * occ)
+                data_expanded[i].extend([val_numeric] * int(round(occ * multiplier)))
 
         # Scale each dataset
         data_scaled = [[scale_y(val) for val in dataset] for dataset in data_expanded]
