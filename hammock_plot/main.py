@@ -93,6 +93,13 @@ class Hammock:
                 raise ValueError(
                     f'The weight variable {weights} must be numeric.'
                 )
+
+            for idx, val in self.data_df[weights].items():
+                if val < 0:
+                    raise ValueError(
+                        f'There is a negative variable in {weights}. This is not allowed.'
+                    )
+            
             
         if uni_hfill < 0:
             warnings.warn("uni_hfill < 0. Value has been clamped to 0.")
