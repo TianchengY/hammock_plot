@@ -95,9 +95,9 @@ class Hammock:
                 )
 
             for idx, val in self.data_df[weights].items():
-                if val < 0:
+                if val <= 0:
                     raise ValueError(
-                        f'There is a negative variable in {weights}. This is not allowed.'
+                        f'There is a nonpositive variable in {weights}. This is not allowed.'
                     )
             
             
