@@ -160,22 +160,24 @@ def edge_color_from_face(facecolor, delta=0.3):
 # Color indexing helpers
 # -----------------------------
 def _compute_color_index(val: Any, hi_missing, hi_value) -> int:
-    # if hi_missing is true, increase each index by 1
     missing_buffer = 1 if hi_missing else 0
+
+    if pd.isna(val):
+        return 0
 
     if isinstance(hi_value, list):
         try:
-            idx = hi_value.index(val) + 1 + missing_buffer
-            return idx
+            return hi_value.index(val) + 1 + missing_buffer
         except ValueError:
-            if not type(val) is str:
+            # Try numeric matching
+            if not isinstance(val, str):
                 for i, value in enumerate(hi_value):
                     try:
-                        match = float(value) == val
-                        if match:
+                        if float(value) == val:
                             return i + 1 + missing_buffer
-                    except ValueError:
-                        return 0
+                    except (ValueError, TypeError):
+                        continue
+            return 0
 
     if isinstance(hi_value, str):
         # regex
@@ -185,13 +187,15 @@ def _compute_color_index(val: Any, hi_missing, hi_value) -> int:
                 return 1 + missing_buffer
         except re.error:
             pass
+
         # numeric expression
         try:
             numeric_val = float(val) if isinstance(val, str) else val
             if isinstance(numeric_val, (int, float)) and is_in_range(numeric_val, hi_value):
                 return 1 + missing_buffer
-        except ValueError:
+        except (ValueError, TypeError):
             return 0
+
     return 0
 
 def assign_color_index(df: pd.DataFrame, var_list: List[str], hi_missing, missing_placeholder, hi_var, hi_value) -> pd.DataFrame:
