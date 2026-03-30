@@ -70,7 +70,7 @@ class Unibar:
         dtype = self.val_type
 
         # global set of color indices
-        all_colors = list(range(self.df["color_index"].max() + 1))
+        all_colors = list(range(int(self.df["color_index"].max()) + 1))
 
         # Determine order
         order = self.val_order
