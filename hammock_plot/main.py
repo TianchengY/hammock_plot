@@ -401,7 +401,7 @@ class Hammock:
             self.data_df = self.data_df.dropna(subset=var)
             if(self.data_df.empty):
                 raise ValueError(
-                    f'Dataframe is empty (likely too many missing values)'
+                    f'Dataframe is empty after missing values are removed.'
                 )
 
         self.data_df = assign_color_index(self.data_df, var + [hi_var] if hi_var not in var else var, hi_missing, missing_placeholder, hi_var, hi_value)
