@@ -406,9 +406,9 @@ class Hammock:
 
         self.data_df = assign_color_index(self.data_df, var + [hi_var] if hi_var not in var else var, hi_missing, missing_placeholder, hi_var, hi_value)
 
-        print("NaNs in color_index:", self.data_df["color_index"].isna().sum())
-        print(self.data_df["color_index"].unique()[:20])
-        print(self.data_df[self.data_df["color_index"].isna()].head())
+        # print("NaNs in color_index:", self.data_df["color_index"].isna().sum())
+        # print(self.data_df["color_index"].unique()[:20])
+        # print(self.data_df[self.data_df["color_index"].isna()].head())
 
         fig = Figure(
             # general
