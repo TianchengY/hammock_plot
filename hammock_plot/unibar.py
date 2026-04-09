@@ -29,7 +29,7 @@ class Unibar:
                  violin_bw_method,
                  draw_white_dividers):
         self.df = df
-        self.weights = weights
+        self.weights = weights # None if none...
         self.name = name
         self.display_type = display_type
         self.label_type = label_type
@@ -381,18 +381,6 @@ class Unibar:
             )
 
     def _prepare_scaled_data(self, y_start, y_end):
-        """
-        Prepare scaled data and colors for plotting.
-        Each element in data_per_color corresponds to one highlight (color),
-        with the last element holding the non-highlighted data.
-        Stores one entry per Value (not expanded), scaled into [y_start, y_end].
-        Weights are handled separately via _prepare_weights().
-
-        Returns:
-            data_per_color: list of lists, each list is the scaled values for a highlight
-            facecolors: list of colors for each dataset
-            edgecolors: darker/lighter edge colour relative to face colour
-        """
         if not self.non_missing_vals:
             return [], [], []
 
@@ -407,6 +395,9 @@ class Unibar:
                 return (y_start + y_end) / 2
             return y_start + (val - min_val) / (max_val - min_val) * (y_end - y_start)
 
+        # weights column is present when self.weights is not None
+        weights_present = self.weights is not None
+
         for v in self.non_missing_vals:
             occs = v.occ_by_colour
             if len(occs) < n_colors:
@@ -414,21 +405,16 @@ class Unibar:
             scaled = scale_y(v.numeric)
             for i, occ in enumerate(occs):
                 if occ > 0:
-                    data_per_color[i].append(scaled)
+                    if weights_present:
+                        data_per_color[i].append(scaled)
+                    else:
+                        data_per_color[i].extend([scaled] * int(occ))
 
         return data_per_color, self.colors, [edge_color_from_face(c) for c in self.colors]
 
     def _prepare_weights(self, n_colors):
-        """
-        Returns weights_per_color mirroring data_per_color from _prepare_scaled_data,
-        or None if all weights are uniform (occ == 1 for every non-zero entry).
-        """
-        all_occs = []
-        for v in self.non_missing_vals:
-            all_occs.extend(v.occ_by_colour)
-
-        if all(o == 1 for o in all_occs if o > 0):
-            return None  # unweighted — use fast paths in draw functions
+        if self.weights is None:
+            return None
 
         weights_per_color = [[] for _ in range(n_colors)]
         for v in self.non_missing_vals:
