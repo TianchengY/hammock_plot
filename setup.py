@@ -21,6 +21,6 @@ setuptools.setup(
         "Intended Audience :: Science/Research",
     ],
     python_requires=">=3.6",
-    install_requires=["matplotlib", "numpy", "pandas"],
+    install_requires=["matplotlib", "numpy", "pandas", "scipy"],
     # cmdclass=versioneer.get_cmdclass(),
 )

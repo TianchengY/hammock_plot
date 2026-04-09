@@ -6,7 +6,7 @@ from hammock_plot.value import Value
 from hammock_plot.utils import edge_color_from_face
 from .utils import Defaults, get_formatted_label
 from fractions import Fraction
-import math
+from scipy.stats import gaussian_kde
 
 class Unibar:
     def __init__(self,
@@ -379,7 +379,7 @@ class Unibar:
                 zorder=2,  # slightly above bars
                 check_overlap=False
             )
-
+        
     def _prepare_scaled_data(self, y_start, y_end):
         if not self.non_missing_vals:
             return [], [], []
@@ -395,9 +395,6 @@ class Unibar:
                 return (y_start + y_end) / 2
             return y_start + (val - min_val) / (max_val - min_val) * (y_end - y_start)
 
-        # weights column is present when self.weights is not None
-        weights_present = self.weights is not None
-
         for v in self.non_missing_vals:
             occs = v.occ_by_colour
             if len(occs) < n_colors:
@@ -405,17 +402,11 @@ class Unibar:
             scaled = scale_y(v.numeric)
             for i, occ in enumerate(occs):
                 if occ > 0:
-                    if weights_present:
-                        data_per_color[i].append(scaled)
-                    else:
-                        data_per_color[i].extend([scaled] * int(occ))
+                    data_per_color[i].append(scaled)
 
         return data_per_color, self.colors, [edge_color_from_face(c) for c in self.colors]
 
     def _prepare_weights(self, n_colors):
-        if self.weights is None:
-            return None
-
         weights_per_color = [[] for _ in range(n_colors)]
         for v in self.non_missing_vals:
             occs = v.occ_by_colour
@@ -423,6 +414,7 @@ class Unibar:
                 occs = occs + [0] * (n_colors - len(occs))
             for i, occ in enumerate(occs):
                 if occ > 0:
+                    # if no weight column, occ is an integer count — use it directly as the weight
                     weights_per_color[i].append(float(occ))
 
         return weights_per_color
@@ -453,7 +445,6 @@ class Unibar:
         Uses weighted KDE (scipy) when weights are present, otherwise falls
         back to matplotlib's violinplot for identical unweighted behaviour.
         """
-        from scipy.stats import gaussian_kde
 
         data_per_color, facecolors, edgecolors = self._prepare_scaled_data(y_start, y_end)
         weights_per_color = self._prepare_weights(len(self.colors))
@@ -461,16 +452,17 @@ class Unibar:
         # ---- helpers ----
 
         def make_kde_path(data, weights=None):
-            """Return (y_grid, density) via weighted or plain KDE."""
             data = np.array(data, dtype=float)
             if weights is not None:
                 w = np.array(weights, dtype=float)
-                w /= w.sum()
-                kde = gaussian_kde(data, weights=w, bw_method=self.violin_bw_method)
-            else:
-                kde = gaussian_kde(data, bw_method=self.violin_bw_method)
+                # repeat each value proportionally so KDE sees correct sample size
+                counts = np.round(w / w.min()).astype(int)  # relative integer counts
+                data = np.repeat(data, counts)
+            kde = gaussian_kde(data, bw_method=self.violin_bw_method)
             y_grid = np.linspace(data.min(), data.max(), 1000)
-            return y_grid, kde(y_grid)
+            density = kde(y_grid)
+            density = density / density.max() * self.width / 2
+            return y_grid, density
 
         def fill_violin(y_grid, density, color, side='full'):
             """Draw violin as a filled polygon directly on ax."""
