@@ -383,251 +383,326 @@ class Unibar:
     def _prepare_scaled_data(self, y_start, y_end):
         """
         Prepare scaled data and colors for plotting.
-        Each element in data_scaled corresponds to one highlight (color),
+        Each element in data_per_color corresponds to one highlight (color),
         with the last element holding the non-highlighted data.
-        Expands each Value according to occ_by_colour, then scales numeric
-        values globally into [y_start, y_end].
-        
+        Stores one entry per Value (not expanded), scaled into [y_start, y_end].
+        Weights are handled separately via _prepare_weights().
+
         Returns:
-            data_scaled: list of lists, each list is the scaled values for a highlight
+            data_per_color: list of lists, each list is the scaled values for a highlight
             facecolors: list of colors for each dataset
-            edgecolors: uses function in utils.py to make a darker/lighter edge colour relative to the face colour
+            edgecolors: darker/lighter edge colour relative to face colour
         """
         if not self.non_missing_vals:
             return [], [], []
 
         n_colors = len(self.colors)
-        data_expanded = [[] for _ in range(n_colors)]
+        data_per_color = [[] for _ in range(n_colors)]
 
-        # Collect all numeric values to compute global min/max
-        all_numeric_vals = []
-        
-        for v in self.non_missing_vals:
-            val_numeric = v.numeric
-            all_numeric_vals.append(val_numeric)
-
-        
+        all_numeric_vals = [v.numeric for v in self.non_missing_vals]
         min_val, max_val = self.range if self.range else (min(all_numeric_vals), max(all_numeric_vals))
 
-        # Scaling function
         def scale_y(val):
             if max_val == min_val:
                 return (y_start + y_end) / 2
             return y_start + (val - min_val) / (max_val - min_val) * (y_end - y_start)
 
-        # Find multiplier to convert float weights to integers
+        for v in self.non_missing_vals:
+            occs = v.occ_by_colour
+            if len(occs) < n_colors:
+                occs = occs + [0] * (n_colors - len(occs))
+            scaled = scale_y(v.numeric)
+            for i, occ in enumerate(occs):
+                if occ > 0:
+                    data_per_color[i].append(scaled)
+
+        return data_per_color, self.colors, [edge_color_from_face(c) for c in self.colors]
+
+    def _prepare_weights(self, n_colors):
+        """
+        Returns weights_per_color mirroring data_per_color from _prepare_scaled_data,
+        or None if all weights are uniform (occ == 1 for every non-zero entry).
+        """
         all_occs = []
         for v in self.non_missing_vals:
             all_occs.extend(v.occ_by_colour)
-        all_occs = [o for o in all_occs if o > 0]
 
-        if all_occs:
-            fracs = [Fraction(o).limit_denominator(1000) for o in all_occs]
-            multiplier = math.lcm(*[f.denominator for f in fracs])
-        else:
-            multiplier = 1
+        if all(o == 1 for o in all_occs if o > 0):
+            return None  # unweighted — use fast paths in draw functions
 
-        # Expand each Value according to occ_by_colour
+        weights_per_color = [[] for _ in range(n_colors)]
         for v in self.non_missing_vals:
-            val_numeric = v.numeric
             occs = v.occ_by_colour
-
-            # Pad occs if fewer than colors
             if len(occs) < n_colors:
-                occs = occs + [0]*(n_colors - len(occs))
-
+                occs = occs + [0] * (n_colors - len(occs))
             for i, occ in enumerate(occs):
-                data_expanded[i].extend([val_numeric] * int(round(occ * multiplier)))
+                if occ > 0:
+                    weights_per_color[i].append(float(occ))
 
-        # Scale each dataset
-        data_scaled = [[scale_y(val) for val in dataset] for dataset in data_expanded]
+        return weights_per_color
 
-        return data_scaled, self.colors, [edge_color_from_face(color) for color in self.colors]
+    def _weighted_quantile(self, data, weights, quantiles):
+        """
+        Exact weighted quantiles via sorted cumulative weights. No resampling.
+        data and weights must be the same length.
+        """
+        data = np.array(data, dtype=float)
+        weights = np.array(weights, dtype=float)
+
+        if len(data) != len(weights):
+            raise ValueError(
+                f"_weighted_quantile: data length {len(data)} != weights length {len(weights)}."
+            )
+
+        sorter = np.argsort(data)
+        data = data[sorter]
+        weights = weights[sorter]
+        cumulative = np.cumsum(weights)
+        cumulative /= cumulative[-1]
+        return np.interp(quantiles, cumulative, data)
 
     def _draw_violin(self, ax, y_start, y_end, draw_boxplot=True):
         """
         Draw a violin plot with optional split halves and overlaid boxplots.
+        Uses weighted KDE (scipy) when weights are present, otherwise falls
+        back to matplotlib's violinplot for identical unweighted behaviour.
         """
-        data_scaled, facecolors, edgecolors = self._prepare_scaled_data(y_start, y_end)
+        from scipy.stats import gaussian_kde
 
-        if len(data_scaled) == 1:
-            # Single violin (no split)
-            parts = ax.violinplot(
-                dataset=[data_scaled[0]],
-                positions=[self.pos_x],
-                widths=self.width,
-                showmeans=False,
-                showmedians=False,
-                showextrema=False,
-                bw_method=self.violin_bw_method,
-            )
-            for pc in parts['bodies']:
-                pc.set_facecolor(facecolors[0])
-                pc.set_edgecolor('none')
-                pc.set_alpha(self.alpha)
+        data_per_color, facecolors, edgecolors = self._prepare_scaled_data(y_start, y_end)
+        weights_per_color = self._prepare_weights(len(self.colors))
 
-            if draw_boxplot:
-                # Boxplot inside violin
-                box = ax.boxplot(
-                    data_scaled[0],
+        # ---- helpers ----
+
+        def make_kde_path(data, weights=None):
+            """Return (y_grid, density) via weighted or plain KDE."""
+            data = np.array(data, dtype=float)
+            if weights is not None:
+                w = np.array(weights, dtype=float)
+                w /= w.sum()
+                kde = gaussian_kde(data, weights=w, bw_method=self.violin_bw_method)
+            else:
+                kde = gaussian_kde(data, bw_method=self.violin_bw_method)
+            y_grid = np.linspace(data.min(), data.max(), 1000)
+            return y_grid, kde(y_grid)
+
+        def fill_violin(y_grid, density, color, side='full'):
+            """Draw violin as a filled polygon directly on ax."""
+            d = density / density.max() * self.width / 2
+            if side == 'full':
+                xl, xr = self.pos_x - d, self.pos_x + d
+            elif side == 'left':
+                xl, xr = self.pos_x - d, np.full_like(d, self.pos_x)
+            else:  # right
+                xl, xr = np.full_like(d, self.pos_x), self.pos_x + d
+            ax.fill_betweenx(y_grid, xl, xr, color=color, alpha=self.alpha)
+
+        def draw_inner_box(data, weights, pos_x, width, edgecolor):
+            """Draw box/whisker using weighted quantiles (or np.percentile if unweighted)."""
+            if weights is not None:
+                q1, median, q3 = self._weighted_quantile(data, weights, [0.25, 0.5, 0.75])
+            else:
+                q1, median, q3 = np.percentile(data, [25, 50, 75])
+            iqr = q3 - q1
+            arr = np.array(data, dtype=float)
+            lo = arr[arr >= q1 - 1.5 * iqr].min()
+            hi = arr[arr <= q3 + 1.5 * iqr].max()
+            hw = width / 2
+            ax.broken_barh([(pos_x - hw, width)], (q1, q3 - q1),
+                           facecolors='none', edgecolors=edgecolor, linewidth=1.2)
+            ax.plot([pos_x - hw, pos_x + hw], [median, median], color=edgecolor, linewidth=1.5)
+            ax.plot([pos_x, pos_x], [lo, q1], color=edgecolor, linewidth=1)
+            ax.plot([pos_x, pos_x], [q3, hi], color=edgecolor, linewidth=1)
+
+        # ---- single violin ----
+        if len(data_per_color) == 1:
+            data = data_per_color[0]
+            if not data:
+                return
+            weights = weights_per_color[0] if weights_per_color else None
+
+            if weights is None:
+                # original matplotlib path — pixel-perfect match to unweighted behaviour
+                parts = ax.violinplot(
+                    dataset=[data],
                     positions=[self.pos_x],
-                    widths=self.width * 0.1,
-                    patch_artist=True,
-                    showcaps=False,
-                    boxprops=dict(facecolor='none', edgecolor=edgecolors[0], linewidth=1.2),
-                    whiskerprops=dict(color=edgecolors[0], linewidth=1),
-                    medianprops=dict(color=edgecolors[0], linewidth=1.5),
-                    showfliers=False,
-                    manage_ticks=False,
+                    widths=self.width,
+                    showmeans=False, showmedians=False, showextrema=False,
+                    bw_method=self.violin_bw_method,
                 )
-
-        else:
-            # Split violin
-            left_scaled = data_scaled[1]
-            right_scaled = data_scaled[0]
-
-            # Left half
-            parts_left = ax.violinplot(
-                dataset=[left_scaled],
-                positions=[self.pos_x],
-                widths=self.width,
-                showmeans=False,
-                showmedians=False,
-                showextrema=False
-            )
-            for pc in parts_left['bodies']:
-                verts = pc.get_paths()[0].vertices
-                verts[:, 0] = np.clip(verts[:, 0], -np.inf, self.pos_x)
-                pc.set_facecolor(facecolors[1])
-                pc.set_edgecolor('none')
-                pc.set_alpha(self.alpha)
-
-            # Right half
-            parts_right = ax.violinplot(
-                dataset=[right_scaled],
-                positions=[self.pos_x],
-                widths=self.width,
-                showmeans=False,
-                showmedians=False,
-                showextrema=False,
-            )
-            for pc in parts_right['bodies']:
-                verts = pc.get_paths()[0].vertices
-                verts[:, 0] = np.clip(verts[:, 0], self.pos_x, np.inf)
-                pc.set_facecolor(facecolors[0])
-                pc.set_edgecolor('none')
-                pc.set_alpha(self.alpha)
-
-            # Offset for half-boxplots (move slightly away from center)
-            offset = self.width * 0.05
+                for pc in parts['bodies']:
+                    pc.set_facecolor(facecolors[0])
+                    pc.set_edgecolor('none')
+                    pc.set_alpha(self.alpha)
+            else:
+                y_grid, density = make_kde_path(data, weights)
+                fill_violin(y_grid, density, facecolors[0], side='full')
 
             if draw_boxplot:
-                # Left half box (shift left)
-                left_box = ax.boxplot(
-                    left_scaled,
-                    positions=[self.pos_x - offset],
-                    widths=self.width * 0.05,
-                    patch_artist=True,
-                    showcaps=False,
-                    boxprops=dict(facecolor='none', edgecolor=edgecolors[1], linewidth=1.2),
-                    whiskerprops=dict(color=edgecolors[1], linewidth=1),
-                    medianprops=dict(color=edgecolors[1], linewidth=1.5),
-                    manage_ticks=False,
-                    showfliers=False,
-                )
-                for patch in left_box['boxes']:
-                    verts = patch.get_path().vertices
-                    verts[:, 0] = np.clip(verts[:, 0], -np.inf, self.pos_x)
+                draw_inner_box(data, weights, self.pos_x, self.width * 0.1, edgecolors[0])
 
-                # Right half box (shift right)
-                right_box = ax.boxplot(
-                    right_scaled,
-                    positions=[self.pos_x + offset],
-                    widths=self.width * 0.05,
-                    patch_artist=True,
-                    showcaps=False,
-                    boxprops=dict(facecolor='none', edgecolor=edgecolors[0], linewidth=1.2),
-                    whiskerprops=dict(color=edgecolors[0], linewidth=1),
-                    medianprops=dict(color=edgecolors[0], linewidth=1.5),
-                    manage_ticks=False,
-                    showfliers=False,
-                )
-                for patch in right_box['boxes']:
-                    verts = patch.get_path().vertices
-                    verts[:, 0] = np.clip(verts[:, 0], self.pos_x, np.inf)
+        # ---- split violin ----
+        else:
+            right_data    = data_per_color[0]
+            left_data     = data_per_color[1]
+            right_weights = (weights_per_color[0] if weights_per_color else None)
+            left_weights  = (weights_per_color[1] if weights_per_color else None)
+
+            if weights_per_color is None:
+                # original matplotlib path for split violin
+                if left_data:
+                    parts_left = ax.violinplot(
+                        dataset=[left_data], positions=[self.pos_x], widths=self.width,
+                        showmeans=False, showmedians=False, showextrema=False,
+                    )
+                    for pc in parts_left['bodies']:
+                        verts = pc.get_paths()[0].vertices
+                        verts[:, 0] = np.clip(verts[:, 0], -np.inf, self.pos_x)
+                        pc.set_facecolor(facecolors[1])
+                        pc.set_edgecolor('none')
+                        pc.set_alpha(self.alpha)
+
+                if right_data:
+                    parts_right = ax.violinplot(
+                        dataset=[right_data], positions=[self.pos_x], widths=self.width,
+                        showmeans=False, showmedians=False, showextrema=False,
+                    )
+                    for pc in parts_right['bodies']:
+                        verts = pc.get_paths()[0].vertices
+                        verts[:, 0] = np.clip(verts[:, 0], self.pos_x, np.inf)
+                        pc.set_facecolor(facecolors[0])
+                        pc.set_edgecolor('none')
+                        pc.set_alpha(self.alpha)
+            else:
+                if right_data:
+                    y_grid, density = make_kde_path(right_data, right_weights)
+                    fill_violin(y_grid, density, facecolors[0], side='right')
+                if left_data:
+                    y_grid, density = make_kde_path(left_data, left_weights)
+                    fill_violin(y_grid, density, facecolors[1], side='left')
+
+            offset = self.width * 0.05
+            if draw_boxplot:
+                if right_data:
+                    draw_inner_box(right_data, right_weights,
+                                   self.pos_x + offset, self.width * 0.05, edgecolors[0])
+                if left_data:
+                    draw_inner_box(left_data, left_weights,
+                                   self.pos_x - offset, self.width * 0.05, edgecolors[1])
 
     def _draw_boxplot(self, ax, y_start, y_end, gap_ratio=0.02):
         """
-        Draw a boxplot
+        Draw a boxplot.
+        Uses weighted quantiles when weights are present, otherwise falls back
+        to matplotlib's boxplot for identical unweighted behaviour.
         """
         def rotate_left(lst):
             if len(lst) > 1:
                 return lst[1:] + lst[:1]
             return lst
 
-        data_scaled, facecolors, edgecolors = self._prepare_scaled_data(y_start, y_end)
-        n = len(data_scaled)
+        data_per_color, facecolors, edgecolors = self._prepare_scaled_data(y_start, y_end)
+        weights_per_color = self._prepare_weights(len(self.colors))
+
+        n = len(data_per_color)
         if n == 0:
             return
 
-        # Reverse all lists so visual order = highlighted 2 -> highlighted 1 -> not highlighted
-        data_scaled = rotate_left(data_scaled)
-        facecolors = rotate_left(facecolors)
-        edgecolors = rotate_left(edgecolors)
+        data_per_color  = rotate_left(data_per_color)
+        facecolors      = rotate_left(facecolors)
+        edgecolors      = rotate_left(edgecolors)
+        if weights_per_color:
+            weights_per_color = rotate_left(weights_per_color)
 
-        # Ensure colors match number of boxes
+        # Ensure color lists match
         if len(facecolors) < n:
             facecolors = (facecolors * n)[:n]
         if len(edgecolors) < n:
             edgecolors = (edgecolors * n)[:n]
 
-        # Calculate proportional widths
-        num_points = [len(values) for values in data_scaled]
-        total_points = sum(num_points)
-        if total_points == 0:
+        # Proportional widths — weight sum if weighted, count if not
+        if weights_per_color:
+            totals = [sum(w) for w in weights_per_color]
+        else:
+            totals = [len(d) for d in data_per_color]
+
+        grand_total = sum(totals)
+        if grand_total == 0:
             return
-        gap = self.width * gap_ratio
-        num_boxes = len(data_scaled)
-        box_widths = [(self.width - gap *  (num_boxes - 1))* (cnt / total_points) for cnt in num_points]
 
-        # Compute total width including gaps
+        gap       = self.width * gap_ratio
+        box_widths = [(self.width - gap * (n - 1)) * (t / grand_total) for t in totals]
         total_width = sum(box_widths) + gap * (n - 1)
-        start_x = self.pos_x - total_width / 2  # leftmost edge of first box
+        start_x   = self.pos_x - total_width / 2
 
-        # Compute offsets sequentially
         offsets = []
         current_x = start_x
         for w in box_widths:
-            center = current_x + w / 2
-            offsets.append(center)
+            offsets.append(current_x + w / 2)
             current_x += w + gap
 
-        # Draw boxes
-        for i, values in enumerate(data_scaled):
-            if not values:
+        for i, data in enumerate(data_per_color):
+            if not data:
                 continue
 
-            bp = ax.boxplot(
-                x=[values],
-                positions=[offsets[i]],
-                widths=box_widths[i],
-                vert=True,
-                patch_artist=True,
-                manage_ticks=False,
-                showfliers=True,
-                flierprops=dict(marker='o', markerfacecolor=facecolors[i], markeredgecolor='none')
-            )
+            weights = weights_per_color[i] if weights_per_color else None
+            pos_x   = offsets[i]
+            bw      = box_widths[i]
 
-            # Set edge colors
-            for element in ['whiskers', 'caps', 'medians']:
-                for artist in bp[element]:
-                    artist.set_color(edgecolors[i])
+            if weights is None:
+                # original matplotlib path — identical to previous unweighted behaviour
+                bp = ax.boxplot(
+                    x=[data],
+                    positions=[pos_x],
+                    widths=bw,
+                    vert=True,
+                    patch_artist=True,
+                    manage_ticks=False,
+                    showfliers=True,
+                    flierprops=dict(marker='o', markerfacecolor=facecolors[i], markeredgecolor='none'),
+                )
+                for element in ['whiskers', 'caps', 'medians']:
+                    for artist in bp[element]:
+                        artist.set_color(edgecolors[i])
+                for patch in bp['boxes']:
+                    patch.set_facecolor(facecolors[i])
+                    patch.set_edgecolor(edgecolors[i])
+                    patch.set_alpha(self.alpha)
+            else:
+                # weighted path — draw manually using weighted quantiles
+                q1, median, q3 = self._weighted_quantile(data, weights, [0.25, 0.5, 0.75])
+                iqr   = q3 - q1
+                arr   = np.array(data, dtype=float)
+                lo    = arr[arr >= q1 - 1.5 * iqr].min()
+                hi    = arr[arr <= q3 + 1.5 * iqr].max()
+                hw    = bw / 2
 
-            # Set face colors
-            for patch in bp['boxes']:
-                patch.set_facecolor(facecolors[i])
-                patch.set_edgecolor(edgecolors[i])
-                patch.set_alpha(self.alpha)
+                # Box fill
+                ax.broken_barh(
+                    [(pos_x - hw, bw)], (q1, q3 - q1),
+                    facecolors=facecolors[i], edgecolors=edgecolors[i],
+                    linewidth=1.2, alpha=self.alpha,
+                )
+                # Median line
+                ax.plot([pos_x - hw, pos_x + hw], [median, median],
+                        color=edgecolors[i], linewidth=1.5)
+                # Whiskers
+                ax.plot([pos_x, pos_x], [lo, q1], color=edgecolors[i], linewidth=1)
+                ax.plot([pos_x, pos_x], [q3, hi], color=edgecolors[i], linewidth=1)
+                # Caps
+                ax.plot([pos_x - hw * 0.5, pos_x + hw * 0.5], [lo, lo],
+                        color=edgecolors[i], linewidth=1)
+                ax.plot([pos_x - hw * 0.5, pos_x + hw * 0.5], [hi, hi],
+                        color=edgecolors[i], linewidth=1)
+                # Fliers
+                flier_mask = (arr < q1 - 1.5 * iqr) | (arr > q3 + 1.5 * iqr)
+                fliers = arr[flier_mask]
+                if len(fliers):
+                    ax.scatter(
+                        [pos_x] * len(fliers), fliers,
+                        marker='o', color=facecolors[i], edgecolors='none',
+                        s=10, alpha=self.alpha, zorder=3,
+                    )
     
     def _draw_lumpy_beanplot(self, ax, rectangle_painter):
         self._draw_violin(ax,
