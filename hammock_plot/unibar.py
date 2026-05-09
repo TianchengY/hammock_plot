@@ -442,8 +442,8 @@ class Unibar:
     def _draw_violin(self, ax, y_start, y_end, draw_boxplot=True):
         """
         Draw a violin plot with optional split halves and overlaid boxplots.
-        Uses weighted KDE (scipy) when weights are present, otherwise falls
-        back to matplotlib's violinplot for identical unweighted behaviour.
+        Uses weighted KDE (scipy); each unique value's frequency comes from
+        its occurrence count or weight-sum.
         """
 
         data_per_color, facecolors, edgecolors = self._prepare_scaled_data(y_start, y_end)
@@ -476,11 +476,8 @@ class Unibar:
             ax.fill_betweenx(y_grid, xl, xr, color=color, alpha=self.alpha)
 
         def draw_inner_box(data, weights, pos_x, width, edgecolor):
-            """Draw box/whisker using weighted quantiles (or np.percentile if unweighted)."""
-            if weights is not None:
-                q1, median, q3 = self._weighted_quantile(data, weights, [0.25, 0.5, 0.75])
-            else:
-                q1, median, q3 = np.percentile(data, [25, 50, 75])
+            """Draw box/whisker using weighted quantiles."""
+            q1, median, q3 = self._weighted_quantile(data, weights, [0.25, 0.5, 0.75])
             iqr = q3 - q1
             arr = np.array(data, dtype=float)
             lo = arr[arr >= q1 - 1.5 * iqr].min()
@@ -497,24 +494,10 @@ class Unibar:
             data = data_per_color[0]
             if not data:
                 return
-            weights = weights_per_color[0] if weights_per_color else None
+            weights = weights_per_color[0]
 
-            if weights is None:
-                # original matplotlib path — pixel-perfect match to unweighted behaviour
-                parts = ax.violinplot(
-                    dataset=[data],
-                    positions=[self.pos_x],
-                    widths=self.width,
-                    showmeans=False, showmedians=False, showextrema=False,
-                    bw_method=self.violin_bw_method,
-                )
-                for pc in parts['bodies']:
-                    pc.set_facecolor(facecolors[0])
-                    pc.set_edgecolor('none')
-                    pc.set_alpha(self.alpha)
-            else:
-                y_grid, density = make_kde_path(data, weights)
-                fill_violin(y_grid, density, facecolors[0], side='full')
+            y_grid, density = make_kde_path(data, weights)
+            fill_violin(y_grid, density, facecolors[0], side='full')
 
             if draw_boxplot:
                 draw_inner_box(data, weights, self.pos_x, self.width * 0.1, edgecolors[0])
@@ -523,41 +506,15 @@ class Unibar:
         else:
             right_data    = data_per_color[0]
             left_data     = data_per_color[1]
-            right_weights = (weights_per_color[0] if weights_per_color else None)
-            left_weights  = (weights_per_color[1] if weights_per_color else None)
+            right_weights = weights_per_color[0]
+            left_weights  = weights_per_color[1]
 
-            if weights_per_color is None:
-                # original matplotlib path for split violin
-                if left_data:
-                    parts_left = ax.violinplot(
-                        dataset=[left_data], positions=[self.pos_x], widths=self.width,
-                        showmeans=False, showmedians=False, showextrema=False,
-                    )
-                    for pc in parts_left['bodies']:
-                        verts = pc.get_paths()[0].vertices
-                        verts[:, 0] = np.clip(verts[:, 0], -np.inf, self.pos_x)
-                        pc.set_facecolor(facecolors[1])
-                        pc.set_edgecolor('none')
-                        pc.set_alpha(self.alpha)
-
-                if right_data:
-                    parts_right = ax.violinplot(
-                        dataset=[right_data], positions=[self.pos_x], widths=self.width,
-                        showmeans=False, showmedians=False, showextrema=False,
-                    )
-                    for pc in parts_right['bodies']:
-                        verts = pc.get_paths()[0].vertices
-                        verts[:, 0] = np.clip(verts[:, 0], self.pos_x, np.inf)
-                        pc.set_facecolor(facecolors[0])
-                        pc.set_edgecolor('none')
-                        pc.set_alpha(self.alpha)
-            else:
-                if right_data:
-                    y_grid, density = make_kde_path(right_data, right_weights)
-                    fill_violin(y_grid, density, facecolors[0], side='right')
-                if left_data:
-                    y_grid, density = make_kde_path(left_data, left_weights)
-                    fill_violin(y_grid, density, facecolors[1], side='left')
+            if right_data:
+                y_grid, density = make_kde_path(right_data, right_weights)
+                fill_violin(y_grid, density, facecolors[0], side='right')
+            if left_data:
+                y_grid, density = make_kde_path(left_data, left_weights)
+                fill_violin(y_grid, density, facecolors[1], side='left')
 
             offset = self.width * 0.05
             if draw_boxplot:
@@ -570,9 +527,8 @@ class Unibar:
 
     def _draw_boxplot(self, ax, y_start, y_end, gap_ratio=0.02):
         """
-        Draw a boxplot.
-        Uses weighted quantiles when weights are present, otherwise falls back
-        to matplotlib's boxplot for identical unweighted behaviour.
+        Draw a boxplot using weighted quantiles. Each unique value's
+        frequency comes from its occurrence count or weight-sum.
         """
         def rotate_left(lst):
             if len(lst) > 1:
@@ -623,64 +579,43 @@ class Unibar:
             if not data:
                 continue
 
-            weights = weights_per_color[i] if weights_per_color else None
+            weights = weights_per_color[i]
             pos_x   = offsets[i]
             bw      = box_widths[i]
 
-            if weights is None:
-                # original matplotlib path — identical to previous unweighted behaviour
-                bp = ax.boxplot(
-                    x=[data],
-                    positions=[pos_x],
-                    widths=bw,
-                    vert=True,
-                    patch_artist=True,
-                    manage_ticks=False,
-                    showfliers=True,
-                    flierprops=dict(marker='o', markerfacecolor=facecolors[i], markeredgecolor='none'),
-                )
-                for element in ['whiskers', 'caps', 'medians']:
-                    for artist in bp[element]:
-                        artist.set_color(edgecolors[i])
-                for patch in bp['boxes']:
-                    patch.set_facecolor(facecolors[i])
-                    patch.set_edgecolor(edgecolors[i])
-                    patch.set_alpha(self.alpha)
-            else:
-                # weighted path — draw manually using weighted quantiles
-                q1, median, q3 = self._weighted_quantile(data, weights, [0.25, 0.5, 0.75])
-                iqr   = q3 - q1
-                arr   = np.array(data, dtype=float)
-                lo    = arr[arr >= q1 - 1.5 * iqr].min()
-                hi    = arr[arr <= q3 + 1.5 * iqr].max()
-                hw    = bw / 2
+            q1, median, q3 = self._weighted_quantile(data, weights, [0.25, 0.5, 0.75])
+            iqr   = q3 - q1
+            arr   = np.array(data, dtype=float)
+            lo    = arr[arr >= q1 - 1.5 * iqr].min()
+            hi    = arr[arr <= q3 + 1.5 * iqr].max()
+            hw    = bw / 2
 
-                # Box fill
-                ax.broken_barh(
-                    [(pos_x - hw, bw)], (q1, q3 - q1),
-                    facecolors=facecolors[i], edgecolors=edgecolors[i],
-                    linewidth=1.2, alpha=self.alpha,
+            # Box fill
+            ax.broken_barh(
+                [(pos_x - hw, bw)], (q1, q3 - q1),
+                facecolors=facecolors[i], edgecolors=edgecolors[i],
+                linewidth=1.2, alpha=self.alpha,
+            )
+            # Median line
+            ax.plot([pos_x - hw, pos_x + hw], [median, median],
+                    color=edgecolors[i], linewidth=1.5)
+            # Whiskers
+            ax.plot([pos_x, pos_x], [lo, q1], color=edgecolors[i], linewidth=1)
+            ax.plot([pos_x, pos_x], [q3, hi], color=edgecolors[i], linewidth=1)
+            # Caps
+            ax.plot([pos_x - hw * 0.5, pos_x + hw * 0.5], [lo, lo],
+                    color=edgecolors[i], linewidth=1)
+            ax.plot([pos_x - hw * 0.5, pos_x + hw * 0.5], [hi, hi],
+                    color=edgecolors[i], linewidth=1)
+            # Fliers
+            flier_mask = (arr < q1 - 1.5 * iqr) | (arr > q3 + 1.5 * iqr)
+            fliers = arr[flier_mask]
+            if len(fliers):
+                ax.scatter(
+                    [pos_x] * len(fliers), fliers,
+                    marker='o', color=facecolors[i], edgecolors='none',
+                    s=10, alpha=self.alpha, zorder=3,
                 )
-                # Median line
-                ax.plot([pos_x - hw, pos_x + hw], [median, median],
-                        color=edgecolors[i], linewidth=1.5)
-                # Whiskers
-                ax.plot([pos_x, pos_x], [lo, q1], color=edgecolors[i], linewidth=1)
-                ax.plot([pos_x, pos_x], [q3, hi], color=edgecolors[i], linewidth=1)
-                # Caps
-                ax.plot([pos_x - hw * 0.5, pos_x + hw * 0.5], [lo, lo],
-                        color=edgecolors[i], linewidth=1)
-                ax.plot([pos_x - hw * 0.5, pos_x + hw * 0.5], [hi, hi],
-                        color=edgecolors[i], linewidth=1)
-                # Fliers
-                flier_mask = (arr < q1 - 1.5 * iqr) | (arr > q3 + 1.5 * iqr)
-                fliers = arr[flier_mask]
-                if len(fliers):
-                    ax.scatter(
-                        [pos_x] * len(fliers), fliers,
-                        marker='o', color=facecolors[i], edgecolors='none',
-                        s=10, alpha=self.alpha, zorder=3,
-                    )
     
     def _draw_lumpy_beanplot(self, ax, rectangle_painter):
         self._draw_violin(ax,
