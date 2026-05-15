@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Visualization of mixed categorical and numerical variables using hammock plots"
 readme = "README.md"
 license = {text = "MIT"}
-requires-python = ">=3.9"
+requires-python = ">=3.6"
 
 dependencies = [
     "numpy",
