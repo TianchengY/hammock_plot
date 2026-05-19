@@ -4,14 +4,31 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hammock-plot"
-version = "0.1.0"
-description = "Visualization of mixed categorical and numerical variables using hammock plots"
-readme = "README.md"
+version = "2.0"
+description = "Hammock - visualization of categorical or mixed categorical/continuous data"
+readme = {file = "README.md", content-type = "text/markdown"}
 license = {text = "MIT"}
 requires-python = ">=3.6"
-
+authors = [
+    {name = "Tiancheng Yang", email = "t77yang@uwaterloo.ca"},
+    {name = "Sandra Huang", email = "sandra.huang@uwaterloo.ca"},
+    {name = "Matthias Schonlau", email = "schonlau@uwaterloo.ca"},
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+]
 dependencies = [
+    "matplotlib",
     "numpy",
     "pandas",
-    "matplotlib"
+    "scipy",
 ]
+
+[project.urls]
+Homepage = "https://github.com/TianchengY/hammock_plot"
+
+[tool.setuptools.packages.find]
+include = ["hammock_plot", "hammock_plot.*"]
