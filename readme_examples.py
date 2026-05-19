@@ -7,7 +7,7 @@ DATA_DIR="data/"
 df_asthma = pd.read_csv(os.path.join(DATA_DIR, "data_asthma.csv"))
 df_diabetes = pd.read_csv(os.path.join(DATA_DIR, "data_diabetes.csv"))
 df_asthma_2 = pd.read_csv(os.path.join(DATA_DIR, "data_asthma_2.csv"))
-df_shakespeare = pd.read_csv(os.path.join(DATA_DIR, "data_shakespeare.csv"))
+df_shakespeare = pd.read_csv(os.path.join(DATA_DIR, "data_shakespeare_v5.csv"))
 df_penguins = pd.read_csv(os.path.join(DATA_DIR, "data_penguins.csv"))
 
 def minimal_example():
