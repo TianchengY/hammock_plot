@@ -1,5 +1,21 @@
 # Hammock plot
 
+## Table of Contents
+
+- [Description](#description)
+- [Getting started](#getting-started)
+  - [Example: Asthma data](#example-asthma-data)
+  - [Example Satisfaction scales for the diabetes data](#example-satisfaction-scales-for-the-diabetes-data)
+  - [Example value_order for the Shakespeare data](#example-value_order-for-the-shakespeare-data)
+  - [Example same_scale using Shakespeare data](#example-same_scale-using-shakespeare-data)
+  - [Example display_type using penguin data](#example-display_type-using-penguin-data)
+- [Explaining Jargon](#explaining-jargon)
+- [API Reference](#api-reference)
+- [Historical context](#historical-context)
+  - [References](#references)
+  - [Other implementations of the hammock plot](#other-implementations-of-the-hammock-plot)
+- [Authors](#authors)
+
 
 ## Description
 
