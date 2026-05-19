@@ -111,7 +111,7 @@ We import the Shakespeare dataset (Schonlau 2024):
 ```python
 import hammock_plot
 import pandas as pd
-df = pd.read_csv('./data/data_shakespeare.csv')
+df = pd.read_csv('./data/data_shakespeare_v4.csv')
 ```
 
 We use `speaker_dict` to map the values of the variables `speaker1` and `speaker2` according to the social class hierarchy.
