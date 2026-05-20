@@ -1,7 +1,17 @@
+"""
+Penguins Connectors Only
+========================
+
+Hide unibars and labels to emphasize observation-level connectors.
+"""
+
+from _gallery_utils import data_path, gallery_image_path
+
 import hammock_plot
 import pandas as pd
 
-df = pd.read_csv("../../data/data_penguins.csv")
+
+df = pd.read_csv(data_path("data_penguins.csv"))
 
 hammock = hammock_plot.Hammock(data_df=df)
 hammock.plot(
@@ -19,5 +29,5 @@ hammock.plot(
     height=9,
     # hammock draws thin rectangles that look like (thin) lines for individual obs. Setting uni_vfill=1 make them thicker
     uni_vfill=1, 
-    save_path="../../image/gallery/penguins_connectors_only.png",
+    save_path=gallery_image_path("penguins_connectors_only.png"),
 )

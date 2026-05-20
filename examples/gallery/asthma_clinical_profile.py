@@ -1,8 +1,17 @@
+"""
+Asthma Clinical Profile
+=======================
+
+Use mixed categorical and numerical displays to compare asthma diagnosis groups.
+"""
+
+from _gallery_utils import data_path, gallery_image_path
+
 import hammock_plot
 import pandas as pd
 
 
-df = pd.read_csv("../../data/data_asthma_2.csv")
+df = pd.read_csv(data_path("data_asthma_2.csv"))
 binary_labels = {
     "Diagnosis": {0: "No asthma", 1: "Asthma"},
     "Gender": {0: "Female", 1: "Male"},
@@ -36,5 +45,5 @@ hammock.plot(
     numerical_var_levels={"Age": 6, "LungFunctionFEV1": 6},
     uni_hfill=0.9,
     uni_vfill=0.99,
-    save_path="../../image/gallery/asthma_clinical_profile.png",
+    save_path=gallery_image_path("asthma_clinical_profile.png"),
 )

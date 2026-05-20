@@ -1,8 +1,17 @@
+"""
+Shakespeare Box Plot
+====================
+
+Show play character counts as a box plot alongside categorical variables.
+"""
+
+from _gallery_utils import data_path, gallery_image_path
+
 import hammock_plot
 import pandas as pd
 
 
-df = pd.read_csv("../../data/data_shakespeare_v5.csv")
+df = pd.read_csv(data_path("data_shakespeare_v5.csv"))
 speaker_order = [ "Royalty", "Nobility", "Gentry", "Citizens", "Yeomanry","Beggars"]
 sex_order = [ "M","F"]
 
@@ -17,5 +26,5 @@ hammock.plot(
     missing=True,
     uni_vfill=.4,
     display_type={"characters": "box"},
-    save_path="../../image/gallery/shakespeare_box.png",
+    save_path=gallery_image_path("shakespeare_box.png"),
 )

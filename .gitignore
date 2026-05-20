@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+
+docs/_build/
+docs/gallery/
+docs/sg_execution_times.rst

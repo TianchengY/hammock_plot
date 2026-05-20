@@ -1,8 +1,17 @@
+"""
+Penguins Compact Rugplots
+=========================
+
+Use compact horizontal fill settings for numerical rugplots.
+"""
+
+from _gallery_utils import data_path, gallery_image_path
+
 import hammock_plot
 import pandas as pd
 
 
-df = pd.read_csv("../../data/data_penguins.csv")
+df = pd.read_csv(data_path("data_penguins.csv"))
 
 hammock = hammock_plot.Hammock(data_df=df)
 hammock.plot(
@@ -26,5 +35,5 @@ hammock.plot(
     },
     width=15,
     height=8,
-    save_path="../../image/gallery/penguins_rugplots_compact_hfill.png",
+    save_path=gallery_image_path("penguins_rugplots_compact_hfill.png"),
 )

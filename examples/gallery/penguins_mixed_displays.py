@@ -1,8 +1,17 @@
+"""
+Penguins Mixed Displays
+=======================
+
+Combine bar charts and box plots in one hammock plot.
+"""
+
+from _gallery_utils import data_path, gallery_image_path
+
 import hammock_plot
 import pandas as pd
 
 
-df = pd.read_csv("../../data/data_penguins.csv")
+df = pd.read_csv(data_path("data_penguins.csv"))
 
 hammock = hammock_plot.Hammock(data_df=df)
 hammock.plot(
@@ -30,5 +39,5 @@ hammock.plot(
     },
     width=15,
     height=8,
-    save_path="../../image/gallery/penguins_mixed_displays.png",
+    save_path=gallery_image_path("penguins_mixed_displays.png"),
 )
