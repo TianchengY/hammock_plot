@@ -324,30 +324,37 @@ class Figure:
         elif same_scale_type and same_scale_type == "categorical":
             # determine the positions of the first and last categories to make them line up
             if same_scale:
+                # Compute the max top/bottom bar height across ALL categorical
+                # unibars in the plot, not just the same_scale group. Non-same_scale
+                # categorical vars would otherwise use their own (often smaller)
+                # adjustment and extend visually past the same_scale group, making
+                # the same_scale columns look like they don't reach the plot edges.
+                # Sharing the adjustment keeps the whole plot vertically aligned.
                 max_btm_height = 0
                 max_top_height = 0
                 for uni in self.unibars:
                     # note: there may be a bug with same_scale and missing=True - need to test
-                    if uni.name in same_scale:
-                        if uni.display_type == "bar chart":
-                            max_btm_height = max(max_btm_height, hbar_height)
-                            max_top_height = max(max_top_height, hbar_height)
-                        else:
-                            # Use the unibar's actual bottommost / topmost rendered value.
-                            # The merged value_order may include entries that don't exist
-                            # in this column (e.g. F/M in speaker1 when same_scale spans
-                            # speakers and sex), so indexing value_order would point at
-                            # the wrong value or miss it entirely.
-                            if not uni.non_missing_vals:
-                                continue
-                            btm_val = uni.non_missing_vals[0]
-                            top_val = uni.non_missing_vals[-1]
-                            max_btm_height = max(max_btm_height, btm_val.occurrences * self.bar_unit)
-                            max_top_height = max(max_top_height, top_val.occurrences * self.bar_unit)
+                    if uni.val_type != np.str_:
+                        continue
+                    if uni.display_type == "bar chart":
+                        max_btm_height = max(max_btm_height, hbar_height)
+                        max_top_height = max(max_top_height, hbar_height)
+                    else:
+                        # Use the unibar's actual bottommost / topmost rendered value.
+                        # The merged value_order may include entries that don't exist
+                        # in this column (e.g. F/M in speaker1 when same_scale spans
+                        # speakers and sex), so indexing value_order would point at
+                        # the wrong value or miss it entirely.
+                        if not uni.non_missing_vals:
+                            continue
+                        btm_val = uni.non_missing_vals[0]
+                        top_val = uni.non_missing_vals[-1]
+                        max_btm_height = max(max_btm_height, btm_val.occurrences * self.bar_unit)
+                        max_top_height = max(max_top_height, top_val.occurrences * self.bar_unit)
                 min_max_pos = (max_btm_height / 2, max_top_height / 2)
 
                 for uni in self.unibars:
-                    if uni.name in same_scale:
+                    if uni.val_type == np.str_:
                         uni.min_max_pos = min_max_pos
         
         # finally, compute the vertical positions
