@@ -297,11 +297,16 @@ class Figure:
                     for uni_name in same_scale:
                         global_range = (global_min, global_max)
                 
-                # set variables so that same_scale variables align with each other
+                # set variables so that same_scale variables align with each other.
+                # Only unibars whose display draws a *value-specific bar* at min/max
+                # (rugplot / stacked bar / lumpy beanplot) need padding reserved for
+                # half that bar's height. Box / violin / spiky beanplot draw value 0
+                # as a thin point, so they don't contribute to the adjustment.
+                bar_like_for_same_scale = {"rugplot", "stacked bar", "lumpy beanplot"}
                 max_min_occ = 0 # maximum occurrences observed across all values that are at the minimum value on same_scale
                 max_max_occ = 0 # maximum occurrences observed across all values that are at the maximum value on same_scale
                 for uni in self.unibars:
-                    if uni.name in same_scale:
+                    if uni.name in same_scale and uni.display_type in bar_like_for_same_scale:
                         for val in uni.values:
                             if val.id == self.missing_placeholder: continue #skip missing placeholder
                             if val.numeric == global_min:
@@ -328,15 +333,17 @@ class Figure:
                             max_btm_height = max(max_btm_height, hbar_height)
                             max_top_height = max(max_top_height, hbar_height)
                         else:
-                            bottommost_val = self.value_order[uni.name][0]
-                            if bottommost_val == self.missing_placeholder:
-                                bottommost_val = self.value_order[uni.name][1]
-                            topmost_val = self.value_order[uni.name][-1]
-                            for val in uni.values:
-                                if val.id == bottommost_val:
-                                    max_btm_height = max(max_btm_height, val.occurrences * self.bar_unit)
-                                if val.id == topmost_val:
-                                    max_top_height = max(max_top_height, val.occurrences * self.bar_unit)
+                            # Use the unibar's actual bottommost / topmost rendered value.
+                            # The merged value_order may include entries that don't exist
+                            # in this column (e.g. F/M in speaker1 when same_scale spans
+                            # speakers and sex), so indexing value_order would point at
+                            # the wrong value or miss it entirely.
+                            if not uni.non_missing_vals:
+                                continue
+                            btm_val = uni.non_missing_vals[0]
+                            top_val = uni.non_missing_vals[-1]
+                            max_btm_height = max(max_btm_height, btm_val.occurrences * self.bar_unit)
+                            max_top_height = max(max_top_height, top_val.occurrences * self.bar_unit)
                 min_max_pos = (max_btm_height / 2, max_top_height / 2)
 
                 for uni in self.unibars:

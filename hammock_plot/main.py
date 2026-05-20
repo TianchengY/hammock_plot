@@ -265,34 +265,41 @@ class Hammock:
                             "Variables in same_scale must either all be numerical or all be categorical."
                         )
                 
-        if same_scale and value_order:
+        if same_scale:
+            # Find any user-specified orders for variables in same_scale.
             orders = []
-            for cur_var in same_scale:
-                if cur_var in value_order:
-                    orders.append(value_order[cur_var])
-            resolved_order = resolve_ordering(orders)
-            if resolved_order == None:
-                raise ValueError(
-                    "value_order has conflict with same_scale."
-                )
-            else:
+            if value_order:
                 for cur_var in same_scale:
-                    # set the new value_order to be the full, resolved order
-                    value_order[cur_var] = resolved_order
+                    if cur_var in value_order:
+                        orders.append(value_order[cur_var])
 
-        elif same_scale and same_scale_type == "categorical":
-            combined_uni_vals = []
-            seen = set()
-            for cur_var in same_scale:
-                uni_vals = list(self.data_df[cur_var].dropna().unique())
-                for val in uni_vals:
-                    if val not in seen:
-                        seen.add(val)
-                        combined_uni_vals.append(val)
-            # now set the combined order for all variables
-            if not value_order: value_order = {}
-            for cur_var in same_scale:
-                value_order[cur_var] = sorted(combined_uni_vals)
+            if orders:
+                # At least one same_scale var has user-specified order;
+                # merge them and propagate to all same_scale vars.
+                resolved_order = resolve_ordering(orders)
+                if resolved_order is None:
+                    raise ValueError(
+                        "value_order has conflict with same_scale."
+                    )
+                for cur_var in same_scale:
+                    value_order[cur_var] = resolved_order
+            elif same_scale_type == "categorical":
+                # No user-specified order for any same_scale var; build a
+                # combined order from the union of data values across siblings.
+                combined_uni_vals = []
+                seen = set()
+                for cur_var in same_scale:
+                    uni_vals = list(self.data_df[cur_var].dropna().unique())
+                    for val in uni_vals:
+                        if val not in seen:
+                            seen.add(val)
+                            combined_uni_vals.append(val)
+                if not value_order: value_order = {}
+                for cur_var in same_scale:
+                    value_order[cur_var] = sorted(combined_uni_vals)
+            # For numerical same_scale with no user value_order:
+            # leave value_order alone — the default loop below will populate
+            # each variable's value_order from its own sorted data values.
                     
         
         # highlight variable is not in data
@@ -393,7 +400,29 @@ class Hammock:
                     value_order[v] = [missing_placeholder] + uniq
                 else:
                     value_order[v] = uniq
-    
+
+        # Filter each variable's value_order to only include valid slots.
+        # - For variables in same_scale: a slot is valid if the value appears in
+        #   any same_scale sibling's data (so e.g. F/M are kept as empty slots
+        #   in speaker1 when sex1 is in the same_scale group).
+        # - For variables not in same_scale: a slot is valid only if the value
+        #   exists in this variable's own data.
+        # The missing_placeholder is always preserved when missing=True.
+        same_scale_data_vals = None
+        if same_scale:
+            same_scale_data_vals = set()
+            for cur_var in same_scale:
+                same_scale_data_vals.update(self.data_df[cur_var].dropna().unique().tolist())
+        for v in var:
+            if same_scale and v in same_scale:
+                valid = same_scale_data_vals
+            else:
+                valid = set(self.data_df[v].dropna().unique().tolist())
+            value_order[v] = [
+                val for val in value_order[v]
+                if val in valid or (missing and val == missing_placeholder)
+            ]
+
         # set up dataframe to be used in Figure
         if missing:
             self.data_df[var] = self.data_df[var].fillna(missing_placeholder)

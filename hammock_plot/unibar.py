@@ -40,6 +40,8 @@ class Unibar:
         self.missing = missing
         self.y_top = 0.0
         self.y_bottom = 0.0 # bottom of non missing values
+        self.draw_y_start = 0.0 # adjusted drawable bottom (incl. missing_padding + bottom_adjustment)
+        self.draw_y_end = 0.0 # adjusted drawable top (incl. top_adjustment)
         self.missing_placeholder = missing_placeholder
         self.val_order = val_order
         self.min_bar_height = min_bar_height
@@ -178,6 +180,16 @@ class Unibar:
             bottom_adjustment =  max(self.min_bar_height, bottom_height) / 2 if self.non_missing_vals and self.non_missing_vals[0].occurrences != 0 else 0
         bottom += bottom_adjustment
 
+        # For non rugplot bars, the bar-height-based adjustments don't apply. When same_scale is on,
+        # use the adjusted [bottom, top] so the shape aligns with rugplots in
+        # the group. Otherwise let the shape span the panel (minus missing area).
+        if self.min_max_pos:
+            self.draw_y_start = bottom
+            self.draw_y_end = top
+        else:
+            self.draw_y_start = (y_start + self.missing_padding) if self.missing else y_start
+            self.draw_y_end = y_end
+
         # --- Numeric values ---
         if self.val_type in [np.integer, np.floating] and self.non_missing_vals:
             numeric_vals = []
@@ -301,20 +313,19 @@ class Unibar:
         5. spiky beanplots (draws a bean plot with a spikeplot inside)
         """
         if self.missing:
-            y_start += self.missing_padding
             # draw missing values
             self._draw_rectangles(ax, self.missing_vals, rectangle_painter)
 
         if self.display_type == "rugplot" or self.display_type == "stacked bar":
             self._draw_rectangles(ax, self.non_missing_vals, rectangle_painter)
         elif self.display_type == "violin":
-            self._draw_violin(ax, y_start, y_end)
+            self._draw_violin(ax, self.draw_y_start, self.draw_y_end)
         elif self.display_type == "box":
-            self._draw_boxplot(ax, y_start, y_end)
+            self._draw_boxplot(ax, self.draw_y_start, self.draw_y_end)
         elif self.display_type == "lumpy beanplot":
             self._draw_lumpy_beanplot(ax, rectangle_painter)
         elif self.display_type == "spiky beanplot":
-            self._draw_spiky_beanplot(ax, y_start, y_end, rectangle_painter)
+            self._draw_spiky_beanplot(ax, self.draw_y_start, self.draw_y_end, rectangle_painter)
         elif self.display_type == "bar chart":
             self._draw_hbar(ax, self.non_missing_vals, rectangle_painter)
         else:
@@ -887,19 +898,14 @@ class Unibar:
             # Compute coordinate range based on first and last non-missing bar centers
             first_center = self.non_missing_vals[0].vert_centre
             last_center = self.non_missing_vals[-1].vert_centre
-            
-            bottom_coord =  (self.y_bottom + self.min_max_pos[0]) if self.min_max_pos else first_center
+
+            bottom_coord = (self.y_bottom + self.min_max_pos[0]) if self.min_max_pos else first_center
             top_coord = (self.y_top - self.min_max_pos[1]) if self.min_max_pos else last_center
-        else: # "box" or "violin" display types
-            bottom_coord = y_start
-            top_coord = y_end
-    
-        if self.missing and self.min_max_pos and bottom_coord == self.y_bottom + self.min_max_pos[0]:
-            bottom_coord += self.missing_padding
-        elif self.missing and self.display_type in ["violin", "box", "spiky beanplot"]:
-            bottom_coord += self.missing_padding
-        
-        level_coords = [bottom_coord + (top_coord - bottom_coord) * (v - min_val) / (max_val - min_val) 
+        else: # "box" or "violin" or "spiky beanplot"
+            bottom_coord = self.draw_y_start
+            top_coord = self.draw_y_end
+
+        level_coords = [bottom_coord + (top_coord - bottom_coord) * (v - min_val) / (max_val - min_val)
                         for v in level_vals]
 
         for tick_val, tick_y in zip(level_vals, level_coords):
