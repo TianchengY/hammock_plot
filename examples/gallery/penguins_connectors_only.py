@@ -1,8 +1,5 @@
 """
-Penguins Parallel coordinate plot
-=================================
-
-Hide unibars and labels and show connectors only.
+Parallel coordinate plot: Hide unibars and labels and show connectors only.
 """
 
 from _gallery_utils import data_path, gallery_image_path
