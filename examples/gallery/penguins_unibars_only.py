@@ -1,8 +1,8 @@
 """
-Penguins Unibars Only
-=====================
+Marginal displays (Unibars) Only
+================================
 
-Remove connectors to focus on the marginal unibar displays.
+Remove connectors to focus on the marginal displays. Also large bars.
 """
 
 from _gallery_utils import data_path, gallery_image_path
@@ -27,6 +27,7 @@ hammock.plot(
     hi_value=["Torgersen", "Biscoe"],
     missing=True,
     connector_fraction=0,
+    uni_hfill=.5,
     uni_vfill=.99,
     display_type={
         "species": "stacked bar",
@@ -36,7 +37,5 @@ hammock.plot(
         "flipper_length_mm": "box",
         "body_mass_g": "box",
     },
-    width=15,
-    height=8,
     save_path=gallery_image_path("penguins_unibars_only.png"),
 )

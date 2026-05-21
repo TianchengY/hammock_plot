@@ -28,3 +28,6 @@ hammock.plot(
     display_type={"characters": "box"},
     save_path=gallery_image_path("shakespeare_box.png"),
 )
+
+import matplotlib.pyplot as plt
+plt.show()
