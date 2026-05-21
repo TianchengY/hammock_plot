@@ -1,8 +1,8 @@
 """
-Diabetes Satisfaction Scales
-============================
+Missing values in a satisfaction survey
+=======================================
 
-Show missing values across related satisfaction scale variables.
+Show missing value patterns. Reveals top coding (many respondents just choose highest category)
 """
 
 from _gallery_utils import data_path, gallery_image_path

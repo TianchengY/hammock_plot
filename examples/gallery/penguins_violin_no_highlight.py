@@ -1,8 +1,8 @@
 """
-Penguins Violin Displays
-========================
+Large categorical bars / violin plots
+===========================================
 
-Display numerical penguin measurements using violin plots without highlighting.
+Display numerical variables using violin plots. Increase bar size of categorical variables.
 """
 
 from _gallery_utils import data_path, gallery_image_path
