@@ -13,3 +13,10 @@ Run all examples:
 ```powershell
 Get-ChildItem examples/gallery/*.py | ForEach-Object { python $_.FullName }
 ```
+
+Build the Sphinx gallery:
+
+```powershell
+pip install -r docs/requirements.txt
+sphinx-build -b html docs docs/_build/html
+```

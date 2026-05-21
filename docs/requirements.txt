@@ -1,0 +1,6 @@
+sphinx
+sphinx-gallery
+matplotlib
+numpy
+pandas
+scipy

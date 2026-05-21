@@ -1,8 +1,17 @@
+"""
+Penguins Violin Displays
+========================
+
+Display numerical penguin measurements using violin plots without highlighting.
+"""
+
+from _gallery_utils import data_path, gallery_image_path
+
 import hammock_plot
 import pandas as pd
 
 
-df = pd.read_csv("../../data/data_penguins.csv")
+df = pd.read_csv(data_path("data_penguins.csv"))
 
 hammock = hammock_plot.Hammock(data_df=df)
 hammock.plot(
@@ -25,5 +34,5 @@ hammock.plot(
     },
     width=15,
     height=8,
-    save_path="../../image/gallery/penguins_violin_no_highlight.png",
+    save_path=gallery_image_path("penguins_violin_no_highlight.png"),
 )
