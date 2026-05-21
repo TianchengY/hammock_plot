@@ -1,6 +1,6 @@
 """
-Large categorical bars / violin plots
-===========================================
+violin plots and larger bars 
+============================
 
 Display numerical variables using violin plots. Increase bar size of categorical variables.
 """
