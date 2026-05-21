@@ -1,4 +1,6 @@
 """
+=======================
+
 Parallel coordinate plot: Hide unibars and labels and show connectors only.
 """
 
