@@ -1,8 +1,8 @@
 """
-Shakespeare Box Plot
-====================
+Display numerical var as Box Plot
+==================================
 
-Show play character counts as a box plot alongside categorical variables.
+Display type of numerical var, specify order of categorical var, put a subset of variables on the same scale.
 """
 
 from _gallery_utils import data_path, gallery_image_path

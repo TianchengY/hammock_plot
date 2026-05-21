@@ -1,7 +1,8 @@
 """
-=======================
+Parallel coordinate plot
+========================
 
-Parallel coordinate plot: Hide unibars and labels and show connectors only.
+Hide unibars and labels and show connectors only.
 """
 
 from _gallery_utils import data_path, gallery_image_path
