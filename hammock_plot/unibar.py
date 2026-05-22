@@ -432,7 +432,11 @@ class Unibar:
 
     def _weighted_quantile(self, data, weights, quantiles):
         """
-        Exact weighted quantiles via sorted cumulative weights. No resampling.
+        Weighted quantiles matching matplotlib boxplot's default convention
+        (numpy.percentile / Hyndman-Fan type 7): target position p*(W-1)+1
+        on the expanded sample, with linear interpolation between adjacent
+        order statistics. For unit weights this equals numpy.quantile(...).
+        For integer weights it equals expanding-then-quantiling.
         data and weights must be the same length.
         """
         data = np.array(data, dtype=float)
@@ -446,9 +450,19 @@ class Unibar:
         sorter = np.argsort(data)
         data = data[sorter]
         weights = weights[sorter]
-        cumulative = np.cumsum(weights)
-        cumulative /= cumulative[-1]
-        return np.interp(quantiles, cumulative, data)
+        cum = np.cumsum(weights)
+        W = cum[-1]
+
+        quantiles = np.asarray(quantiles, dtype=float)
+        # we decided to use the p*(n-1)+1 method in line with other software packages. See closed issue on github.
+        target = quantiles * (W - 1) + 1
+        lower = np.floor(target)
+        frac = target - lower
+
+        n = len(data)
+        lo_idx = np.clip(np.searchsorted(cum, lower, side='left'), 0, n - 1)
+        hi_idx = np.clip(np.searchsorted(cum, lower + 1, side='left'), 0, n - 1)
+        return (1 - frac) * data[lo_idx] + frac * data[hi_idx]
 
     def _draw_violin(self, ax, y_start, y_end, draw_boxplot=True):
         """
