@@ -1,6 +1,6 @@
 """
 Boxplots, violin plots, lumpy rugplots
-======================================================
+======================================
 
 Display numerical variables using boxplots, violin plots, or lumpy rugplots. Also missing values.
 """

@@ -1,6 +1,6 @@
 """
 Highlighting
-======================================================
+============
 
 Highlighting. Also missing values.
 """

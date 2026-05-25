@@ -1,8 +1,8 @@
 """
-Marginal Display only -  horizontal barcharts
+Marginal display only -  horizontal barcharts
 ==================================
 
-display type "bar chart" for categorical vars; removing connectors; same scale.
+Display type "bar chart" for categorical vars; removing connectors; force same scale for some vars.
 """
 
 from _gallery_utils import data_path, gallery_image_path

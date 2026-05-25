@@ -1,8 +1,8 @@
 """
-Marginal displays Only
+Marginal displays only
 =======================
 
-Remove connectors to focus on the marginal displays. Also large bars.
+Remove connectors to focus on the marginal displays. Also stacked bar charts (large bars).
 """
 
 from _gallery_utils import data_path, gallery_image_path

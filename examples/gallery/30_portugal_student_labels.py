@@ -1,6 +1,7 @@
 """
 Changing names, labels and size
 ===============================
+
 Changing labels of categorical variables, variable names size of names/labels (Portugal Student Data)
 """
 
