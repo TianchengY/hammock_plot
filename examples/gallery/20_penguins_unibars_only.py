@@ -1,6 +1,6 @@
 """
-Marginal displays (Unibars) Only
-================================
+Marginal displays Only
+=======================
 
 Remove connectors to focus on the marginal displays. Also large bars.
 """

@@ -1,8 +1,8 @@
 """
-violin plots and larger bars 
-============================
+Highlighting
+======================================================
 
-Display numerical variables using violin plots. Increase bar size of categorical variables.
+Highlighting. Also missing values.
 """
 
 from _gallery_utils import data_path, gallery_image_path
@@ -23,16 +23,18 @@ hammock.plot(
         "flipper_length_mm",
         "body_mass_g",
     ],
+    hi_var="island",
+    hi_value=["Torgersen"],
     missing=True,
-    uni_vfill=.9,
+    uni_vfill=.4,
     connector_fraction=.2,
     display_type={
-        "bill_length_mm": "violin",
-        "bill_depth_mm": "violin",
-        "flipper_length_mm": "violin",
-        "body_mass_g": "violin",
+        "bill_length_mm":"box", 
+        "bill_depth_mm": "rugplot", 
+        "flipper_length_mm": "violin", 
+        "body_mass_g":"box"
     },
     width=15,
     height=8,
-    save_path=gallery_image_path("penguins_violin_no_highlight.png"),
+    save_path=gallery_image_path("penguins_highlight.png"),
 )

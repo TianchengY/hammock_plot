@@ -1,8 +1,8 @@
 """
-Display numerical var as Box Plot
-==================================
+Specify order of categories
+===========================
 
-Display type of numerical var, specify order of categorical var, put a subset of variables on the same scale.
+Mixed numerical/categorical vars, specify order of categories, put a subset of variables on the same scale, missing values (Shakespeare data).
 """
 
 from _gallery_utils import data_path, gallery_image_path
@@ -25,9 +25,7 @@ hammock.plot(
     same_scale=["speaker1", "speaker2"],
     missing=True,
     uni_vfill=.4,
+    connector_fraction=.2,
     display_type={"characters": "box"},
     save_path=gallery_image_path("shakespeare_box.png"),
 )
-
-import matplotlib.pyplot as plt
-plt.show()

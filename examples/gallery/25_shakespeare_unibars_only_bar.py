@@ -1,5 +1,5 @@
 """
-Parallel horizontal barcharts
+Marginal Display only -  horizontal barcharts
 ==================================
 
 display type "bar chart" for categorical vars; removing connectors; same scale.
