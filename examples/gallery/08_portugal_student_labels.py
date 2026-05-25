@@ -58,7 +58,7 @@ display_names = {
     "walc": "weekly\nalcohol",
 }
 
-label_options = {var: {"fontsize": 14} for var in plot_vars}
+label_options = {var: {"fontsize": 14, "color": "#006D77"} for var in plot_vars}
 
 hammock = hammock_plot.Hammock(data_df=df)
 ax = hammock.plot(
@@ -82,8 +82,11 @@ ax = hammock.plot(
     connector_fraction=0.2,
     label=True,
     label_options=label_options,
+    default_color="#D95F45",
 )
 
 ax.set_xticklabels([display_names.get(var, var) for var in plot_vars])
+for tick_label in ax.get_xticklabels():
+    tick_label.set_color("black")
 
 ax.get_figure().savefig(gallery_image_path("portugal_student_labels.png"))

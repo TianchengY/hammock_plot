@@ -1,6 +1,6 @@
 """
-Highlighting and stacked barcharts
-==================================
+Stacked barcharts and more
+==========================
 
 Large categorical bars combine to stacked barcharts. Here, we specified a different color for the the connectors.
 """
