@@ -1,7 +1,6 @@
 from pathlib import Path
 import sys
 
-
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "examples" / "gallery"))
@@ -21,6 +20,7 @@ sphinx_gallery_conf = {
     "gallery_dirs": "gallery",
     "filename_pattern": r".*\.py",
     "ignore_pattern": r"_gallery_utils\.py",
+    "within_subsection_order": "FileNameSortKey",
     "download_all_examples": False,
     "remove_config_comments": True,
 }

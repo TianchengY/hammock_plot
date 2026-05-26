@@ -1,6 +1,6 @@
 """
 Marginal display only -  horizontal barcharts
-==================================
+=============================================
 
 Display type "bar chart" for categorical vars; removing connectors; force same scale for some vars.
 """

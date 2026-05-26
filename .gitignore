@@ -1,6 +1,14 @@
 __pycache__/
 *.py[cod]
+.ipynb_checkpoints/
+.pytest_cache/
+.vscode/
 
 docs/_build/
 docs/gallery/
 docs/sg_execution_times.rst
+
+continuous_diff.png
+image/gallery/*.png
+test_suite/.ipynb_checkpoints/
+test_suite/test_plots/

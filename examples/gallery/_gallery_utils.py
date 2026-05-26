@@ -21,4 +21,6 @@ def data_path(filename):
 
 
 def gallery_image_path(filename):
-    return ROOT / "image" / "gallery" / filename
+    output_dir = ROOT / "image" / "gallery"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    return output_dir / filename
