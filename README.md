@@ -9,7 +9,6 @@
   - [Example value_order for the Shakespeare data](#example-value_order-for-the-shakespeare-data)
   - [Example same_scale using Shakespeare data](#example-same_scale-using-shakespeare-data)
   - [Example display_type using penguin data](#example-display_type-using-penguin-data)
-- [Explaining Jargon](#explaining-jargon)
 - [API Reference](#api-reference)
 - [Historical context](#historical-context)
   - [References](#references)
@@ -210,17 +209,6 @@ ax = hammock.plot(
 ```
 <img src="image/penguin_display_horizontal_barchart.png" alt="Hammock plot for the penguin data, demonstrating display_type for categorical data" width="600"/>
 
-## Explaining Jargon
-<img src="image/labeled_minimal.png" alt="Circled Hammock plot example" width="600"/>
-
-The **variable names** in this Hammock plot are "hospitalizations", "group", "gender", and "comorbidities".
-
-Each **variable** is represented by a corresponding **unibar** (circled in purple). **Unibar** is the shortened version of the term "univariate bar".
-
-The **values** in the **unibar** "group" are circled in orange. Each unibar has a corresponding set of values.
-
-We call the lines between each unibar **connectors**, since they connect adjacent unibars.
-
 ## API Reference
 
 ```
@@ -310,5 +298,6 @@ There is also a Stata implementation `hammock` (available from the Stata archive
 
 - Tiancheng Yang t77yang@uwaterloo.ca
 - Sandra Huang s77huang@uwaterloo.ca
+- Matthias Schonlau schonlau@uwaterloo.ca
 
 
