@@ -149,7 +149,7 @@ ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,colors=colo
 <img src="image/shakespeare_order.png" alt="Hammock plot for the Shakespeare data, with value_order specified" width="600"/>
 
 ### Example same_scale using Shakespeare data
-`speaker1' and `speaker2 should have the same layout, but only `speaker1' has `Beggars'. We can force the same layout using `same_scale`.
+`speaker1` and `speaker2` should have the same layout, but only `speaker1` has the category Beggars. We can force the same layout using `same_scale`.
 ```python
 hammock = hammock_plot.Hammock(data_df = df)
 ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,color=color_lst, bar_width=0.6,missing=True,
