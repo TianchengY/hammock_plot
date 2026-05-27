@@ -91,7 +91,7 @@ ax = hammock.plot(var=var, value_order=value_order, numerical_var_levels=numeric
 <!---    ![Hammock plot ](image/asthma1.png)   --->
 <img src="image/asthma_value_order.png" alt="Hammock plot" width="600"/>
 
-We highlight observations with comorbidities=0  in red:
+We highlight observations with comorbidities=0:
 
 ```python
 ax = hammock.plot(var=var ,hi_var="comorbidities", hi_value=[0], colors=["orange"], numerical_var_levels=numeric_levels)
