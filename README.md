@@ -125,7 +125,7 @@ satisfied respondents simply choose the highest value.
 
 ### Example value_order for the Shakespeare data
 
-We import the Shakespeare dataset (Schonlau 2024):
+We import the Shakespeare dataset (Schonlau, 2024):
 
 ```python
 import hammock_plot
@@ -149,7 +149,7 @@ ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,colors=colo
 <img src="image/shakespeare_order.png" alt="Hammock plot for the Shakespeare data, with value_order specified" width="600"/>
 
 ### Example same_scale using Shakespeare data
-We can accomplish similar results using `same_scale`.
+`speaker1' and `speaker2 should have the same layout, but only `speaker1' has `Beggars'. We can force the same layout using `same_scale`.
 ```python
 hammock = hammock_plot.Hammock(data_df = df)
 ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,color=color_lst, bar_width=0.6,missing=True,
@@ -170,7 +170,7 @@ df = pd.read_csv('./data/data_penguins.csv')
 We use `display_type` to control how we want to display our data.
 
 #### Numerical display types
-Numerical data has three display options: "box", "rugplot", and "violin".
+Numerical data have three display options: "box", "rugplot", and "violin".
 ```python
 hammock = hammock_plot.Hammock(df)
 ax = hammock.plot(
@@ -183,7 +183,7 @@ ax = hammock.plot(
 ```
 <img src="image/penguin_display_numerical.png" alt="Hammock plot for the penguin data, demonstrating display_type for numerical data" width="600"/>
 
-Box plots support multiple highlight values. Violin plots only support one highlight value.
+Box plots support multiple highlighted values. Violin plots only support one highlighted value (highlighted value vs remainder).
 ```python
 ax = hammock.plot(
   var= ["species", "island", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"],
@@ -198,7 +198,7 @@ ax = hammock.plot(
 #### Categorical display types
 Categorical data has two display options: "stacked bar" (default), and "bar chart" (horizontal bar chart)
 
-For horizontal bar charts, set uni_vfill to a higher value for better visuals. When uni_vfill is high, lower the connector_fraction
+For horizontal bar charts, set uni_vfill to a higher value for better visuals. When uni_vfill is high, lower the connector_fraction.
 ```python
 hammock = hammock_plot.Hammock(df)
 ax = hammock.plot(
