@@ -12,3 +12,4 @@ continuous_diff.png
 image/gallery/*.png
 test_suite/.ipynb_checkpoints/
 test_suite/test_plots/
+test_suite/diff_plots/
