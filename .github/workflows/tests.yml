@@ -3,7 +3,9 @@ name: Tests
 on:
   pull_request:
   push:
-    branches: [main]
+    branches:
+      - main
+      - tiancheng/auto_test
 
 jobs:
   integration-tests:
