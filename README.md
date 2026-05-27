@@ -3,7 +3,8 @@
 ## Table of Contents
 
 - [Description](#description)
-- [Getting started](#getting-started)
+- [Gallery](#gallery)
+- [Installation](#installation)
   - [Example: Asthma data](#example-asthma-data)
   - [Example Satisfaction scales for the diabetes data](#example-satisfaction-scales-for-the-diabetes-data)
   - [Example value_order for the Shakespeare data](#example-value_order-for-the-shakespeare-data)
