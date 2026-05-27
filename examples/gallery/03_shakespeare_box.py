@@ -1,8 +1,17 @@
+"""
+Specify order of categories
+===========================
+
+Mixed numerical/categorical vars, specify order of categories, put a subset of variables on the same scale, missing values (Shakespeare data).
+"""
+
+from _gallery_utils import data_path, gallery_image_path
+
 import hammock_plot
 import pandas as pd
 
 
-df = pd.read_csv("../../data/data_shakespeare_v5.csv")
+df = pd.read_csv(data_path("data_shakespeare_v5.csv"))
 speaker_order = [ "Royalty", "Nobility", "Gentry", "Citizens", "Yeomanry","Beggars"]
 sex_order = [ "M","F"]
 
@@ -16,6 +25,7 @@ hammock.plot(
     same_scale=["speaker1", "speaker2"],
     missing=True,
     uni_vfill=.4,
+    connector_fraction=.2,
     display_type={"characters": "box"},
-    save_path="../../image/gallery/shakespeare_box.png",
+    save_path=gallery_image_path("shakespeare_box.png"),
 )

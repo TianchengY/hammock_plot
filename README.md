@@ -35,9 +35,12 @@
     destring.
 
 
+## Gallery
+
+See the example gallery here: [Gallery](https://tianchengy.github.io/hammock_plot/gallery)
 
 
-## Getting started
+## Installation
 The hammock plot package is accessible for use from [this website](https://hammock-plot.streamlit.app/).
 
 You can also install hammock from `pip`:
