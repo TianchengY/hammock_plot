@@ -292,7 +292,7 @@ Penguins Go Parallel: a grammar of graphics framework for generalized parallel c
 Journal of Computational and Graphical Statistics, 1-16. (online first)
 
 ### Other implementations of the hammock plot 
-There is also a Stata implementation `hammock` (available from the Stata archive SSC) and an R implementation as part of the package `ggparallel`.
+There is also a Stata implementation `hammock` (available from the Stata archive SSC) and an R implementation (without numerical variables) as part of the package `ggparallel`.
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 
