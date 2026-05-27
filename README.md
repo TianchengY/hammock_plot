@@ -19,22 +19,17 @@
 
 ## Description
 
-    The hammock plot draws a graph to visualize categorical or mixed categorical / continuous data.
-    Variables are lined up parallel to the vertical axis. Categories within a variable are spread out along a
-    vertical line. Categories of adjacent variables are connected by boxes. (The boxes are parallelograms; we
-    use boxes for brevity). The "width" of a box is proportional to the number of observations that correspond
-    to that box (i.e. have the same values/categories for the two variables). The "width" of a box refers to the
-    distance between the longer set of parallel lines rather than the vertical distance.
+    The hammock visualizes categorical or mixed categorical and numerical data.
+    The hammock plot uses parallel coordinates which means that the variable axes are parallel to one another. 
+    Categories within a variable are spread out along a
+    vertical line. Categories of adjacent variables are connected by boxes (rectangles or parallelograms). 
+    The width of a box is proportional to the number of observations that the box represents 
+    (i.e. have the same values/categories for the two variables). The "width" of a box refers to the
+    distance between the longer set of parallel lines rather than the vertical distance. 
 
-    If the boxes degenerate to a single line, and no labels or missing values are used the hammock plot
-    corresponds to a parallel coordinate plot. Boxes degenerate into a single line if barwidth is so small that
-    the boxes for categorical variables appear to be a single line. For continuous variables boxes will usually
-    appear to be a single line because each category typically only contains one observation.
-
-    The order of variables in varlist determines the order of variables in the graph.  All variables in varlist
-    must be numerical. String variables should be converted to numerical variables first, e.g. using encode or
-    destring.
-
+    If boxes are very thin (e.g., they just represent one observation) they look like a line. 
+    In that case, if no labels or missing values are used, the hammock plot
+    corresponds to a parallel coordinate plot. 
 
 ## Gallery
 
@@ -221,7 +216,7 @@ ax = hammock.plot(
 
 | Category | Parameter | Type     | Description                |
 | --- | :-------- | :------- | :-------------------------  |
-| General |     `var` | `List[str]` | List of variables to display. |
+| General |     `var` | `List[str]` | List of variables to display. The order determines the variable order in the graph.   |
 | |             `weights` | `str` | Weight variable (must be a numeric variable with only positive, nonmissing values. Cannot be a member of `var`). |
 | |             `value_order` | `Dict[str, List[int]]`  |  If specified, the order of the values in the plot follows the order of values in the list supplied in the dictionary. Only applicable to categorical variables. If a value_order is given to a numerical variable, it will behave like categorical data instead. |
 | |            `numerical_var_levels` | `Dict[str, int \| None]` | Specifies the number of subdivisions in the y-axis for numerical variables. Example: {"NumericalVarname": 9, "NumericalVarname2": None}. Default is 7. |
