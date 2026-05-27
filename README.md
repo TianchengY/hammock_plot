@@ -234,7 +234,7 @@ ax = hammock.plot(
 | | `hi_box` | `str` | Controls how highlighted values are displayed within category labels. Options are "side-by-side" for side-by-side color segments or "stacked" for horizontally split color segments. Default is "side-by-side".|
 | | `hi_missing` | `bool` | Whether or not missing values for `hi_var` should be highlighted. |
 | | `colors` | `List[str]` | List of colors corresponding to the list of values to be highlighted. Each color can be specified as a plain color name (e.g., `"red"`, `"yellow"`) or in the format `"color=alpha"` (e.g., `"red=0.5"`) to control transparency/intensity, where `alpha` is a decimal between 0 and 1.|
-| | `default_color` | `str` |  Default color of plotting elements for boxes that are not highlighted. Default is "blue" |
+| | `default_color` | `str` |  Default color of plotting elements for boxes that are not highlighted. |
 | | `connector_color` | `str` | The color of the connectors. Default matches the default color + highlight colors. Specifying a connector color removes the highlighting from the connectors. | |
 | Manipulating Spacing and Layout |   `uni_vfill` | `float`  | Fraction of vertical space that should be populated by data. Adjusts the height of the data points. Defaults is 0.08.| 
 | | `connector_fraction` | `float` | Fraction of the `uni_vfill` height used for drawing connectors between unibars. Controls how tall the connectors are relative to the bar height. Default is 1. |
@@ -257,7 +257,7 @@ In 1898, Sankey diagrams were developed to visualize flows of energy and materia
 
 In 1985, Inselberg popularized parallel coordinates to visualize continuous variables only. The central contribution is the use of parallel axes.
 
-In 2003, Schonlau proposed the hammock plot. This was the first plot to visualize categorical data (or mixed categorical continuous data) on parallel axes. 
+In 2003, Schonlau proposed the hammock plot. This was the first plot to visualize categorical data (or mixed categorical and numerical data) on parallel axes. 
 
 In 2010, Rosvall proposed alluvial plots to visualize network variables over time. Rather than using bars to connect axes, alluvial plots use rounded curves. Alluvial plots are now also used to visualize categorical data.
 
