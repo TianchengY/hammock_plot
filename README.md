@@ -170,6 +170,8 @@ Numerical data have three display options: "box", "rugplot", and "violin".
 hammock = hammock_plot.Hammock(df)
 ax = hammock.plot(
     var= ["species", "island", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"],
+    uni_vfill=0.7,
+    connector_fraction=0.1,
     hi_var="island",
     hi_value=["Torgersen"],
     missing=True,
@@ -178,10 +180,12 @@ ax = hammock.plot(
 ```
 <img src="image/penguin_display_numerical.png" alt="Hammock plot for the penguin data, demonstrating display_type for numerical data" width="600"/>
 
-Box plots support multiple highlighted values. Violin plots only support one highlighted value (highlighted value vs remainder).
+There is some overlap among the boxes in the lumpy rugplot. This could be reduced by setting `uni_vfill' lower (this would also affect the categorical variables). Box plots support multiple highlighted values. Violin plots only support one highlighted value (highlighted value vs remainder).
 ```python
 ax = hammock.plot(
   var= ["species", "island", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"],
+  uni_vfill=0.99,
+  connector_fraction=0.1,
   hi_var="island",
   hi_value=["Torgersen", "Biscoe"],
   missing=True,
