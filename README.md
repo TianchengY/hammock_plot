@@ -64,7 +64,7 @@ ax = hammock.plot(var=var)
 ```
 <img src="image/asthma_minimal.png" alt="Minimal example for a Hammock plot" width="600"/>
 
-The labels for the numerical variables aren't as desired; we would like the labels directly drawn on the data. We specify that we want no levels for our numerical variables.
+The labels for the numerical variables aren't as desired; we would like the labels directly drawn on the data. For our numerical variables, we ignore the level management and instead label each value or level  that occurs in the variable.  
 
 ```python
 numeric_levels = {"comorbidities": None, "hospitalizations": None}
