@@ -224,7 +224,7 @@ ax = hammock.plot(
 | Labeling |             `label` | `bool` | Whether or not to display labels between the plotting segments |
 | |              `label_options` |  `Dict[str, Dict[str, Any]]`  | Manipulates the size and look of the labels. Args following the options in the website: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.text.html Example:{"ExampleVarname":{"fontsize":12,"fontstyle":"italic","fontweight":"black","color":"b"}}  Default is `None`. | 
 | |            `numerical_var_levels` | `Dict[str, int \| None]` | Specifies the number of subdivisions in the y-axis for numerical variables. Example: {"NumericalVarname": 9, "NumericalVarname2": None}. Default is 7. |
-| Highlighting | `hi_var` | `str` |  Variable to be highlighted. Default is `None`. |
+| Highlighting and Color  | `hi_var` | `str` |  Variable to be highlighted. Default is `None`. |
 | | `hi_value` | `List[str or int] or str or int` | Value(s) of `hi_var` to be highlighted. You can highlighted one or multiple values. You can also pass an expression (e.g. "x>1 and (x>5 or x<4)") in string when you want to specify a range for a numeric `hi_var`.|
 | | `hi_box` | `str` | Controls how highlighted values are displayed within category labels. Options are "side-by-side" for side-by-side color segments or "stacked" for horizontally split color segments. Default is "side-by-side".|
 | | `hi_missing` | `bool` | Whether or not missing values for `hi_var` should be highlighted. |
