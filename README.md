@@ -219,11 +219,11 @@ ax = hammock.plot(
 | General |     `var` | `List[str]` | List of variables to display. The order determines the variable order in the graph.   |
 | |             `weights` | `str` | Weight variable (must be a numeric variable with only positive, nonmissing values. Cannot be a member of `var`). |
 | |             `value_order` | `Dict[str, List[int]]`  |  If specified, the order of the values in the plot follows the order of values in the list supplied in the dictionary. Only applicable to categorical variables. If a value_order is given to a numerical variable, it will behave like categorical data instead. |
-| |            `numerical_var_levels` | `Dict[str, int \| None]` | Specifies the number of subdivisions in the y-axis for numerical variables. Example: {"NumericalVarname": 9, "NumericalVarname2": None}. Default is 7. |
 | |            `display_type` | `Dict[str, str]` | Specifies the type of plot. "rugplot", "box", and "violin" are the options for numerical data, and "stacked bar", "bar chart" are the options for categorical data. Example: {"NumericalVarname": "rugplot", "NumericalVarname2": "violin", "NumericalVarname3": "box"}. Default is "rugplot" for numerical data and "stacked bar" for categorical data. |
 | |             `missing` | `bool` | Whether or not to add a category for missing values at the bottom of the plot.  If `False`, observations that have a missing value for any variable in the data frame (even those not used in the hammock plot) are removed.  Default is `False`. |
-| |             `label` | `bool` | Whether or not to display labels between the plotting segments |
-| |             `unibar`| `bool` | Whether or not to display unibars between the plotting segments |
+| Labeling |             `label` | `bool` | Whether or not to display labels between the plotting segments |
+| |              `label_options` |  `Dict[str, Dict[str, Any]]`  | Manipulates the size and look of the labels. Args following the options in the website: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.text.html Example:{"ExampleVarname":{"fontsize":12,"fontstyle":"italic","fontweight":"black","color":"b"}}  Default is `None`. | 
+| |            `numerical_var_levels` | `Dict[str, int \| None]` | Specifies the number of subdivisions in the y-axis for numerical variables. Example: {"NumericalVarname": 9, "NumericalVarname2": None}. Default is 7. |
 | Highlighting | `hi_var` | `str` |  Variable to be highlighted. Default is `None`. |
 | | `hi_value` | `List[str or int] or str or int` | Value(s) of `hi_var` to be highlighted. You can highlighted one or multiple values. You can also pass an expression (e.g. "x>1 and (x>5 or x<4)") in string when you want to specify a range for a numeric `hi_var`.|
 | | `hi_box` | `str` | Controls how highlighted values are displayed within category labels. Options are "side-by-side" for side-by-side color segments or "stacked" for horizontally split color segments. Default is "side-by-side".|
@@ -231,16 +231,16 @@ ax = hammock.plot(
 | | `colors` | `List[str]` | List of colors corresponding to the list of values to be highlighted. Each color can be specified as a plain color name (e.g., `"red"`, `"yellow"`) or in the format `"color=alpha"` (e.g., `"red=0.5"`) to control transparency/intensity, where `alpha` is a decimal between 0 and 1.|
 | | `default_color` | `str` |  Default color of plotting elements for boxes that are not highlighted. |
 | | `connector_color` | `str` | The color of the connectors. Default matches the default color + highlight colors. Specifying a connector color removes highlighting from the connectors. | |
-| Manipulating Spacing and Layout |   `uni_vfill` | `float`  | Fraction of vertical space that should be populated by data. Adjusts the height of the data points. Defaults is 0.08.| 
+| |               `alpha` | `float` | Alpha value for the colours in the plot. Float from 0-1. Default is 0.7. |
+| Manipulating Spacing and Layout |             `unibar`| `bool` | Whether or not to display unibars between the plotting segments |
+| |   `uni_vfill` | `float`  | Fraction of vertical space that should be populated by data. Adjusts the height of the data points. Defaults is 0.08.| 
 | | `connector_fraction` | `float` | Fraction of the `uni_vfill` height used for drawing connectors between unibars. Controls how tall the connectors are relative to the bar height. Default is 1. |
 | |              `uni_hfill` |  `float`  |Fraction of horizontal space allocated to labels/univ. bars rather than to connecting boxes. Default is 0.3. | 
-| |              `label_options` |  `Dict[str, Dict[str, Any]]`  | Manipulates the size and look of the labels. Args following the options in the website: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.text.html Example:{"ExampleVarname":{"fontsize":12,"fontstyle":"italic","fontweight":"black","color":"b"}}  Default is `None`. | 
 | |              `height` |  `float`  | Height of the plot in inches. Default is 10. | 
 | |              `width` |  `float`  |  Width of the plot in inches. Default is 15. Caution: Width too narrow may distort the plot. | 
-| |               `alpha` | `float` | Alpha value for the colours in the plot. Float from 0-1. Default is 0.7. |
-| |              `min_bar_height` | `float` | Minimal bar height. Bars representing only a tiny fraction of the data may be so narrow, that they are invivisible in a plot. The default value tries to ensure this does not happen.  Default is 0.1.
 | Other options |              `shape` |  `str`  | Shape of the boxes. "rectangle" or "parallelogram". Default is "rectangle". | 
 | |              `same_scale` |  `List[str]`  | List of variables that have the same scale. Default is `None`. | 
+| |              `min_bar_height` | `float` | Minimal bar height. Bars representing only a tiny fraction of the data may be so narrow, that they are invivisible in a plot. The default value tries to ensure this does not happen.  Default is 0.1.
 | |              `display_figure` |  `bool`  | Whether or not to display the figure. This can be useful if you just want to save the plots. Default is `True`. | 
 | |              `save_path` |  `str`  |   If it is not `None`, the figure will be saved to the given path with given name and format. Default is `None`. | 
 | |             `violin_bw_method` | `str` or `float` | Specifies the bw method used to plot a violin plot. See https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.violinplot.html for more details. |
