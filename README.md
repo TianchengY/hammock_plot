@@ -234,15 +234,15 @@ ax = hammock.plot(
 | Manipulating Spacing and Layout |   `uni_vfill` | `float`  | Fraction of vertical space that should be populated by data. Adjusts the height of the data points. Defaults is 0.08.| 
 | | `connector_fraction` | `float` | Fraction of the `uni_vfill` height used for drawing connectors between unibars. Controls how tall the connectors are relative to the bar height. Default is 1. |
 | |              `uni_hfill` |  `float`  |Fraction of horizontal space allocated to labels/univ. bars rather than to connecting boxes. Default is 0.3. | 
-| |              `label_options` |  `Dict[str, Dict[str, Any]]`  | Manipulates the size and look of the labels. Args following the options in the website: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.text.html Example:{"ExampleVarname":{"fontsize":12,"fontstyle":"italic","fontweight":"black","color":"b"}}  Default is `None'. | 
+| |              `label_options` |  `Dict[str, Dict[str, Any]]`  | Manipulates the size and look of the labels. Args following the options in the website: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.text.html Example:{"ExampleVarname":{"fontsize":12,"fontstyle":"italic","fontweight":"black","color":"b"}}  Default is `None`. | 
 | |              `height` |  `float`  | Height of the plot in inches. Default is 10. | 
 | |              `width` |  `float`  |  Width of the plot in inches. Default is 15. Caution: Width too narrow may distort the plot. | 
 | |               `alpha` | `float` | Alpha value for the colours in the plot. Float from 0-1. Default is 0.7. |
 | |              `min_bar_height` | `float` | Minimal bar height. Bars representing only a tiny fraction of the data may be so narrow, that they are invivisible in a plot. The default value tries to ensure this does not happen.  Default is 0.1.
 | Other options |              `shape` |  `str`  | Shape of the boxes. "rectangle" or "parallelogram". Default is "rectangle". | 
-| |              `same_scale` |  `List[str]`  | List of variables that have the same scale. Default is `None'. | 
-| |              `display_figure` |  `bool`  | Whether or not to display the figure. This can be useful if you just want to save the plots. Default is `True'. | 
-| |              `save_path` |  `str`  |   If it is not None, the figure will be saved to the given path with given name and format. Default is `None'. | 
+| |              `same_scale` |  `List[str]`  | List of variables that have the same scale. Default is `None`. | 
+| |              `display_figure` |  `bool`  | Whether or not to display the figure. This can be useful if you just want to save the plots. Default is `True`. | 
+| |              `save_path` |  `str`  |   If it is not `None`, the figure will be saved to the given path with given name and format. Default is `None`. | 
 | |             `violin_bw_method` | `str` or `float` | Specifies the bw method used to plot a violin plot. See https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.violinplot.html for more details. |
 
 
