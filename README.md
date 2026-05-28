@@ -217,10 +217,10 @@ ax = hammock.plot(
 | Category | Parameter | Type     | Description                |
 | --- | :-------- | :------- | :-------------------------  |
 | General |     `var` | `List[str]` | List of variables to display. The order determines the variable order in the graph.   |
-| |             `weights` | `str` | Weight variable (must be a numeric variable with only positive, nonmissing values. Cannot be a member of `var`). |
 | |             `value_order` | `Dict[str, List[int]]`  |  If specified, the order of the values in the plot follows the order of values in the list supplied in the dictionary. Only applicable to categorical variables. If a value_order is given to a numerical variable, it will behave like categorical data instead. |
 | |            `display_type` | `Dict[str, str]` | Specifies the type of plot. "rugplot", "box", and "violin" are the options for numerical data, and "stacked bar", "bar chart" are the options for categorical data. Example: {"NumericalVarname": "rugplot", "NumericalVarname2": "violin", "NumericalVarname3": "box"}. Default is "rugplot" for numerical data and "stacked bar" for categorical data. |
 | |             `missing` | `bool` | Whether or not to add a category for missing values at the bottom of the plot.  If `False`, observations that have a missing value for any variable in the data frame (even those not used in the hammock plot) are removed.  Default is `False`. |
+| |             `weights` | `str` | Weight variable (must be a numeric variable with only positive, nonmissing values. Cannot be a member of `var`). |
 | Labeling |             `label` | `bool` | Whether or not to display labels between the plotting segments |
 | |              `label_options` |  `Dict[str, Dict[str, Any]]`  | Manipulates the size and look of the labels. Args following the options in the website: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.text.html Example:{"ExampleVarname":{"fontsize":12,"fontstyle":"italic","fontweight":"black","color":"b"}}  Default is `None`. | 
 | |            `numerical_var_levels` | `Dict[str, int \| None]` | Specifies the number of subdivisions in the y-axis for numerical variables. Example: {"NumericalVarname": 9, "NumericalVarname2": None}. Default is 7. |
