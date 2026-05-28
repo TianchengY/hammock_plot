@@ -128,7 +128,7 @@ import pandas as pd
 df = pd.read_csv('./data/data_shakespeare_v4.csv')
 ```
 
-We use a dictionary to map the values of the variables `speaker1` and `speaker2` according to the social class hierarchy.
+We use a dictionary to map the values of the variables `speaker1` and `speaker2` according to the social class hierarchy. We also choose different colors.
 ```python
 var_lst = ["type","speaker1","speaker2","sex1"]
 color_lst = ["#fdc086",  "#386cb0", "#7fc97f"]
