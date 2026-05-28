@@ -274,7 +274,7 @@ Sankey, H. (1898). Introductory note on the thermal efficiency of steam-engines.
 the committee appointed on the 31st march, 1896, to consider and report to the council
 upon the subject of the definition of a standard or standards of thermal efficiency for
 steam-engines: With an introductory note. In Minutes of proceedings of the institution
-of civil engineers, Volume 134, pp. 278–283.
+of civil engineers, Volume 134,  278–283.
 
 Schonlau M. Hammock plots: visualizing categorical and numerical variables. Journal of Computational and Graphical Statistics, November 2024. 33(4), 1475-1487.
 
@@ -284,7 +284,7 @@ In Proceedings of the Section on Statistical Graphics, American Statistical Asso
 
 VanderPlas, S., Ge, Y., Unwin, A., & Hofmann, H. (2023). 
 Penguins Go Parallel: a grammar of graphics framework for generalized parallel coordinate plots. 
-Journal of Computational and Graphical Statistics, 1-16. (online first)
+Journal of Computational and Graphical Statistics,  32(4), 1572-1587.
 
 ### Other implementations of the hammock plot 
 There is also a Stata implementation `hammock` (available from the Stata archive SSC) and an R implementation (without numerical variables) as part of the package `ggparallel`.
