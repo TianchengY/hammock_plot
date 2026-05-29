@@ -32,7 +32,7 @@
     corresponds to a parallel coordinate plot. 
 
 ## Gallery
-Click any image to explore the whole gallery or use the direct link: [Gallery](https://tianchengy.github.io/hammock_plot/gallery) or click any image to explore the whole gallery.
+Click any image to explore the whole gallery or use the direct link: [Gallery](https://tianchengy.github.io/hammock_plot/gallery).
 
 <p>
   <a href="https://tianchengy.github.io/hammock_plot/gallery">
