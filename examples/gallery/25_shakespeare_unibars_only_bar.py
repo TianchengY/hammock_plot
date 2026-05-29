@@ -28,7 +28,7 @@ hammock.plot(
     width=5,
     height=10,
     display_type={"type": "bar chart", "speaker1":"bar chart", "speaker2": "bar chart"},
-    save_path=gallery_image_path("shakespeare_box.png"),
+    save_path=gallery_image_path("shakespeare_bar.png"),
 )
 
 import matplotlib.pyplot as plt

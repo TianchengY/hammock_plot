@@ -29,5 +29,5 @@ hammock.plot(
     height=9,
     # hammock draws thin rectangles that look like (thin) lines for individual obs. Setting uni_vfill=1 make them thicker
     uni_vfill=1, 
-    save_path=gallery_image_path("penguins_connectors_only.png"),
+    save_path=gallery_image_path("penguins_par_coord_plot.png"),
 )
