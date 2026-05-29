@@ -19,17 +19,9 @@
 
 ## Description
 
-    The hammock visualizes categorical or mixed categorical and numerical data.
-    The hammock plot uses parallel coordinates which means that the variable axes are parallel to one another. 
-    Categories within a variable are spread out along a
-    vertical line. Categories of adjacent variables are connected by boxes (rectangles or parallelograms). 
-    The width of a box is proportional to the number of observations that the box represents 
-    (i.e. have the same values/categories for the two variables). The "width" of a box refers to the
-    distance between the longer set of parallel lines rather than the vertical distance. 
+The hammock visualizes categorical or mixed categorical and numerical data. The hammock plot uses parallel coordinates which means that the variable axes are parallel to one another. Categories within a variable are spread out along a vertical line. Categories of adjacent variables are connected by boxes (rectangles or parallelograms). The width of a box is proportional to the number of observations that the box represents (i.e. have the same values/categories for the two variables). The "width" of a box refers to the distance between the longer set of parallel lines rather than the vertical distance. 
 
-    If boxes are very thin (e.g., they just represent one observation) they look like a line. 
-    In that case, if no labels or missing values are used, the hammock plot
-    corresponds to a parallel coordinate plot. 
+If boxes are very thin (e.g., they just represent one observation) they look like a line. In that case, if no labels or missing values are used, the hammock plot corresponds to a parallel coordinate plot. 
 
 ## Gallery
 Click any image to explore the whole gallery or use the direct link: [Gallery](https://tianchengy.github.io/hammock_plot/gallery).
