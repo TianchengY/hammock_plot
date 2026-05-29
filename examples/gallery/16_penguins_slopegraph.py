@@ -12,9 +12,7 @@ import pandas as pd
 
 
 df = pd.read_csv(data_path("data_penguins.csv"))
-df[["bill_length_mm", "bill_depth_mm"]] = df[
-    ["bill_length_mm", "bill_depth_mm"]
-].round().astype("Int64")
+
 
 hammock = hammock_plot.Hammock(data_df=df)
 hammock.plot(
