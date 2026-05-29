@@ -32,8 +32,22 @@
     corresponds to a parallel coordinate plot. 
 
 ## Gallery
+Click any image to explore the whole gallery or use the direct link: [Gallery](https://tianchengy.github.io/hammock_plot/gallery) or click any image to explore the whole gallery.
 
-See the example gallery here: [Gallery](https://tianchengy.github.io/hammock_plot/gallery)
+<p>
+  <a href="https://tianchengy.github.io/hammock_plot/gallery">
+    <img src="image/gallery/penguins_numerical_no_highlight.png" alt="Penguins numerical gallery example" width="180"/>
+  </a>
+  <a href="https://tianchengy.github.io/hammock_plot/gallery">
+    <img src="image/gallery/shakespeare_box.png" alt="Shakespeare box gallery example" width="180"/>
+  </a>
+  <a href="https://tianchengy.github.io/hammock_plot/gallery">
+    <img src="image/gallery/penguins_mixed_displays.png" alt="Penguins mixed displays gallery example" width="180"/>
+  </a>
+  <a href="https://tianchengy.github.io/hammock_plot/gallery">
+    <img src="image/gallery/penguins_highlight.png" alt="Penguins highlight gallery example" width="180"/>
+  </a>
+</p>
 
 
 ## Installation
@@ -62,7 +76,9 @@ var = ["hospitalizations","group","gender","comorbidities"]
 hammock = hammock_plot.Hammock(data_df = df)
 ax = hammock.plot(var=var)
 ```
+
 <img src="image/asthma_minimal.png" alt="Minimal example for a Hammock plot" width="600"/>
+
 
 The labels for the numerical variables aren't as desired; we would like the labels directly drawn on the data. For our numerical variables, we ignore the level management and instead label each value or level  that occurs in the variable.  
 
