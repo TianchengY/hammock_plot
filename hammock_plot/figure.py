@@ -123,7 +123,7 @@ class Figure:
             label_opts = self.label_options[v] if self.label_options and v in self.label_options else None
 
             # -------------- DETERMINE DISPLAY AND LABEL TYPES ---------------------
-            uni_display_type = "rugplot" if dtype != np.str_ else "stacked bar" # default
+            uni_display_type = "rug" if dtype != np.str_ else "stacked_bar" # default
             if display_type and v in display_type:
                 uni_display_type = display_type[v]
             label_type = "default"
@@ -139,11 +139,11 @@ class Figure:
                 if numerical_var_levels[v]:
                     label_type="levels"
                     num_levels = numerical_var_levels[v]
-                elif uni_display_type == "rugplot": # v: None - labels are by value only if display is rugplot
+                elif uni_display_type == "rug": # v: None - labels are by value only if display is rugplot
                     label_type = "values"
                 
             # long boolean expression represents the conditions for drawing small white lines to divide rugplot rectangles
-            draw_white_dividers = (uni_display_type == "stacked bar" or uni_display_type == "bar chart") and self.uni_vfill == 1
+            draw_white_dividers = (uni_display_type == "stacked_bar" or uni_display_type == "bar") and self.uni_vfill == 1
 
             uni = Unibar(
                 df=self.data_df,
@@ -244,9 +244,9 @@ class Figure:
         only_hbars = True
 
         for uni in self.unibars:
-            if uni.display_type == "stacked bar" or uni.display_type == "rugplot":
+            if uni.display_type == "stacked_bar" or uni.display_type == "rug":
                 only_hbars = False
-            if uni.display_type == "bar chart":
+            if uni.display_type == "bar":
                 max_val_occ = max(max_val_occ, max(val.occurrences for val in uni.values))
                 max_num_categories = max(max_num_categories, len(uni.non_missing_vals))
         if max_num_categories > 0:
@@ -302,7 +302,7 @@ class Figure:
                 # (rugplot / stacked bar / lumpy beanplot) need padding reserved for
                 # half that bar's height. Box / violin / spiky beanplot draw value 0
                 # as a thin point, so they don't contribute to the adjustment.
-                bar_like_for_same_scale = {"rugplot", "stacked bar", "lumpy beanplot"}
+                bar_like_for_same_scale = {"rug", "stacked_bar", "lumpy beanplot"}
                 max_min_occ = 0 # maximum occurrences observed across all values that are at the minimum value on same_scale
                 max_max_occ = 0 # maximum occurrences observed across all values that are at the maximum value on same_scale
                 for uni in self.unibars:
@@ -336,7 +336,7 @@ class Figure:
                     # note: there may be a bug with same_scale and missing=True - need to test
                     if uni.val_type != np.str_:
                         continue
-                    if uni.display_type == "bar chart":
+                    if uni.display_type == "bar":
                         max_btm_height = max(max_btm_height, hbar_height)
                         max_top_height = max(max_top_height, hbar_height)
                     else:

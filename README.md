@@ -173,7 +173,7 @@ df = pd.read_csv('./data/data_penguins.csv')
 We use `display_type` to control how we want to display our data.
 
 #### Numerical display types
-Numerical data have three display options: "box", "rugplot", and "violin".
+Numerical data have three display options: "box", "rug", and "violin".
 ```python
 hammock = hammock_plot.Hammock(df)
 ax = hammock.plot(
@@ -183,7 +183,7 @@ ax = hammock.plot(
     hi_var="island",
     hi_value=["Torgersen"],
     missing=True,
-    display_type={"bill_length_mm":"box", "bill_depth_mm": "rugplot", "flipper_length_mm": "violin", "body_mass_g":"box"},
+    display_type={"bill_length_mm":"box", "bill_depth_mm": "rug", "flipper_length_mm": "violin", "body_mass_g":"box"},
 )
 ```
 <img src="image/penguin_display_numerical.png" alt="Hammock plot for the penguin data, demonstrating display_type for numerical data" width="600"/>
@@ -203,7 +203,7 @@ ax = hammock.plot(
 <img src="image/penguin_display_types_mult_highlight.png" alt="Hammock plot for the penguin data, demonstrating display_type with multiple highlighting" width="600"/>
 
 #### Categorical display types
-Categorical data has two display options: "stacked bar", and "bar chart" (horizontal bar chart). Default is "stacked bar".
+Categorical data has two display options: "stacked_bar", and "bar" (horizontal bar chart). Default is "stacked_bar".
 
 For horizontal bar charts, set uni_vfill to a higher value for better visuals. When uni_vfill is high, lower the connector_fraction.
 ```python
@@ -215,7 +215,7 @@ ax = hammock.plot(
     hi_var="island",
     hi_value=["Torgersen", "Biscoe"],
     missing=True,
-    display_type={"species": "bar chart", "island": "bar chart", "bill_length_mm":"box", "bill_depth_mm": "box", "flipper_length_mm": "box", "body_mass_g":"box"},
+    display_type={"species": "bar", "island": "bar", "bill_length_mm":"box", "bill_depth_mm": "box", "flipper_length_mm": "box", "body_mass_g":"box"},
 )
 ```
 <img src="image/penguin_display_horizontal_barchart.png" alt="Hammock plot for the penguin data, demonstrating display_type for categorical data" width="600"/>
