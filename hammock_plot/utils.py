@@ -25,7 +25,7 @@ class Defaults:
     BAR_UNIT: float = 1.0 # default bar unit (how many pixels/obs.) is recalculated on init.
     XMARGIN: float = 0.02 # margin on x axis
     YMARGIN: float = 0.04 # margin on y axis
-    SCALE: float = 10 # 
+    SCALE: float = 10 #  width/height/location multiplier to get pixel values
     GAP_BTWN_UNI_MULTI: float = 2 # required gap between unibars and the multivariate connectors
     MIN_MULTI_WIDTH: float = 3 # in pixels
     SPACE_ABOVE_MISSING: float = 2 # space above missing values (separating missing from non-missing)
