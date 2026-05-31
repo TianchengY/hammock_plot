@@ -28,7 +28,7 @@ hammock.plot(
     connector_fraction=.2,
     display_type={
         "bill_length_mm":"box", 
-        "bill_depth_mm": "rugplot", 
+        "bill_depth_mm": "rug", 
         "flipper_length_mm": "violin", 
         "body_mass_g":"box"
     },
