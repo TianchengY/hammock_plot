@@ -162,9 +162,19 @@ class Unibar:
             # Update bottom for non-missing values: start above missing bar + padding
             bottom += self.missing_padding
 
+        # Box / violin draw each value as a thin point, not a bar, so no half-bar
+        # padding is reserved at the extremes: their value centres (where connectors
+        # attach) span the full [draw_y_start, draw_y_end], matching where the level
+        # labels and the box/violin body are drawn. Bar-like displays (rug /
+        # stacked_bar / bar / lumpy beanplot) still reserve half a bar. The same_scale
+        # path encodes the same exclusion via bar_like_for_same_scale in figure.py.
+        point_like = self.display_type in Defaults.CENTER_ATTACH_DISPLAYS
+
         # --- Adjust top for last non-missing bar ---
         if self.min_max_pos:
             top_adjustment =  max(self.min_bar_height / 2, self.min_max_pos[1]) if self.min_max_pos[1] != 0 else 0
+        elif point_like:
+            top_adjustment = 0
         else:
             if self.display_type != "bar":
                 top_height = self.non_missing_vals[-1].occurrences * self.bar_unit
@@ -172,9 +182,11 @@ class Unibar:
                 top_height = self.hbar_height
             top_adjustment = max(self.min_bar_height, top_height) / 2 if self.non_missing_vals and self.non_missing_vals[-1].occurrences != 0 else 0
         top -= top_adjustment
-        
+
         if self.min_max_pos:
             bottom_adjustment = max(self.min_bar_height / 2, self.min_max_pos[0]) if self.min_max_pos[0] != 0 else 0
+        elif point_like:
+            bottom_adjustment = 0
         else:
             if self.display_type != "bar":
                 bottom_height = self.non_missing_vals[0].occurrences * self.bar_unit
