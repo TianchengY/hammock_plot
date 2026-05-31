@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+before="$(git hash-object README.md)"
+
+python scripts/update_readme_toc.py
+
+after="$(git hash-object README.md)"
+
+if [ "$before" != "$after" ]; then
+  echo "README table of contents was updated."
+  echo "Review the change, then run:"
+  echo "  git add README.md"
+  echo "  git commit"
+  exit 1
+fi

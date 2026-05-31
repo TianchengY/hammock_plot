@@ -1,3 +1,7 @@
+
+import sys
+print(sys.executable)
+
 import hammock_plot
 import pandas as pd
 import os
@@ -20,15 +24,17 @@ def numeric_var_levels():
     df = df_asthma
     var = ["hospitalizations","group","gender","comorbidities"]
     hammock = hammock_plot.Hammock(data_df = df)
-    ax = hammock.plot(var=var, numerical_var_levels={"comorbidities": None, "hospitalizations": None}, save_path="image/asthma_levels.png")
+    numeric_levels = {"comorbidities": None, "hospitalizations": None}
+    ax = hammock.plot(var=var, numerical_var_levels=numeric_levels, save_path="image/asthma_levels.png")
 
 def value_order():
     df = df_asthma
     var = ["hospitalizations","group","gender","comorbidities"]
+    numeric_levels = {"comorbidities": None, "hospitalizations": None}
     group_order = ["child", "adolescent", "adult"]
     value_order = {"group": group_order}
     hammock = hammock_plot.Hammock(data_df = df)
-    ax = hammock.plot(var=var, value_order=value_order, numerical_var_levels={"comorbidities": None, "hospitalizations": None}, save_path="image/asthma_value_order.png")
+    ax = hammock.plot(var=var, value_order=value_order, numerical_var_levels=numeric_levels, save_path="image/asthma_value_order.png")
 
 def highlighting():
     df = df_asthma
@@ -48,7 +54,7 @@ def speaker_order():
     color_lst = ["#fdc086",  "#386cb0", "#7fc97f"]
     hi_value = ["Beggars","Citizens","Gentry"]
 
-    speaker_order=["Beggars", "Royalty", "Nobility", "Gentry", "Citizens", "Yeomanry"]
+    speaker_order=["Royalty", "Nobility", "Gentry", "Citizens", "Yeomanry", "Beggars"]
 
     hammock = hammock_plot.Hammock(data_df = df)
     ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,colors=color_lst,missing=True,
@@ -74,6 +80,8 @@ def display_type_numerical():
     ax = hammock.plot(
         var= ["species", "island", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"],
         display_figure=False,
+        uni_vfill=0.7,
+        connector_fraction=0.1,
         hi_var="island",
         hi_value=["Torgersen"],
         missing=True,
@@ -88,6 +96,8 @@ def display_type_mult_highlight():
     ax = hammock.plot(
         var= ["species", "island", "bill_length_mm", "bill_depth_mm", "flipper_length_mm", "body_mass_g"],
         display_figure=False,
+        uni_vfill=0.99,
+        connector_fraction=0.1,
         hi_var="island",
         hi_value=["Torgersen", "Biscoe"],
         missing=True,
