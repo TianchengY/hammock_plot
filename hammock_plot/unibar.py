@@ -78,12 +78,14 @@ class Unibar:
         order = self.val_order
 
         for val in order:
+            # get number of occurrences of the value, and assign to the Value object.
             if self.weights is None:
                 cnt = int(counts.get(val, 0))
             else:
                 mask = self.df[self.name] == val
                 cnt = self.df.loc[mask, self.weights].sum()
 
+            # assigns a list of # occurrences which corresponds to each of the highlight colours.
             if cnt > 0:
                 subset = self.df[self.df[self.name] == val]
 
@@ -104,6 +106,7 @@ class Unibar:
             else:
                 occ_by_colour = [0] * len(all_colors)
 
+            # puts the constructed Value in a list associated with the Unibar.
             values.append(Value(
                 id=str(val),
                 occurrences=cnt,
@@ -392,6 +395,21 @@ class Unibar:
             )
         
     def _prepare_scaled_data(self, y_start, y_end):
+        """
+        Collect the y-positions for the box/violin plots, split by colour.
+
+        Each value's number is mapped onto the [y_start, y_end] span, and that
+        position is recorded once per colour it appears in. Repetition by count
+        is left to _prepare_weights, which lines up with this output entry for
+        entry.
+
+        Args:
+            y_start, y_end: bottom and top of the drawable vertical span.
+
+        Returns (data_per_color, facecolors, edgecolors): the y-positions per
+        colour, the fill colours, and their matching edge colours. Empty lists
+        if there are no non-missing values.
+        """
         if not self.non_missing_vals:
             return [], [], []
 
@@ -418,6 +436,20 @@ class Unibar:
         return data_per_color, self.colors, [edge_color_from_face(c) for c in self.colors]
 
     def _prepare_weights(self, n_colors):
+        """
+        Give the frequency of each y-position from _prepare_scaled_data.
+
+        Walks the values the same way that method does, but records the
+        occurrence count (or weight-sum, if a weights column is set) instead of
+        the position. The box/violin code zips the two together so the KDE and
+        quantiles know how many observations sit at each spot.
+
+        Args:
+            n_colors: number of colours to split the weights across.
+
+        Returns weights_per_color: a list of weights per colour, aligned with
+        _prepare_scaled_data's output.
+        """
         weights_per_color = [[] for _ in range(n_colors)]
         for v in self.non_missing_vals:
             occs = v.occ_by_colour
@@ -790,6 +822,9 @@ class Unibar:
     
     # draws missing values as well
     def _draw_hbar(self, ax, values, rectangle_painter):
+        """
+            Used to draw the unibar background for the horizontal bar chart display option (categorical data only)
+        """
         n = len(values)
         
         left_pts, right_pts, weights = [], [], []
