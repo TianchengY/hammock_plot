@@ -277,9 +277,9 @@ class Figure:
                                  bar_unit=self.bar_unit,
                                  missing_padding=missing_padding)
         
-        # determine same_scale positioning
-        # BUG: same_scale and missing=True and same_scale_type == "numerical"
-        # BUG: this should be determined BEFORE bar_unit and stuff is calculated
+        # determine same_scale positioning. bar_unit / missing_padding are already
+        # finalised above (incl. the missing + hbar adjustments), so the padding
+        # below is computed against the final bar_unit.
         if same_scale_type and same_scale_type == "numerical":
             # Determine ranges for unibars that should use same_scale
             global_range = None
@@ -324,27 +324,28 @@ class Figure:
         elif same_scale_type and same_scale_type == "categorical":
             # determine the positions of the first and last categories to make them line up
             if same_scale:
-                # Compute the max top/bottom bar height across ALL categorical
-                # unibars in the plot, not just the same_scale group. Non-same_scale
-                # categorical vars would otherwise use their own (often smaller)
-                # adjustment and extend visually past the same_scale group, making
-                # the same_scale columns look like they don't reach the plot edges.
-                # Sharing the adjustment keeps the whole plot vertically aligned.
+                # Compute the bottom/top padding from the same_scale group members. The padding reserves half the
+                # extreme bar's height so the bottom/top slot's bar edge
+                # touches the floor/ceiling, and sharing it across members keeps the
+                # shared scale aligned. Non-members get min_max_pos=None and lay out independently, each
+                # spanning the full band via the no-same_scale branch.
                 max_btm_height = 0
                 max_top_height = 0
                 for uni in self.unibars:
-                    # note: there may be a bug with same_scale and missing=True - need to test
-                    if uni.val_type != np.str_:
+                    if uni.name not in same_scale or uni.val_type != np.str_:
                         continue
                     if uni.display_type == "bar":
-                        max_btm_height = max(max_btm_height, hbar_height)
-                        max_top_height = max(max_top_height, hbar_height)
+                        # bar charts draw every present value at a fixed hbar_height,
+                        # but only reserve padding at an end this member actually
+                        # occupies (its bottom/top slot may be an empty merged slot).
+                        if uni.non_missing_vals and uni.non_missing_vals[0].occurrences > 0:
+                            max_btm_height = max(max_btm_height, hbar_height)
+                        if uni.non_missing_vals and uni.non_missing_vals[-1].occurrences > 0:
+                            max_top_height = max(max_top_height, hbar_height)
                     else:
-                        # Use the unibar's actual bottommost / topmost rendered value.
-                        # The merged value_order may include entries that don't exist
-                        # in this column (e.g. F/M in speaker1 when same_scale spans
-                        # speakers and sex), so indexing value_order would point at
-                        # the wrong value or miss it entirely.
+                        # Use the member's actual bottommost / topmost rendered value.
+                        # The merged value_order may include empty slots; their
+                        # occurrences are 0, so they don't inflate the padding.
                         if not uni.non_missing_vals:
                             continue
                         btm_val = uni.non_missing_vals[0]
@@ -354,7 +355,7 @@ class Figure:
                 min_max_pos = (max_btm_height / 2, max_top_height / 2)
 
                 for uni in self.unibars:
-                    if uni.val_type == np.str_:
+                    if uni.name in same_scale:
                         uni.min_max_pos = min_max_pos
         
         # finally, compute the vertical positions
@@ -519,9 +520,18 @@ class Figure:
                 if lv_obj is None or rv_obj is None:
                     continue
 
-                # Use precomputed stacked centers
-                ly = next((c_y for r, _, _, c_y in outgoing[lv] if r == rv), lv_obj.vert_centre)
-                ry = next((c_y for l, _, _, c_y in incoming[rv] if l == lv), rv_obj.vert_centre)
+                # Bars (rug / stacked_bar / beanplots) draw each value as a bar, so
+                # connections are stacked to fill that bar's height. Box/violin draw
+                # the value as a point, so connections CENTRE-ATTACH at the value's
+                # vert_centre and fan out to their targets (parallel-coordinate style).
+                if left_uni.display_type in Defaults.CENTER_ATTACH_DISPLAYS:
+                    ly = lv_obj.vert_centre
+                else:
+                    ly = next((c_y for r, _, _, c_y in outgoing[lv] if r == rv), lv_obj.vert_centre)
+                if right_uni.display_type in Defaults.CENTER_ATTACH_DISPLAYS:
+                    ry = rv_obj.vert_centre
+                else:
+                    ry = next((c_y for l, _, _, c_y in incoming[rv] if l == lv), rv_obj.vert_centre)
 
                 lx = left_uni.pos_x + self.unibar_width / 2 + self.gap_btwn_uni_multi
                 rx = right_uni.pos_x - self.unibar_width / 2 - self.gap_btwn_uni_multi

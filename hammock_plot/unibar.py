@@ -229,13 +229,17 @@ class Unibar:
         elif self.val_type == np.str_ and self.non_missing_vals and (self.min_max_pos or self.display_type == "bar"):
             n = len(self.non_missing_vals)
 
-            # spacing between centers
-            step = (top - bottom) / (n - 1)
+            if n == 1:
+                # Single shared slot: nothing to space; centre it in the band.
+                self.non_missing_vals[0].set_y(centre=(bottom + top) / 2)
+            else:
+                # spacing between centers
+                step = (top - bottom) / (n - 1)
 
-            for i, val in enumerate(self.non_missing_vals):
-                # place at center of each interval
-                pos = bottom + i * step
-                val.set_y(pos)
+                for i, val in enumerate(self.non_missing_vals):
+                    # place at center of each interval
+                    pos = bottom + i * step
+                    val.set_y(pos)
         
         # --- String/Categorical values (without same_scale) ---
         elif self.val_type == np.str_ and self.non_missing_vals:
