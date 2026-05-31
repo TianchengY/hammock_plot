@@ -21,8 +21,8 @@ hammock.plot(
     uni_hfill=0.99,
     connector_fraction=0.1,
     display_type={
-        "species": "bar chart",
-        "island": "bar chart",
+        "species": "bar",
+        "island": "bar",
         "bill_length_mm": "box",
         "bill_depth_mm": "box",
         "flipper_length_mm": "box",

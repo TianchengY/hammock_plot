@@ -163,7 +163,7 @@ class Unibar:
         if self.min_max_pos:
             top_adjustment =  max(self.min_bar_height / 2, self.min_max_pos[1]) if self.min_max_pos[1] != 0 else 0
         else:
-            if self.display_type != "bar chart":
+            if self.display_type != "bar":
                 top_height = self.non_missing_vals[-1].occurrences * self.bar_unit
             else:
                 top_height = self.hbar_height
@@ -173,7 +173,7 @@ class Unibar:
         if self.min_max_pos:
             bottom_adjustment = max(self.min_bar_height / 2, self.min_max_pos[0]) if self.min_max_pos[0] != 0 else 0
         else:
-            if self.display_type != "bar chart":
+            if self.display_type != "bar":
                 bottom_height = self.non_missing_vals[0].occurrences * self.bar_unit
             else:
                 bottom_height = self.hbar_height
@@ -223,7 +223,7 @@ class Unibar:
                     v.set_y(centre=p)
 
         # --- String/Categorical values (with same_scale) ---
-        elif self.val_type == np.str_ and self.non_missing_vals and (self.min_max_pos or self.display_type == "bar chart"):
+        elif self.val_type == np.str_ and self.non_missing_vals and (self.min_max_pos or self.display_type == "bar"):
             n = len(self.non_missing_vals)
 
             # spacing between centers
@@ -316,7 +316,7 @@ class Unibar:
             # draw missing values
             self._draw_rectangles(ax, self.missing_vals, rectangle_painter)
 
-        if self.display_type == "rugplot" or self.display_type == "stacked bar":
+        if self.display_type == "rug" or self.display_type == "stacked_bar":
             self._draw_rectangles(ax, self.non_missing_vals, rectangle_painter)
         elif self.display_type == "violin":
             self._draw_violin(ax, self.draw_y_start, self.draw_y_end)
@@ -326,7 +326,7 @@ class Unibar:
             self._draw_lumpy_beanplot(ax, rectangle_painter)
         elif self.display_type == "spiky beanplot":
             self._draw_spiky_beanplot(ax, self.draw_y_start, self.draw_y_end, rectangle_painter)
-        elif self.display_type == "bar chart":
+        elif self.display_type == "bar":
             self._draw_hbar(ax, self.non_missing_vals, rectangle_painter)
         else:
             raise ValueError(f"Unknown display_type: {self.display_type}")
@@ -886,7 +886,7 @@ class Unibar:
     def _draw_level_labels(self, ax, y_start, y_end):
         """
         2 ways to draw levels:
-        1. Display type == rugplot
+        1. Display type == rug
             - this means that the bottommost and topmost values are NOT centred at the bottom and the top of the drawable space.
             - Labels must be offset slightly to accomodate for the adjustment made
         2. Display type == box or violin
@@ -908,7 +908,7 @@ class Unibar:
                 indices = np.linspace(0, len(possible_vals) - 1, num_levels, dtype=int)
                 level_vals = possible_vals[indices]
         
-        if self.display_type == "rugplot" or self.display_type == "lumpy beanplot":
+        if self.display_type == "rug" or self.display_type == "lumpy beanplot":
             # Compute coordinate range based on first and last non-missing bar centers
             first_center = self.non_missing_vals[0].vert_centre
             last_center = self.non_missing_vals[-1].vert_centre

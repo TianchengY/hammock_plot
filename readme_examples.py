@@ -78,7 +78,7 @@ def display_type_numerical():
         hi_value=["Torgersen"],
         missing=True,
         save_path="image/penguin_display_numerical.png",
-        display_type={"bill_length_mm":"box", "bill_depth_mm": "rugplot", "flipper_length_mm": "violin", "body_mass_g":"box"},
+        display_type={"bill_length_mm":"box", "bill_depth_mm": "rug", "flipper_length_mm": "violin", "body_mass_g":"box"},
     )
 
 def display_type_mult_highlight():
@@ -108,7 +108,7 @@ def display_type_categorical():
         hi_value=["Torgersen", "Biscoe"],
         missing=True,
         save_path="image/penguin_display_horizontal_barchart.png",
-        display_type={"species": "bar chart", "island": "bar chart", "bill_length_mm":"box", "bill_depth_mm": "box", "flipper_length_mm": "box", "body_mass_g":"box"},
+        display_type={"species": "bar", "island": "bar", "bill_length_mm":"box", "bill_depth_mm": "box", "flipper_length_mm": "box", "body_mass_g":"box"},
     )
 
 minimal_example()

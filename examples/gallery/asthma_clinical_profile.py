@@ -27,10 +27,10 @@ hammock.plot(
     display_type={
         "Age": "box",
         "LungFunctionFEV1": "violin",
-        "Gender": "bar chart",
-        "Smoking": "bar chart",
-        "Diagnosis": "bar chart",
-        "FamilyHistoryAsthma": "bar chart",
+        "Gender": "bar",
+        "Smoking": "bar",
+        "Diagnosis": "bar",
+        "FamilyHistoryAsthma": "bar",
     },
     # number of levels displayed for corresponding numerical variable
     numerical_var_levels={"Age": 6, "LungFunctionFEV1": 6},
