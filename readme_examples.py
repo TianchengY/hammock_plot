@@ -57,7 +57,10 @@ def speaker_order():
     speaker_order=["Royalty", "Nobility", "Gentry", "Citizens", "Yeomanry", "Beggars"]
 
     hammock = hammock_plot.Hammock(data_df = df)
-    ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,colors=color_lst,missing=True,
+    ax = hammock.plot(var=var_lst,
+                    uni_vfill=0.7,
+                    connector_fraction=0.1,
+                    hi_var = "speaker1", hi_value=hi_value,colors=color_lst,missing=True,
                     value_order ={"speaker1":speaker_order,"speaker2":speaker_order},
                     save_path="image/shakespeare_order.png")
 
@@ -70,7 +73,10 @@ def same_scale():
     speaker_order=["Beggars", "Royalty", "Nobility", "Gentry", "Citizens", "Yeomanry"]
 
     hammock = hammock_plot.Hammock(data_df = df)
-    ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,colors=color_lst,missing=True,
+    ax = hammock.plot(var=var_lst,
+                    uni_vfill=0.7,
+                    connector_fraction=0.1,
+                    hi_var = "speaker1", hi_value=hi_value,colors=color_lst,missing=True,
                     value_order ={"speaker1":speaker_order}, same_scale=["speaker1", "speaker2"],
                     save_path="image/shakespeare_scale.png")
 
