@@ -2,7 +2,7 @@
 Marginal display only -  horizontal barcharts
 =============================================
 
-Display type "bar chart" for categorical vars; removing connectors; force same scale for some vars.
+Display type "bar" for categorical vars; removing connectors; force same scale for some vars.
 """
 
 from _gallery_utils import data_path, gallery_image_path
@@ -27,7 +27,7 @@ hammock.plot(
     connector_fraction=0,
     width=5,
     height=10,
-    display_type={"type": "bar chart", "speaker1":"bar chart", "speaker2": "bar chart"},
+    display_type={"type": "bar", "speaker1":"bar", "speaker2": "bar"},
     save_path=gallery_image_path("shakespeare_bar.png"),
 )
 

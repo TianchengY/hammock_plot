@@ -19,17 +19,9 @@
 
 ## Description
 
-    The hammock visualizes categorical or mixed categorical and numerical data.
-    The hammock plot uses parallel coordinates which means that the variable axes are parallel to one another. 
-    Categories within a variable are spread out along a
-    vertical line. Categories of adjacent variables are connected by boxes (rectangles or parallelograms). 
-    The width of a box is proportional to the number of observations that the box represents 
-    (i.e. have the same values/categories for the two variables). The "width" of a box refers to the
-    distance between the longer set of parallel lines rather than the vertical distance. 
+The hammock visualizes categorical or mixed categorical and numerical data. The hammock plot uses parallel coordinates which means that the variable axes are parallel to one another. Categories within a variable are spread out along a vertical line. Categories of adjacent variables are connected by boxes (rectangles or parallelograms). The width of a box is proportional to the number of observations that the box represents (i.e. have the same values/categories for the two variables). The "width" of a box refers to the distance between the longer set of parallel lines rather than the vertical distance. 
 
-    If boxes are very thin (e.g., they just represent one observation) they look like a line. 
-    In that case, if no labels or missing values are used, the hammock plot
-    corresponds to a parallel coordinate plot. 
+If boxes are very thin (e.g., they just represent one observation) they look like a line. In that case, if no labels or missing values are used, the hammock plot corresponds to a parallel coordinate plot. 
 
 ## Gallery
 Click any image to explore the whole gallery or use the direct link: [Gallery](https://tianchengy.github.io/hammock_plot/gallery).
@@ -181,7 +173,7 @@ df = pd.read_csv('./data/data_penguins.csv')
 We use `display_type` to control how we want to display our data.
 
 #### Numerical display types
-Numerical data have three display options: "box", "rugplot", and "violin".
+Numerical data have three display options: "box", "rug", and "violin".
 ```python
 hammock = hammock_plot.Hammock(df)
 ax = hammock.plot(
@@ -191,7 +183,7 @@ ax = hammock.plot(
     hi_var="island",
     hi_value=["Torgersen"],
     missing=True,
-    display_type={"bill_length_mm":"box", "bill_depth_mm": "rugplot", "flipper_length_mm": "violin", "body_mass_g":"box"},
+    display_type={"bill_length_mm":"box", "bill_depth_mm": "rug", "flipper_length_mm": "violin", "body_mass_g":"box"},
 )
 ```
 <img src="image/penguin_display_numerical.png" alt="Hammock plot for the penguin data, demonstrating display_type for numerical data" width="600"/>
@@ -211,7 +203,7 @@ ax = hammock.plot(
 <img src="image/penguin_display_types_mult_highlight.png" alt="Hammock plot for the penguin data, demonstrating display_type with multiple highlighting" width="600"/>
 
 #### Categorical display types
-Categorical data has two display options: "stacked bar", and "bar chart" (horizontal bar chart). Default is "stacked bar".
+Categorical data has two display options: "stacked_bar", and "bar" (horizontal bar chart). Default is "stacked_bar".
 
 For horizontal bar charts, set uni_vfill to a higher value for better visuals. When uni_vfill is high, lower the connector_fraction.
 ```python
@@ -223,7 +215,7 @@ ax = hammock.plot(
     hi_var="island",
     hi_value=["Torgersen", "Biscoe"],
     missing=True,
-    display_type={"species": "bar chart", "island": "bar chart", "bill_length_mm":"box", "bill_depth_mm": "box", "flipper_length_mm": "box", "body_mass_g":"box"},
+    display_type={"species": "bar", "island": "bar", "bill_length_mm":"box", "bill_depth_mm": "box", "flipper_length_mm": "box", "body_mass_g":"box"},
 )
 ```
 <img src="image/penguin_display_horizontal_barchart.png" alt="Hammock plot for the penguin data, demonstrating display_type for categorical data" width="600"/>
@@ -238,7 +230,7 @@ ax = hammock.plot(
 | --- | :-------- | :------- | :-------------------------  |
 | General |     `var` | `List[str]` | List of variables to display. The order determines the variable order in the graph.   |
 | |             `value_order` | `Dict[str, List[int]]`  |  If specified, the order of the values in the plot follows the order of values in the list supplied in the dictionary. Only applicable to categorical variables. If a value_order is given to a numerical variable, it will behave like categorical data instead. |
-| |            `display_type` | `Dict[str, str]` | Specifies the type of plot. "rugplot", "box", and "violin" are the options for numerical data, and "stacked bar", "bar chart" are the options for categorical data. Example: {"NumericalVarname": "rugplot", "NumericalVarname2": "violin", "NumericalVarname3": "box"}. Default is "rugplot" for numerical data and "stacked bar" for categorical data. |
+| |            `display_type` | `Dict[str, str]` | Specifies the type of plot. "rug", "box", and "violin" are the options for numerical data, and "stacked_bar", "bar" are the options for categorical data. Example: {"NumericalVarname": "rug", "NumericalVarname2": "violin", "NumericalVarname3": "box"}. Default is "rug" for numerical data and "stacked_bar" for categorical data. |
 | |             `missing` | `bool` | Whether or not to add a category for missing values at the bottom of the plot.  If `False`, observations that have a missing value for any variable in the data frame (even those not used in the hammock plot) are removed.  Default is `False`. |
 | |             `weights` | `str` | Weight variable (must be a numeric variable with only positive, nonmissing values. Cannot be a member of `var`). |
 | Labeling |             `label` | `bool` | Whether or not to display labels between the plotting segments |

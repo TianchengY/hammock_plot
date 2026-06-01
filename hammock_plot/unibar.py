@@ -78,12 +78,14 @@ class Unibar:
         order = self.val_order
 
         for val in order:
+            # get number of occurrences of the value, and assign to the Value object.
             if self.weights is None:
                 cnt = int(counts.get(val, 0))
             else:
                 mask = self.df[self.name] == val
                 cnt = self.df.loc[mask, self.weights].sum()
 
+            # assigns a list of # occurrences which corresponds to each of the highlight colours.
             if cnt > 0:
                 subset = self.df[self.df[self.name] == val]
 
@@ -104,6 +106,7 @@ class Unibar:
             else:
                 occ_by_colour = [0] * len(all_colors)
 
+            # puts the constructed Value in a list associated with the Unibar.
             values.append(Value(
                 id=str(val),
                 occurrences=cnt,
@@ -163,7 +166,7 @@ class Unibar:
         if self.min_max_pos:
             top_adjustment =  max(self.min_bar_height / 2, self.min_max_pos[1]) if self.min_max_pos[1] != 0 else 0
         else:
-            if self.display_type != "bar chart":
+            if self.display_type != "bar":
                 top_height = self.non_missing_vals[-1].occurrences * self.bar_unit
             else:
                 top_height = self.hbar_height
@@ -173,7 +176,7 @@ class Unibar:
         if self.min_max_pos:
             bottom_adjustment = max(self.min_bar_height / 2, self.min_max_pos[0]) if self.min_max_pos[0] != 0 else 0
         else:
-            if self.display_type != "bar chart":
+            if self.display_type != "bar":
                 bottom_height = self.non_missing_vals[0].occurrences * self.bar_unit
             else:
                 bottom_height = self.hbar_height
@@ -223,7 +226,7 @@ class Unibar:
                     v.set_y(centre=p)
 
         # --- String/Categorical values (with same_scale) ---
-        elif self.val_type == np.str_ and self.non_missing_vals and (self.min_max_pos or self.display_type == "bar chart"):
+        elif self.val_type == np.str_ and self.non_missing_vals and (self.min_max_pos or self.display_type == "bar"):
             n = len(self.non_missing_vals)
 
             # spacing between centers
@@ -316,7 +319,7 @@ class Unibar:
             # draw missing values
             self._draw_rectangles(ax, self.missing_vals, rectangle_painter)
 
-        if self.display_type == "rugplot" or self.display_type == "stacked bar":
+        if self.display_type == "rug" or self.display_type == "stacked_bar":
             self._draw_rectangles(ax, self.non_missing_vals, rectangle_painter)
         elif self.display_type == "violin":
             self._draw_violin(ax, self.draw_y_start, self.draw_y_end)
@@ -326,7 +329,7 @@ class Unibar:
             self._draw_lumpy_beanplot(ax, rectangle_painter)
         elif self.display_type == "spiky beanplot":
             self._draw_spiky_beanplot(ax, self.draw_y_start, self.draw_y_end, rectangle_painter)
-        elif self.display_type == "bar chart":
+        elif self.display_type == "bar":
             self._draw_hbar(ax, self.non_missing_vals, rectangle_painter)
         else:
             raise ValueError(f"Unknown display_type: {self.display_type}")
@@ -392,6 +395,21 @@ class Unibar:
             )
         
     def _prepare_scaled_data(self, y_start, y_end):
+        """
+        Collect the y-positions for the box/violin plots, split by colour.
+
+        Each value's number is mapped onto the [y_start, y_end] span, and that
+        position is recorded once per colour it appears in. Repetition by count
+        is left to _prepare_weights, which lines up with this output entry for
+        entry.
+
+        Args:
+            y_start, y_end: bottom and top of the drawable vertical span.
+
+        Returns (data_per_color, facecolors, edgecolors): the y-positions per
+        colour, the fill colours, and their matching edge colours. Empty lists
+        if there are no non-missing values.
+        """
         if not self.non_missing_vals:
             return [], [], []
 
@@ -418,6 +436,20 @@ class Unibar:
         return data_per_color, self.colors, [edge_color_from_face(c) for c in self.colors]
 
     def _prepare_weights(self, n_colors):
+        """
+        Give the frequency of each y-position from _prepare_scaled_data.
+
+        Walks the values the same way that method does, but records the
+        occurrence count (or weight-sum, if a weights column is set) instead of
+        the position. The box/violin code zips the two together so the KDE and
+        quantiles know how many observations sit at each spot.
+
+        Args:
+            n_colors: number of colours to split the weights across.
+
+        Returns weights_per_color: a list of weights per colour, aligned with
+        _prepare_scaled_data's output.
+        """
         weights_per_color = [[] for _ in range(n_colors)]
         for v in self.non_missing_vals:
             occs = v.occ_by_colour
@@ -790,6 +822,9 @@ class Unibar:
     
     # draws missing values as well
     def _draw_hbar(self, ax, values, rectangle_painter):
+        """
+            Used to draw the unibar background for the horizontal bar chart display option (categorical data only)
+        """
         n = len(values)
         
         left_pts, right_pts, weights = [], [], []
@@ -886,7 +921,7 @@ class Unibar:
     def _draw_level_labels(self, ax, y_start, y_end):
         """
         2 ways to draw levels:
-        1. Display type == rugplot
+        1. Display type == rug
             - this means that the bottommost and topmost values are NOT centred at the bottom and the top of the drawable space.
             - Labels must be offset slightly to accomodate for the adjustment made
         2. Display type == box or violin
@@ -908,7 +943,7 @@ class Unibar:
                 indices = np.linspace(0, len(possible_vals) - 1, num_levels, dtype=int)
                 level_vals = possible_vals[indices]
         
-        if self.display_type == "rugplot" or self.display_type == "lumpy beanplot":
+        if self.display_type == "rug" or self.display_type == "lumpy beanplot":
             # Compute coordinate range based on first and last non-missing bar centers
             first_center = self.non_missing_vals[0].vert_centre
             last_center = self.non_missing_vals[-1].vert_centre

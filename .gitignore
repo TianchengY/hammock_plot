@@ -16,3 +16,8 @@ image/gallery/*.png
 !image/gallery/penguins_highlight.png
 test_suite/.ipynb_checkpoints/
 test_suite/test_plots/
+
+# testing
+same_scale_examples/
+secret_data/
+testing/

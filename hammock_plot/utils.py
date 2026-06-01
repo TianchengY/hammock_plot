@@ -18,21 +18,22 @@ class Defaults:
     # DEFAULT_COLOR: str = "#b675df"
 
     # Layout
-    UNI_VFILL: float = 0.08
-    CONNECTOR_FRACTION: float = 1
-    UNI_HFILL: float = 0.3
-    MIN_BAR_HEIGHT: float = 0.15
-    BAR_UNIT: float = 1.0
-    XMARGIN: float = 0.02
-    YMARGIN: float = 0.04
-    SCALE: float = 10
-    GAP_BTWN_UNI_MULTI: float = 2
+    UNI_VFILL: float = 0.08 # default unibar vertical fill
+    CONNECTOR_FRACTION: float = 1 # default proportion fraction of connectors : vfill
+    UNI_HFILL: float = 0.3 # default horizontal fill
+    MIN_BAR_HEIGHT: float = 0.15 # minimum bar height
+    BAR_UNIT: float = 1.0 # default bar unit (how many pixels/obs.) is recalculated on init.
+    XMARGIN: float = 0.02 # margin on x axis
+    YMARGIN: float = 0.04 # margin on y axis
+    SCALE: float = 10 # 
+    GAP_BTWN_UNI_MULTI: float = 2 # required gap between unibars and the multivariate connectors
     MIN_MULTI_WIDTH: float = 3 # in pixels
-    SPACE_ABOVE_MISSING: float = 2
-    NUM_LEVELS = 7
-    ALPHA = 0.7
-    WHITE_DIVIDER_HEIGHT = 0.3
-    SPIKE_THICKNESS = 0.3
+    SPACE_ABOVE_MISSING: float = 2 # space above missing values (separating missing from non-missing)
+    NUM_LEVELS = 7 # default number of levels for a numeric variable
+    ALPHA = 0.7 # alpha value of the colours
+    WHITE_DIVIDER_HEIGHT = 0.3 # height of white divider when uni_vfill =1
+    SPIKE_THICKNESS = 0.3 # width of spikes in spiky beanplot
+
 
 def clean_expression(expr: str) -> str:
     """
@@ -90,6 +91,9 @@ def safe_numeric(val):
                 return val
 
 def resolve_ordering(orders):
+    """
+        Resolves ordering when putting categorical variables in same_scale
+    """
     graph = defaultdict(set)
     indegree = defaultdict(int)
     nodes = set()
@@ -160,6 +164,9 @@ def edge_color_from_face(facecolor, delta=0.3):
 # Color indexing helpers
 # -----------------------------
 def _compute_color_index(val: Any, hi_missing, hi_value) -> int:
+    """
+        Calculates the appropriate colour for a specific row, given the hi_missing and hi_value parameters
+    """
     missing_buffer = 1 if hi_missing else 0
 
     if pd.isna(val):
@@ -199,6 +206,10 @@ def _compute_color_index(val: Any, hi_missing, hi_value) -> int:
     return 0
 
 def assign_color_index(df: pd.DataFrame, var_list: List[str], hi_missing, missing_placeholder, hi_var, hi_value) -> pd.DataFrame:
+    """
+        Assigns each row in the dataframe with a colour index; calculates which rows are highlighted which colour.
+    """
+    
     df["color_index"] = 0  # default
 
     # Highlight missing values first
@@ -218,6 +229,9 @@ def assign_color_index(df: pd.DataFrame, var_list: List[str], hi_missing, missin
     return df
 
 def get_formatted_label(datatype, value):
+    """
+        Returns the formatted label version (in particular, returns something nicer for numeric vals)
+    """
     if value is None or pd.isna(value):
         return value
     # if the label is a string

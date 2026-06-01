@@ -30,8 +30,8 @@ hammock.plot(
     uni_hfill=.5,
     uni_vfill=.99,
     display_type={
-        "species": "stacked bar",
-        "island": "stacked bar",
+        "species": "stacked_bar",
+        "island": "stacked_bar",
         "bill_length_mm": "box",
         "bill_depth_mm": "box",
         "flipper_length_mm": "box",
