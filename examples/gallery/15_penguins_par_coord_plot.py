@@ -2,7 +2,7 @@
 Parallel coordinate plot
 ========================
 
-Hide unibars and labels and show connectors only.
+In the hammock plot, we hide unibars and labels and show connectors only.
 """
 
 from _gallery_utils import data_path, gallery_image_path
