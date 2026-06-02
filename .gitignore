@@ -4,6 +4,11 @@ __pycache__/
 .pytest_cache/
 .vscode/
 
+gallery/_build/
+gallery/gallery/
+gallery/sg_execution_times.rst
+
+# Legacy local output from the old Sphinx source directory name.
 docs/_build/
 docs/gallery/
 docs/sg_execution_times.rst
@@ -16,6 +21,7 @@ image/gallery/*.png
 !image/gallery/penguins_highlight.png
 test_suite/.ipynb_checkpoints/
 test_suite/test_plots/
+test_suite/diff_plots/
 
 # testing
 same_scale_examples/

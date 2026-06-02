@@ -70,7 +70,7 @@ def same_scale():
     color_lst = ["#fdc086",  "#386cb0", "#7fc97f"]
     hi_value = ["Beggars","Citizens","Gentry"]
 
-    speaker_order=["Beggars", "Royalty", "Nobility", "Gentry", "Citizens", "Yeomanry"]
+    speaker_order=["Royalty", "Nobility", "Gentry", "Citizens", "Yeomanry", "Beggars"]
 
     hammock = hammock_plot.Hammock(data_df = df)
     ax = hammock.plot(var=var_lst,

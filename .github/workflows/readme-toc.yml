@@ -2,8 +2,16 @@ name: Check README TOC
 
 on:
   pull_request:
+    paths:
+      - ".github/workflows/readme-toc.yml"
+      - "README.md"
+      - "scripts/update_readme_toc.py"
   push:
     branches: [main]
+    paths:
+      - ".github/workflows/readme-toc.yml"
+      - "README.md"
+      - "scripts/update_readme_toc.py"
 
 jobs:
   readme-toc:
