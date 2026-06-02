@@ -149,8 +149,12 @@ hi_value = ["Beggars","Citizens","Gentry"]
 speaker_order=["Royalty", "Nobility", "Gentry", "Citizens", "Yeomanry", "Beggars"]
 
 hammock = hammock_plot.Hammock(data_df = df)
-ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,colors=color_lst, bar_width=0.6,missing=True,
-                value_order ={"speaker1":speaker_order,"speaker2":speaker_order} )
+ax = hammock.plot(var=var_lst,
+    uni_vfill=0.6,
+    connector_fraction=0.1,
+    hi_var = "speaker1", hi_value=hi_value,colors=color_lst,
+    missing=True,
+    value_order ={"speaker1":speaker_order,"speaker2":speaker_order})
 ```
 
 <img src="image/shakespeare_order.png" alt="Hammock plot for the Shakespeare data, with value_order specified" width="600"/>
