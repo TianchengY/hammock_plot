@@ -46,7 +46,12 @@ def missing_true():
     df = df_diabetes
     var = ["sataces","satcomm","satrate"]
     hammock = hammock_plot.Hammock(data_df = df)
-    ax = hammock.plot(var=var, missing=True, numerical_var_levels={"sataces": None, "satcomm": None, "satrate": None}, min_bar_height=0.2, save_path="image/diabetes.png") 
+    ax = hammock.plot(var=var, 
+                      missing=True, 
+                      numerical_var_levels={"sataces": None, "satcomm": None, "satrate": None}, 
+                      min_bar_height=0.2, 
+                      uni_vfill=0.3, 
+                      save_path="image/diabetes.png") 
 
 def speaker_order():
     df = df_shakespeare
@@ -58,7 +63,7 @@ def speaker_order():
 
     hammock = hammock_plot.Hammock(data_df = df)
     ax = hammock.plot(var=var_lst,
-                    uni_vfill=0.7,
+                    uni_vfill=0.6,
                     connector_fraction=0.1,
                     hi_var = "speaker1", hi_value=hi_value,colors=color_lst,missing=True,
                     value_order ={"speaker1":speaker_order,"speaker2":speaker_order},
@@ -74,7 +79,7 @@ def same_scale():
 
     hammock = hammock_plot.Hammock(data_df = df)
     ax = hammock.plot(var=var_lst,
-                    uni_vfill=0.7,
+                    uni_vfill=0.6,
                     connector_fraction=0.1,
                     hi_var = "speaker1", hi_value=hi_value,colors=color_lst,missing=True,
                     value_order ={"speaker1":speaker_order}, same_scale=["speaker1", "speaker2"],
