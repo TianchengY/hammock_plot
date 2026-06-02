@@ -1,0 +1,36 @@
+name: Check README TOC
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/readme-toc.yml"
+      - "README.md"
+      - "scripts/update_readme_toc.py"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/readme-toc.yml"
+      - "README.md"
+      - "scripts/update_readme_toc.py"
+
+jobs:
+  readme-toc:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Update README table of contents
+        run: python scripts/update_readme_toc.py
+
+      - name: Check README table of contents is up to date
+        run: |
+          if ! git diff --exit-code -- README.md; then
+            echo "README table of contents is out of date."
+            echo "Run: python scripts/update_readme_toc.py"
+            exit 1
+          fi

@@ -1,0 +1,38 @@
+play_name,long_name,characters,type,speaker1,speaker2,sex1,sex2
+All's Well,All's Well That Ends Well,22,comedy,Nobility,Nobility,F,M
+Antony,Antony and Cleopatra,53,tragedy,Gentry,Gentry,M,M
+As you like,As You Like It,26,comedy,Yeomanry,Yeomanry,M,M
+Comedy,The Comedy of Errors,19,comedy,Citizens,Nobility,M,M
+Coriolanus,Coriolanus,49,tragedy,Citizens,Citizens,M,M
+Cymbeline,Cymbeline,37,comedy,Gentry,Gentry,M,M
+Hamlet,Hamlet,30,tragedy,Yeomanry,Yeomanry,M,M
+Henry IV(1),Henry IV - Part 1,34,history,Royalty,Nobility,M,M
+Henry IV(2),Henry IV - Part 2,52,history,Nobility,Yeomanry,M,M
+Henry V,Henry V,44,history,Gentry,Gentry,M,M
+Henry VI(1),Henry VI - Part 1,54,history,Nobility,Nobility,M,M
+Henry VI(2),Henry VI - Part 2,60,history,Nobility,Royalty,M,M
+Henry VI(3),Henry VI - Part 3,43,history,Nobility,Nobility,M,M
+Henry VIII,Henry VIII,43,history,Nobility,Nobility,M,M
+Julius Caesar,Julius Caesar,47,tragedy,Gentry,Citizens,M,M
+King John,King John,27,history,Royalty,Nobility,M,M
+King Lear,King Lear,25,tragedy,Nobility,Nobility,M,M
+Love,Love's Labour's Lost,19,comedy,Royalty,Nobility,M,M
+Macbeth,Macbeth,38,tragedy,,,F,F
+Measure,Measure for Measure,23,comedy,Nobility,Nobility,M,M
+Merchant,The Merchant of Venice,22,comedy,Citizens,Gentry,M,M
+Merry Wives,The Merry Wives of Windsor,23,comedy,Gentry,Gentry,M,M
+Midsummer,A Midsummer Night's Dream,22,comedy,Nobility,Royalty,M,F
+Much Ado,Much Ado About Nothing,23,comedy,Nobility,Yeomanry,M,M
+Othello,Othello,25,tragedy,Gentry,Gentry,M,M
+Pericles,"Pericles, Prince of Tyre",43,comedy,Royalty,Nobility,M,M
+Richard II,Richard II,34,history,Royalty,Nobility,M,M
+Richard III,Richard III,53,history,Nobility,Nobility,M,M
+Romeo & Juliet,Romeo and Juliet,32,tragedy,Yeomanry,Yeomanry,M,M
+Shrew,The Taming of the Shrew,34,comedy,Beggars,Yeomanry,M,F
+Tempest,The Tempest,19,comedy,Citizens,Yeomanry,M,M
+Timon,Timon of Athens,48,tragedy,Citizens,Citizens,M,M
+Titus,Titus Andronicus,24,tragedy,Royalty,Nobility,M,M
+Troilus,Troilus and Cressida,27,tragedy,Nobility,Citizens,M,M
+Twelfth,Twelfth Night,18,comedy,Nobility,Gentry,M,M
+Two Gentlemen,The Two Gentlemen of Verona,17,comedy,Gentry,Gentry,M,M
+Winter Tale,The Winter's Tale,33,comedy,Nobility,Nobility,M,M

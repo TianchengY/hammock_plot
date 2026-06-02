@@ -40,6 +40,8 @@ class Unibar:
         self.missing = missing
         self.y_top = 0.0
         self.y_bottom = 0.0 # bottom of non missing values
+        self.draw_y_start = 0.0 # adjusted drawable bottom (incl. missing_padding + bottom_adjustment)
+        self.draw_y_end = 0.0 # adjusted drawable top (incl. top_adjustment)
         self.missing_placeholder = missing_placeholder
         self.val_order = val_order
         self.min_bar_height = min_bar_height
@@ -76,12 +78,14 @@ class Unibar:
         order = self.val_order
 
         for val in order:
+            # get number of occurrences of the value, and assign to the Value object.
             if self.weights is None:
                 cnt = int(counts.get(val, 0))
             else:
                 mask = self.df[self.name] == val
                 cnt = self.df.loc[mask, self.weights].sum()
 
+            # assigns a list of # occurrences which corresponds to each of the highlight colours.
             if cnt > 0:
                 subset = self.df[self.df[self.name] == val]
 
@@ -102,6 +106,7 @@ class Unibar:
             else:
                 occ_by_colour = [0] * len(all_colors)
 
+            # puts the constructed Value in a list associated with the Unibar.
             values.append(Value(
                 id=str(val),
                 occurrences=cnt,
@@ -157,26 +162,48 @@ class Unibar:
             # Update bottom for non-missing values: start above missing bar + padding
             bottom += self.missing_padding
 
+        # Box / violin draw each value as a thin point, not a bar, so no half-bar
+        # padding is reserved at the extremes: their value centres (where connectors
+        # attach) span the full [draw_y_start, draw_y_end], matching where the level
+        # labels and the box/violin body are drawn. Bar-like displays (rug /
+        # stacked_bar / bar / lumpy beanplot) still reserve half a bar. The same_scale
+        # path encodes the same exclusion via bar_like_for_same_scale in figure.py.
+        point_like = self.display_type in Defaults.CENTER_ATTACH_DISPLAYS
+
         # --- Adjust top for last non-missing bar ---
         if self.min_max_pos:
             top_adjustment =  max(self.min_bar_height / 2, self.min_max_pos[1]) if self.min_max_pos[1] != 0 else 0
+        elif point_like:
+            top_adjustment = 0
         else:
-            if self.display_type != "bar chart":
+            if self.display_type != "bar":
                 top_height = self.non_missing_vals[-1].occurrences * self.bar_unit
             else:
                 top_height = self.hbar_height
             top_adjustment = max(self.min_bar_height, top_height) / 2 if self.non_missing_vals and self.non_missing_vals[-1].occurrences != 0 else 0
         top -= top_adjustment
-        
+
         if self.min_max_pos:
             bottom_adjustment = max(self.min_bar_height / 2, self.min_max_pos[0]) if self.min_max_pos[0] != 0 else 0
+        elif point_like:
+            bottom_adjustment = 0
         else:
-            if self.display_type != "bar chart":
+            if self.display_type != "bar":
                 bottom_height = self.non_missing_vals[0].occurrences * self.bar_unit
             else:
                 bottom_height = self.hbar_height
             bottom_adjustment =  max(self.min_bar_height, bottom_height) / 2 if self.non_missing_vals and self.non_missing_vals[0].occurrences != 0 else 0
         bottom += bottom_adjustment
+
+        # For non rugplot bars, the bar-height-based adjustments don't apply. When same_scale is on,
+        # use the adjusted [bottom, top] so the shape aligns with rugplots in
+        # the group. Otherwise let the shape span the panel (minus missing area).
+        if self.min_max_pos:
+            self.draw_y_start = bottom
+            self.draw_y_end = top
+        else:
+            self.draw_y_start = (y_start + self.missing_padding) if self.missing else y_start
+            self.draw_y_end = y_end
 
         # --- Numeric values ---
         if self.val_type in [np.integer, np.floating] and self.non_missing_vals:
@@ -211,16 +238,20 @@ class Unibar:
                     v.set_y(centre=p)
 
         # --- String/Categorical values (with same_scale) ---
-        elif self.val_type == np.str_ and self.non_missing_vals and (self.min_max_pos or self.display_type == "bar chart"):
+        elif self.val_type == np.str_ and self.non_missing_vals and (self.min_max_pos or self.display_type == "bar"):
             n = len(self.non_missing_vals)
 
-            # spacing between centers
-            step = (top - bottom) / (n - 1)
+            if n == 1:
+                # Single shared slot: nothing to space; centre it in the band.
+                self.non_missing_vals[0].set_y(centre=(bottom + top) / 2)
+            else:
+                # spacing between centers
+                step = (top - bottom) / (n - 1)
 
-            for i, val in enumerate(self.non_missing_vals):
-                # place at center of each interval
-                pos = bottom + i * step
-                val.set_y(pos)
+                for i, val in enumerate(self.non_missing_vals):
+                    # place at center of each interval
+                    pos = bottom + i * step
+                    val.set_y(pos)
         
         # --- String/Categorical values (without same_scale) ---
         elif self.val_type == np.str_ and self.non_missing_vals:
@@ -301,21 +332,20 @@ class Unibar:
         5. spiky beanplots (draws a bean plot with a spikeplot inside)
         """
         if self.missing:
-            y_start += self.missing_padding
             # draw missing values
             self._draw_rectangles(ax, self.missing_vals, rectangle_painter)
 
-        if self.display_type == "rugplot" or self.display_type == "stacked bar":
+        if self.display_type == "rug" or self.display_type == "stacked_bar":
             self._draw_rectangles(ax, self.non_missing_vals, rectangle_painter)
         elif self.display_type == "violin":
-            self._draw_violin(ax, y_start, y_end)
+            self._draw_violin(ax, self.draw_y_start, self.draw_y_end)
         elif self.display_type == "box":
-            self._draw_boxplot(ax, y_start, y_end)
+            self._draw_boxplot(ax, self.draw_y_start, self.draw_y_end)
         elif self.display_type == "lumpy beanplot":
             self._draw_lumpy_beanplot(ax, rectangle_painter)
         elif self.display_type == "spiky beanplot":
-            self._draw_spiky_beanplot(ax, y_start, y_end, rectangle_painter)
-        elif self.display_type == "bar chart":
+            self._draw_spiky_beanplot(ax, self.draw_y_start, self.draw_y_end, rectangle_painter)
+        elif self.display_type == "bar":
             self._draw_hbar(ax, self.non_missing_vals, rectangle_painter)
         else:
             raise ValueError(f"Unknown display_type: {self.display_type}")
@@ -381,6 +411,21 @@ class Unibar:
             )
         
     def _prepare_scaled_data(self, y_start, y_end):
+        """
+        Collect the y-positions for the box/violin plots, split by colour.
+
+        Each value's number is mapped onto the [y_start, y_end] span, and that
+        position is recorded once per colour it appears in. Repetition by count
+        is left to _prepare_weights, which lines up with this output entry for
+        entry.
+
+        Args:
+            y_start, y_end: bottom and top of the drawable vertical span.
+
+        Returns (data_per_color, facecolors, edgecolors): the y-positions per
+        colour, the fill colours, and their matching edge colours. Empty lists
+        if there are no non-missing values.
+        """
         if not self.non_missing_vals:
             return [], [], []
 
@@ -407,6 +452,20 @@ class Unibar:
         return data_per_color, self.colors, [edge_color_from_face(c) for c in self.colors]
 
     def _prepare_weights(self, n_colors):
+        """
+        Give the frequency of each y-position from _prepare_scaled_data.
+
+        Walks the values the same way that method does, but records the
+        occurrence count (or weight-sum, if a weights column is set) instead of
+        the position. The box/violin code zips the two together so the KDE and
+        quantiles know how many observations sit at each spot.
+
+        Args:
+            n_colors: number of colours to split the weights across.
+
+        Returns weights_per_color: a list of weights per colour, aligned with
+        _prepare_scaled_data's output.
+        """
         weights_per_color = [[] for _ in range(n_colors)]
         for v in self.non_missing_vals:
             occs = v.occ_by_colour
@@ -421,7 +480,11 @@ class Unibar:
 
     def _weighted_quantile(self, data, weights, quantiles):
         """
-        Exact weighted quantiles via sorted cumulative weights. No resampling.
+        Weighted quantiles matching matplotlib boxplot's default convention
+        (numpy.percentile / Hyndman-Fan type 7): target position p*(W-1)+1
+        on the expanded sample, with linear interpolation between adjacent
+        order statistics. For unit weights this equals numpy.quantile(...).
+        For integer weights it equals expanding-then-quantiling.
         data and weights must be the same length.
         """
         data = np.array(data, dtype=float)
@@ -435,15 +498,25 @@ class Unibar:
         sorter = np.argsort(data)
         data = data[sorter]
         weights = weights[sorter]
-        cumulative = np.cumsum(weights)
-        cumulative /= cumulative[-1]
-        return np.interp(quantiles, cumulative, data)
+        cum = np.cumsum(weights)
+        W = cum[-1]
+
+        quantiles = np.asarray(quantiles, dtype=float)
+        # we decided to use the p*(n-1)+1 method in line with other software packages. See closed issue on github.
+        target = quantiles * (W - 1) + 1
+        lower = np.floor(target)
+        frac = target - lower
+
+        n = len(data)
+        lo_idx = np.clip(np.searchsorted(cum, lower, side='left'), 0, n - 1)
+        hi_idx = np.clip(np.searchsorted(cum, lower + 1, side='left'), 0, n - 1)
+        return (1 - frac) * data[lo_idx] + frac * data[hi_idx]
 
     def _draw_violin(self, ax, y_start, y_end, draw_boxplot=True):
         """
         Draw a violin plot with optional split halves and overlaid boxplots.
-        Uses weighted KDE (scipy) when weights are present, otherwise falls
-        back to matplotlib's violinplot for identical unweighted behaviour.
+        Uses weighted KDE (scipy); each unique value's frequency comes from
+        its occurrence count or weight-sum.
         """
 
         data_per_color, facecolors, edgecolors = self._prepare_scaled_data(y_start, y_end)
@@ -476,11 +549,8 @@ class Unibar:
             ax.fill_betweenx(y_grid, xl, xr, color=color, alpha=self.alpha)
 
         def draw_inner_box(data, weights, pos_x, width, edgecolor):
-            """Draw box/whisker using weighted quantiles (or np.percentile if unweighted)."""
-            if weights is not None:
-                q1, median, q3 = self._weighted_quantile(data, weights, [0.25, 0.5, 0.75])
-            else:
-                q1, median, q3 = np.percentile(data, [25, 50, 75])
+            """Draw box/whisker using weighted quantiles."""
+            q1, median, q3 = self._weighted_quantile(data, weights, [0.25, 0.5, 0.75])
             iqr = q3 - q1
             arr = np.array(data, dtype=float)
             lo = arr[arr >= q1 - 1.5 * iqr].min()
@@ -497,24 +567,10 @@ class Unibar:
             data = data_per_color[0]
             if not data:
                 return
-            weights = weights_per_color[0] if weights_per_color else None
+            weights = weights_per_color[0]
 
-            if weights is None:
-                # original matplotlib path — pixel-perfect match to unweighted behaviour
-                parts = ax.violinplot(
-                    dataset=[data],
-                    positions=[self.pos_x],
-                    widths=self.width,
-                    showmeans=False, showmedians=False, showextrema=False,
-                    bw_method=self.violin_bw_method,
-                )
-                for pc in parts['bodies']:
-                    pc.set_facecolor(facecolors[0])
-                    pc.set_edgecolor('none')
-                    pc.set_alpha(self.alpha)
-            else:
-                y_grid, density = make_kde_path(data, weights)
-                fill_violin(y_grid, density, facecolors[0], side='full')
+            y_grid, density = make_kde_path(data, weights)
+            fill_violin(y_grid, density, facecolors[0], side='full')
 
             if draw_boxplot:
                 draw_inner_box(data, weights, self.pos_x, self.width * 0.1, edgecolors[0])
@@ -523,41 +579,15 @@ class Unibar:
         else:
             right_data    = data_per_color[0]
             left_data     = data_per_color[1]
-            right_weights = (weights_per_color[0] if weights_per_color else None)
-            left_weights  = (weights_per_color[1] if weights_per_color else None)
+            right_weights = weights_per_color[0]
+            left_weights  = weights_per_color[1]
 
-            if weights_per_color is None:
-                # original matplotlib path for split violin
-                if left_data:
-                    parts_left = ax.violinplot(
-                        dataset=[left_data], positions=[self.pos_x], widths=self.width,
-                        showmeans=False, showmedians=False, showextrema=False,
-                    )
-                    for pc in parts_left['bodies']:
-                        verts = pc.get_paths()[0].vertices
-                        verts[:, 0] = np.clip(verts[:, 0], -np.inf, self.pos_x)
-                        pc.set_facecolor(facecolors[1])
-                        pc.set_edgecolor('none')
-                        pc.set_alpha(self.alpha)
-
-                if right_data:
-                    parts_right = ax.violinplot(
-                        dataset=[right_data], positions=[self.pos_x], widths=self.width,
-                        showmeans=False, showmedians=False, showextrema=False,
-                    )
-                    for pc in parts_right['bodies']:
-                        verts = pc.get_paths()[0].vertices
-                        verts[:, 0] = np.clip(verts[:, 0], self.pos_x, np.inf)
-                        pc.set_facecolor(facecolors[0])
-                        pc.set_edgecolor('none')
-                        pc.set_alpha(self.alpha)
-            else:
-                if right_data:
-                    y_grid, density = make_kde_path(right_data, right_weights)
-                    fill_violin(y_grid, density, facecolors[0], side='right')
-                if left_data:
-                    y_grid, density = make_kde_path(left_data, left_weights)
-                    fill_violin(y_grid, density, facecolors[1], side='left')
+            if right_data:
+                y_grid, density = make_kde_path(right_data, right_weights)
+                fill_violin(y_grid, density, facecolors[0], side='right')
+            if left_data:
+                y_grid, density = make_kde_path(left_data, left_weights)
+                fill_violin(y_grid, density, facecolors[1], side='left')
 
             offset = self.width * 0.05
             if draw_boxplot:
@@ -570,9 +600,8 @@ class Unibar:
 
     def _draw_boxplot(self, ax, y_start, y_end, gap_ratio=0.02):
         """
-        Draw a boxplot.
-        Uses weighted quantiles when weights are present, otherwise falls back
-        to matplotlib's boxplot for identical unweighted behaviour.
+        Draw a boxplot using weighted quantiles. Each unique value's
+        frequency comes from its occurrence count or weight-sum.
         """
         def rotate_left(lst):
             if len(lst) > 1:
@@ -623,64 +652,43 @@ class Unibar:
             if not data:
                 continue
 
-            weights = weights_per_color[i] if weights_per_color else None
+            weights = weights_per_color[i]
             pos_x   = offsets[i]
             bw      = box_widths[i]
 
-            if weights is None:
-                # original matplotlib path — identical to previous unweighted behaviour
-                bp = ax.boxplot(
-                    x=[data],
-                    positions=[pos_x],
-                    widths=bw,
-                    vert=True,
-                    patch_artist=True,
-                    manage_ticks=False,
-                    showfliers=True,
-                    flierprops=dict(marker='o', markerfacecolor=facecolors[i], markeredgecolor='none'),
-                )
-                for element in ['whiskers', 'caps', 'medians']:
-                    for artist in bp[element]:
-                        artist.set_color(edgecolors[i])
-                for patch in bp['boxes']:
-                    patch.set_facecolor(facecolors[i])
-                    patch.set_edgecolor(edgecolors[i])
-                    patch.set_alpha(self.alpha)
-            else:
-                # weighted path — draw manually using weighted quantiles
-                q1, median, q3 = self._weighted_quantile(data, weights, [0.25, 0.5, 0.75])
-                iqr   = q3 - q1
-                arr   = np.array(data, dtype=float)
-                lo    = arr[arr >= q1 - 1.5 * iqr].min()
-                hi    = arr[arr <= q3 + 1.5 * iqr].max()
-                hw    = bw / 2
+            q1, median, q3 = self._weighted_quantile(data, weights, [0.25, 0.5, 0.75])
+            iqr   = q3 - q1
+            arr   = np.array(data, dtype=float)
+            lo    = arr[arr >= q1 - 1.5 * iqr].min()
+            hi    = arr[arr <= q3 + 1.5 * iqr].max()
+            hw    = bw / 2
 
-                # Box fill
-                ax.broken_barh(
-                    [(pos_x - hw, bw)], (q1, q3 - q1),
-                    facecolors=facecolors[i], edgecolors=edgecolors[i],
-                    linewidth=1.2, alpha=self.alpha,
+            # Box fill
+            ax.broken_barh(
+                [(pos_x - hw, bw)], (q1, q3 - q1),
+                facecolors=facecolors[i], edgecolors=edgecolors[i],
+                linewidth=1.2, alpha=self.alpha,
+            )
+            # Median line
+            ax.plot([pos_x - hw, pos_x + hw], [median, median],
+                    color=edgecolors[i], linewidth=1.5)
+            # Whiskers
+            ax.plot([pos_x, pos_x], [lo, q1], color=edgecolors[i], linewidth=1)
+            ax.plot([pos_x, pos_x], [q3, hi], color=edgecolors[i], linewidth=1)
+            # Caps
+            ax.plot([pos_x - hw * 0.5, pos_x + hw * 0.5], [lo, lo],
+                    color=edgecolors[i], linewidth=1)
+            ax.plot([pos_x - hw * 0.5, pos_x + hw * 0.5], [hi, hi],
+                    color=edgecolors[i], linewidth=1)
+            # Fliers
+            flier_mask = (arr < q1 - 1.5 * iqr) | (arr > q3 + 1.5 * iqr)
+            fliers = arr[flier_mask]
+            if len(fliers):
+                ax.scatter(
+                    [pos_x] * len(fliers), fliers,
+                    marker='o', color=facecolors[i], edgecolors='none',
+                    s=10, alpha=self.alpha, zorder=3,
                 )
-                # Median line
-                ax.plot([pos_x - hw, pos_x + hw], [median, median],
-                        color=edgecolors[i], linewidth=1.5)
-                # Whiskers
-                ax.plot([pos_x, pos_x], [lo, q1], color=edgecolors[i], linewidth=1)
-                ax.plot([pos_x, pos_x], [q3, hi], color=edgecolors[i], linewidth=1)
-                # Caps
-                ax.plot([pos_x - hw * 0.5, pos_x + hw * 0.5], [lo, lo],
-                        color=edgecolors[i], linewidth=1)
-                ax.plot([pos_x - hw * 0.5, pos_x + hw * 0.5], [hi, hi],
-                        color=edgecolors[i], linewidth=1)
-                # Fliers
-                flier_mask = (arr < q1 - 1.5 * iqr) | (arr > q3 + 1.5 * iqr)
-                fliers = arr[flier_mask]
-                if len(fliers):
-                    ax.scatter(
-                        [pos_x] * len(fliers), fliers,
-                        marker='o', color=facecolors[i], edgecolors='none',
-                        s=10, alpha=self.alpha, zorder=3,
-                    )
     
     def _draw_lumpy_beanplot(self, ax, rectangle_painter):
         self._draw_violin(ax,
@@ -830,6 +838,9 @@ class Unibar:
     
     # draws missing values as well
     def _draw_hbar(self, ax, values, rectangle_painter):
+        """
+            Used to draw the unibar background for the horizontal bar chart display option (categorical data only)
+        """
         n = len(values)
         
         left_pts, right_pts, weights = [], [], []
@@ -926,7 +937,7 @@ class Unibar:
     def _draw_level_labels(self, ax, y_start, y_end):
         """
         2 ways to draw levels:
-        1. Display type == rugplot
+        1. Display type == rug
             - this means that the bottommost and topmost values are NOT centred at the bottom and the top of the drawable space.
             - Labels must be offset slightly to accomodate for the adjustment made
         2. Display type == box or violin
@@ -948,23 +959,18 @@ class Unibar:
                 indices = np.linspace(0, len(possible_vals) - 1, num_levels, dtype=int)
                 level_vals = possible_vals[indices]
         
-        if self.display_type == "rugplot" or self.display_type == "lumpy beanplot":
+        if self.display_type == "rug" or self.display_type == "lumpy beanplot":
             # Compute coordinate range based on first and last non-missing bar centers
             first_center = self.non_missing_vals[0].vert_centre
             last_center = self.non_missing_vals[-1].vert_centre
-            
-            bottom_coord =  (self.y_bottom + self.min_max_pos[0]) if self.min_max_pos else first_center
+
+            bottom_coord = (self.y_bottom + self.min_max_pos[0]) if self.min_max_pos else first_center
             top_coord = (self.y_top - self.min_max_pos[1]) if self.min_max_pos else last_center
-        else: # "box" or "violin" display types
-            bottom_coord = y_start
-            top_coord = y_end
-    
-        if self.missing and self.min_max_pos and bottom_coord == self.y_bottom + self.min_max_pos[0]:
-            bottom_coord += self.missing_padding
-        elif self.missing and self.display_type in ["violin", "box", "spiky beanplot"]:
-            bottom_coord += self.missing_padding
-        
-        level_coords = [bottom_coord + (top_coord - bottom_coord) * (v - min_val) / (max_val - min_val) 
+        else: # "box" or "violin" or "spiky beanplot"
+            bottom_coord = self.draw_y_start
+            top_coord = self.draw_y_end
+
+        level_coords = [bottom_coord + (top_coord - bottom_coord) * (v - min_val) / (max_val - min_val)
                         for v in level_vals]
 
         for tick_val, tick_y in zip(level_vals, level_coords):

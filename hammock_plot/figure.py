@@ -123,7 +123,7 @@ class Figure:
             label_opts = self.label_options[v] if self.label_options and v in self.label_options else None
 
             # -------------- DETERMINE DISPLAY AND LABEL TYPES ---------------------
-            uni_display_type = "rugplot" if dtype != np.str_ else "stacked bar" # default
+            uni_display_type = "rug" if dtype != np.str_ else "stacked_bar" # default
             if display_type and v in display_type:
                 uni_display_type = display_type[v]
             label_type = "default"
@@ -139,11 +139,11 @@ class Figure:
                 if numerical_var_levels[v]:
                     label_type="levels"
                     num_levels = numerical_var_levels[v]
-                elif uni_display_type == "rugplot": # v: None - labels are by value only if display is rugplot
+                elif uni_display_type == "rug": # v: None - labels are by value only if display is rugplot
                     label_type = "values"
                 
             # long boolean expression represents the conditions for drawing small white lines to divide rugplot rectangles
-            draw_white_dividers = (uni_display_type == "stacked bar" or uni_display_type == "bar chart") and self.uni_vfill == 1
+            draw_white_dividers = (uni_display_type == "stacked_bar" or uni_display_type == "bar") and self.uni_vfill == 1
 
             uni = Unibar(
                 df=self.data_df,
@@ -244,9 +244,9 @@ class Figure:
         only_hbars = True
 
         for uni in self.unibars:
-            if uni.display_type == "stacked bar" or uni.display_type == "rugplot":
+            if uni.display_type == "stacked_bar" or uni.display_type == "rug":
                 only_hbars = False
-            if uni.display_type == "bar chart":
+            if uni.display_type == "bar":
                 max_val_occ = max(max_val_occ, max(val.occurrences for val in uni.values))
                 max_num_categories = max(max_num_categories, len(uni.non_missing_vals))
         if max_num_categories > 0:
@@ -277,9 +277,9 @@ class Figure:
                                  bar_unit=self.bar_unit,
                                  missing_padding=missing_padding)
         
-        # determine same_scale positioning
-        # BUG: same_scale and missing=True and same_scale_type == "numerical"
-        # BUG: this should be determined BEFORE bar_unit and stuff is calculated
+        # determine same_scale positioning. bar_unit / missing_padding are already
+        # finalised above (incl. the missing + hbar adjustments), so the padding
+        # below is computed against the final bar_unit.
         if same_scale_type and same_scale_type == "numerical":
             # Determine ranges for unibars that should use same_scale
             global_range = None
@@ -297,11 +297,16 @@ class Figure:
                     for uni_name in same_scale:
                         global_range = (global_min, global_max)
                 
-                # set variables so that same_scale variables align with each other
+                # set variables so that same_scale variables align with each other.
+                # Only unibars whose display draws a *value-specific bar* at min/max
+                # (rugplot / stacked bar / lumpy beanplot) need padding reserved for
+                # half that bar's height. Box / violin / spiky beanplot draw value 0
+                # as a thin point, so they don't contribute to the adjustment.
+                bar_like_for_same_scale = {"rug", "stacked_bar", "lumpy beanplot"}
                 max_min_occ = 0 # maximum occurrences observed across all values that are at the minimum value on same_scale
                 max_max_occ = 0 # maximum occurrences observed across all values that are at the maximum value on same_scale
                 for uni in self.unibars:
-                    if uni.name in same_scale:
+                    if uni.name in same_scale and uni.display_type in bar_like_for_same_scale:
                         for val in uni.values:
                             if val.id == self.missing_placeholder: continue #skip missing placeholder
                             if val.numeric == global_min:
@@ -319,24 +324,34 @@ class Figure:
         elif same_scale_type and same_scale_type == "categorical":
             # determine the positions of the first and last categories to make them line up
             if same_scale:
+                # Compute the bottom/top padding from the same_scale group members. The padding reserves half the
+                # extreme bar's height so the bottom/top slot's bar edge
+                # touches the floor/ceiling, and sharing it across members keeps the
+                # shared scale aligned. Non-members get min_max_pos=None and lay out independently, each
+                # spanning the full band via the no-same_scale branch.
                 max_btm_height = 0
                 max_top_height = 0
                 for uni in self.unibars:
-                    # note: there may be a bug with same_scale and missing=True - need to test
-                    if uni.name in same_scale:
-                        if uni.display_type == "bar chart":
+                    if uni.name not in same_scale or uni.val_type != np.str_:
+                        continue
+                    if uni.display_type == "bar":
+                        # bar charts draw every present value at a fixed hbar_height,
+                        # but only reserve padding at an end this member actually
+                        # occupies (its bottom/top slot may be an empty merged slot).
+                        if uni.non_missing_vals and uni.non_missing_vals[0].occurrences > 0:
                             max_btm_height = max(max_btm_height, hbar_height)
+                        if uni.non_missing_vals and uni.non_missing_vals[-1].occurrences > 0:
                             max_top_height = max(max_top_height, hbar_height)
-                        else:
-                            bottommost_val = self.value_order[uni.name][0]
-                            if bottommost_val == self.missing_placeholder:
-                                bottommost_val = self.value_order[uni.name][1]
-                            topmost_val = self.value_order[uni.name][-1]
-                            for val in uni.values:
-                                if val.id == bottommost_val:
-                                    max_btm_height = max(max_btm_height, val.occurrences * self.bar_unit)
-                                if val.id == topmost_val:
-                                    max_top_height = max(max_top_height, val.occurrences * self.bar_unit)
+                    else:
+                        # Use the member's actual bottommost / topmost rendered value.
+                        # The merged value_order may include empty slots; their
+                        # occurrences are 0, so they don't inflate the padding.
+                        if not uni.non_missing_vals:
+                            continue
+                        btm_val = uni.non_missing_vals[0]
+                        top_val = uni.non_missing_vals[-1]
+                        max_btm_height = max(max_btm_height, btm_val.occurrences * self.bar_unit)
+                        max_top_height = max(max_top_height, top_val.occurrences * self.bar_unit)
                 min_max_pos = (max_btm_height / 2, max_top_height / 2)
 
                 for uni in self.unibars:
@@ -505,9 +520,18 @@ class Figure:
                 if lv_obj is None or rv_obj is None:
                     continue
 
-                # Use precomputed stacked centers
-                ly = next((c_y for r, _, _, c_y in outgoing[lv] if r == rv), lv_obj.vert_centre)
-                ry = next((c_y for l, _, _, c_y in incoming[rv] if l == lv), rv_obj.vert_centre)
+                # Bars (rug / stacked_bar / beanplots) draw each value as a bar, so
+                # connections are stacked to fill that bar's height. Box/violin draw
+                # the value as a point, so connections CENTRE-ATTACH at the value's
+                # vert_centre and fan out to their targets (parallel-coordinate style).
+                if left_uni.display_type in Defaults.CENTER_ATTACH_DISPLAYS:
+                    ly = lv_obj.vert_centre
+                else:
+                    ly = next((c_y for r, _, _, c_y in outgoing[lv] if r == rv), lv_obj.vert_centre)
+                if right_uni.display_type in Defaults.CENTER_ATTACH_DISPLAYS:
+                    ry = rv_obj.vert_centre
+                else:
+                    ry = next((c_y for l, _, _, c_y in incoming[rv] if l == lv), rv_obj.vert_centre)
 
                 lx = left_uni.pos_x + self.unibar_width / 2 + self.gap_btwn_uni_multi
                 rx = right_uni.pos_x - self.unibar_width / 2 - self.gap_btwn_uni_multi
