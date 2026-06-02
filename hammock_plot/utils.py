@@ -1,5 +1,4 @@
 import re
-from collections import defaultdict, deque
 import colorsys
 import matplotlib.colors as mcolors
 import pandas as pd
@@ -18,21 +17,25 @@ class Defaults:
     # DEFAULT_COLOR: str = "#b675df"
 
     # Layout
-    UNI_VFILL: float = 0.08
-    CONNECTOR_FRACTION: float = 1
-    UNI_HFILL: float = 0.3
-    MIN_BAR_HEIGHT: float = 0.15
-    BAR_UNIT: float = 1.0
-    XMARGIN: float = 0.02
-    YMARGIN: float = 0.04
-    SCALE: float = 10
-    GAP_BTWN_UNI_MULTI: float = 2
+    UNI_VFILL: float = 0.08 # default unibar vertical fill
+    CONNECTOR_FRACTION: float = 1 # default proportion fraction of connectors : vfill
+    UNI_HFILL: float = 0.3 # default horizontal fill
+    MIN_BAR_HEIGHT: float = 0.15 # minimum bar height
+    BAR_UNIT: float = 1.0 # default bar unit (how many pixels/obs.) is recalculated on init.
+    XMARGIN: float = 0.02 # margin on x axis
+    YMARGIN: float = 0.04 # margin on y axis
+    SCALE: float = 10 #  width/height/location multiplier to get pixel values
+    GAP_BTWN_UNI_MULTI: float = 2 # required gap between unibars and the multivariate connectors
     MIN_MULTI_WIDTH: float = 3 # in pixels
-    SPACE_ABOVE_MISSING: float = 2
-    NUM_LEVELS = 7
-    ALPHA = 0.7
-    WHITE_DIVIDER_HEIGHT = 0.3
-    SPIKE_THICKNESS = 0.3
+    SPACE_ABOVE_MISSING: float = 2 # space above missing values (separating missing from non-missing)
+    NUM_LEVELS = 7 # default number of levels for a numeric variable
+    ALPHA = 0.7 # alpha value of the colours
+    WHITE_DIVIDER_HEIGHT = 0.3 # height of white divider when uni_vfill =1
+    SPIKE_THICKNESS = 0.3 # width of spikes in spiky beanplot
+    # Display types drawn as a point (not a bar): their connectors attach at the
+    # value centre (parallel-coordinate fan) instead of stacking to fill a bar.
+    CENTER_ATTACH_DISPLAYS = {"box", "violin"}
+
 
 def clean_expression(expr: str) -> str:
     """
@@ -90,37 +93,48 @@ def safe_numeric(val):
                 return val
 
 def resolve_ordering(orders):
-    graph = defaultdict(set)
-    indegree = defaultdict(int)
-    nodes = set()
-
-    # Build graph
+    """
+        Merge several category orderings (from variables in same_scale) into one
+        ordering that doesn't disagree with any of them. Returns None if they
+        conflict (e.g. one says A before B and another says B before A).
+    """
+    # all_categories keeps every category in the order we first see it.
+    all_categories = []
     for seq in orders:
-        for i in range(len(seq)):
-            nodes.add(seq[i])
-            if i > 0:
-                u, v = seq[i-1], seq[i]
-                if v not in graph[u]:
-                    graph[u].add(v)
-                    indegree[v] += 1
+        for cat in seq:
+            if cat not in all_categories:
+                all_categories.append(cat)
 
-    # Initialize queue with nodes of indegree 0
-    q = deque([n for n in nodes if indegree[n] == 0])
-    order = []
+    # must_come_after[x] = the categories that have to be placed after x
+    must_come_after = {cat: [] for cat in all_categories}
+    for seq in orders:
+        for i in range(1, len(seq)):
+            before = seq[i - 1]
+            after = seq[i]
+            if after not in must_come_after[before]:
+                must_come_after[before].append(after)
 
-    while q:
-        u = q.popleft()
-        order.append(u)
-        for v in graph[u]:
-            indegree[v] -= 1
-            if indegree[v] == 0:
-                q.append(v)
+    result = []
+    while len(result) < len(all_categories):
+        # find the next category we are allowed to place: one that isn't placed
+        # yet and has nothing left that must come before it.
+        next_cat = None
+        for cat in all_categories:
+            if cat in result:
+                continue
+            waiting_on = [other for other in all_categories
+                          if other not in result and cat in must_come_after[other]]
+            if len(waiting_on) == 0:
+                next_cat = cat
+                break
 
-    # If we used all nodes, success
-    if len(order) == len(nodes):
-        return order
-    else:
-        return None
+        if next_cat is None:
+            # nothing can be placed but some categories are left -> there's a loop
+            return None
+
+        result.append(next_cat)
+
+    return result
 
 def edge_color_from_face(facecolor, delta=0.3):
     """
@@ -160,6 +174,9 @@ def edge_color_from_face(facecolor, delta=0.3):
 # Color indexing helpers
 # -----------------------------
 def _compute_color_index(val: Any, hi_missing, hi_value) -> int:
+    """
+        Calculates the appropriate colour for a specific row, given the hi_missing and hi_value parameters
+    """
     missing_buffer = 1 if hi_missing else 0
 
     if pd.isna(val):
@@ -199,6 +216,10 @@ def _compute_color_index(val: Any, hi_missing, hi_value) -> int:
     return 0
 
 def assign_color_index(df: pd.DataFrame, var_list: List[str], hi_missing, missing_placeholder, hi_var, hi_value) -> pd.DataFrame:
+    """
+        Assigns each row in the dataframe with a colour index; calculates which rows are highlighted which colour.
+    """
+    
     df["color_index"] = 0  # default
 
     # Highlight missing values first
@@ -218,6 +239,9 @@ def assign_color_index(df: pd.DataFrame, var_list: List[str], hi_missing, missin
     return df
 
 def get_formatted_label(datatype, value):
+    """
+        Returns the formatted label version (in particular, returns something nicer for numeric vals)
+    """
     if value is None or pd.isna(value):
         return value
     # if the label is a string

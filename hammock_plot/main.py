@@ -188,8 +188,8 @@ class Hammock:
                 )
 
             for variable, cur_display_type in display_type.items():
-                numerical_display_types = ["box", "violin", "rugplot"]#, "lumpy beanplot", "spiky beanplot"]
-                categorical_display_types = ["bar chart", "stacked bar"]
+                numerical_display_types = ["box", "violin", "rug"]#, "lumpy beanplot", "spiky beanplot"]
+                categorical_display_types = ["bar", "stacked_bar"]
                 if cur_display_type in numerical_display_types and var_types[variable] == np.str_:
                     raise ValueError(
                         f'Cannot assign display type {cur_display_type} to categorical variable {variable}.'
