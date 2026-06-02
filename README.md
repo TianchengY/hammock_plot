@@ -118,7 +118,11 @@ The three variables represent different ordinal scales for satisfaction. We are 
 ```python
 var = ["sataces","satcomm","satrate"]
 hammock = hammock_plot.Hammock(data_df = df)
-ax = hammock.plot(var=var, missing=True, min_bar_height=0.2,numerical_var_levels={"sataces": None, "satcomm": None, "satrate": None})
+ax = hammock.plot(var=var, 
+        missing=True, 
+        numerical_var_levels={"sataces": None, "satcomm": None, "satrate": None}, 
+        min_bar_height=0.2, 
+        uni_vfill=0.3) 
 ```
 
 <img src="image/diabetes.png" alt="Hammock plot for the Diabetes Data" width="600"/>
@@ -145,8 +149,12 @@ hi_value = ["Beggars","Citizens","Gentry"]
 speaker_order=["Royalty", "Nobility", "Gentry", "Citizens", "Yeomanry", "Beggars"]
 
 hammock = hammock_plot.Hammock(data_df = df)
-ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,colors=color_lst, bar_width=0.6,missing=True,
-                value_order ={"speaker1":speaker_order,"speaker2":speaker_order} )
+ax = hammock.plot(var=var_lst,
+    uni_vfill=0.6,
+    connector_fraction=0.1,
+    hi_var = "speaker1", hi_value=hi_value,colors=color_lst,
+    missing=True,
+    value_order ={"speaker1":speaker_order,"speaker2":speaker_order})
 ```
 
 <img src="image/shakespeare_order.png" alt="Hammock plot for the Shakespeare data, with value_order specified" width="600"/>
@@ -155,8 +163,13 @@ ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,colors=colo
 `speaker1` and `speaker2` should have the same layout, but only `speaker1` has the category Beggars. We can force the same layout using `same_scale`.
 ```python
 hammock = hammock_plot.Hammock(data_df = df)
-ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,colors=color_lst, bar_width=0.6,missing=True,
-                value_order ={"speaker1":speaker_order}, same_scale=["speaker1", "speaker2"] )
+ax = hammock.plot(var=var_lst,
+      uni_vfill=0.6,
+      connector_fraction=0.1,
+      hi_var = "speaker1", hi_value=hi_value,colors=color_lst,
+      missing=True,
+      value_order ={"speaker1":speaker_order}, 
+      same_scale=["speaker1", "speaker2"])
 ```
 <img src="image/shakespeare_scale.png" alt="Hammock plot for the Shakespeare data, with same_scale specified" width="600"/>
 
@@ -308,5 +321,5 @@ There is also a Stata implementation `hammock` (available from the Stata archive
 ## Authors
 
 - Tiancheng Yang t77yang@uwaterloo.ca
-- Sandra Huang s77huang@uwaterloo.ca
+- Sandra Huang sandra.huang@uwaterloo.ca
 - Matthias Schonlau schonlau@uwaterloo.ca
