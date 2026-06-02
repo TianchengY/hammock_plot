@@ -163,8 +163,13 @@ ax = hammock.plot(var=var_lst,
 `speaker1` and `speaker2` should have the same layout, but only `speaker1` has the category Beggars. We can force the same layout using `same_scale`.
 ```python
 hammock = hammock_plot.Hammock(data_df = df)
-ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,colors=color_lst, bar_width=0.6,missing=True,
-                value_order ={"speaker1":speaker_order}, same_scale=["speaker1", "speaker2"] )
+ax = hammock.plot(var=var_lst,
+      uni_vfill=0.6,
+      connector_fraction=0.1,
+      hi_var = "speaker1", hi_value=hi_value,colors=color_lst,
+      missing=True,
+      value_order ={"speaker1":speaker_order}, 
+      same_scale=["speaker1", "speaker2"])
 ```
 <img src="image/shakespeare_scale.png" alt="Hammock plot for the Shakespeare data, with same_scale specified" width="600"/>
 
