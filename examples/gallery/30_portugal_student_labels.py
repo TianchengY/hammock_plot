@@ -65,9 +65,9 @@ hammock = hammock_plot.Hammock(data_df=df)
 ax = hammock.plot(
     var=plot_vars,
     value_order={
-        "medu": ["none", "1-5th grade", "5-9th grade", "secondary", 
+        "medu": ["none", "1-5th grade", "5-9th grade", "secondary",
                  "higher educ"],
-        "fedu": ["none", "1-5th grade", "5-9th grade", "secondary", 
+        "fedu": ["none", "1-5th grade", "5-9th grade", "secondary",
                  "higher educ"],
         "studytime": ["<2 hrs", "2-5 hrs", "5-10 hrs", ">10 hrs"],
         "failures": [0, 1, 2, 3],

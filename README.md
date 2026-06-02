@@ -19,9 +19,9 @@
 
 ## Description
 
-The hammock visualizes categorical or mixed categorical and numerical data. The hammock plot uses parallel coordinates which means that the variable axes are parallel to one another. Categories within a variable are spread out along a vertical line. Categories of adjacent variables are connected by boxes (rectangles or parallelograms). The width of a box is proportional to the number of observations that the box represents (i.e. have the same values/categories for the two variables). The "width" of a box refers to the distance between the longer set of parallel lines rather than the vertical distance. 
+The hammock visualizes categorical or mixed categorical and numerical data. The hammock plot uses parallel coordinates which means that the variable axes are parallel to one another. Categories within a variable are spread out along a vertical line. Categories of adjacent variables are connected by boxes (rectangles or parallelograms). The width of a box is proportional to the number of observations that the box represents (i.e. have the same values/categories for the two variables). The "width" of a box refers to the distance between the longer set of parallel lines rather than the vertical distance.
 
-If boxes are very thin (e.g., they just represent one observation) they look like a line. In that case, if no labels or missing values are used, the hammock plot corresponds to a parallel coordinate plot. 
+If boxes are very thin (e.g., they just represent one observation) they look like a line. In that case, if no labels or missing values are used, the hammock plot corresponds to a parallel coordinate plot.
 
 ## Gallery
 Click any image to explore the whole gallery or use the direct link: [Gallery](https://tianchengy.github.io/hammock_plot/gallery).
@@ -62,7 +62,7 @@ import pandas as pd
 df = pd.read_csv('./data/data_asthma.csv')
 ```
 
-Minimal example of a hammock plot: 
+Minimal example of a hammock plot:
 ```python
 var = ["hospitalizations","group","gender","comorbidities"]
 hammock = hammock_plot.Hammock(data_df = df)
@@ -72,7 +72,7 @@ ax = hammock.plot(var=var)
 <img src="image/asthma_minimal.png" alt="Minimal example for a Hammock plot" width="600"/>
 
 
-The labels for the numerical variables aren't as desired; we would like the labels directly drawn on the data. For our numerical variables, we ignore the level management and instead label each value or level  that occurs in the variable.  
+The labels for the numerical variables aren't as desired; we would like the labels directly drawn on the data. For our numerical variables, we ignore the level management and instead label each value or level  that occurs in the variable.
 
 ```python
 numeric_levels = {"comorbidities": None, "hospitalizations": None}
@@ -81,7 +81,7 @@ ax = hammock.plot(var=var, numerical_var_levels=numeric_levels)
 
 <img src="image/asthma_levels.png" alt="Hammock plot" width="600"/>
 
-The ordering of the child-adolescent-adult variable is not in the desired order; adult should not be in the middle. We now specify a specific order, child-adolescent-adult. 
+The ordering of the child-adolescent-adult variable is not in the desired order; adult should not be in the middle. We now specify a specific order, child-adolescent-adult.
 
 ```python
 group_order = ["child", "adolescent", "adult"]
@@ -114,16 +114,16 @@ import pandas as pd
 df = pd.read_csv('./data/data_diabetes.csv')
 ```
 
-The three variables represent different ordinal scales for satisfaction. We are checking for missing values: 
+The three variables represent different ordinal scales for satisfaction. We are checking for missing values:
 ```python
 var = ["sataces","satcomm","satrate"]
 hammock = hammock_plot.Hammock(data_df = df)
-ax = hammock.plot(var=var, missing=True, min_bar_height=0.2,numerical_var_levels={"sataces": None, "satcomm": None, "satrate": None}) 
+ax = hammock.plot(var=var, missing=True, min_bar_height=0.2,numerical_var_levels={"sataces": None, "satcomm": None, "satrate": None})
 ```
 
 <img src="image/diabetes.png" alt="Hammock plot for the Diabetes Data" width="600"/>
 
-The missing value category is shown at the bottom for each variable. We find missing values for all 3 variables, but fewest for the last one. We also see a phenomenon called "top coding", where 
+The missing value category is shown at the bottom for each variable. We find missing values for all 3 variables, but fewest for the last one. We also see a phenomenon called "top coding", where
 satisfied respondents simply choose the highest value.
 
 ### Example value_order for the Shakespeare data
@@ -234,7 +234,7 @@ ax = hammock.plot(
 | |             `missing` | `bool` | Whether or not to add a category for missing values at the bottom of the plot.  If `False`, observations that have a missing value for any variable in the data frame (even those not used in the hammock plot) are removed.  Default is `False`. |
 | |             `weights` | `str` | Weight variable (must be a numeric variable with only positive, nonmissing values. Cannot be a member of `var`). |
 | Labeling |             `label` | `bool` | Whether or not to display labels between the plotting segments |
-| |              `label_options` |  `Dict[str, Dict[str, Any]]`  | Manipulates the size and look of the labels. Args following the options in the website: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.text.html Example:{"ExampleVarname":{"fontsize":12,"fontstyle":"italic","fontweight":"black","color":"b"}}  Default is `None`. | 
+| |              `label_options` |  `Dict[str, Dict[str, Any]]`  | Manipulates the size and look of the labels. Args following the options in the website: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.text.html Example:{"ExampleVarname":{"fontsize":12,"fontstyle":"italic","fontweight":"black","color":"b"}}  Default is `None`. |
 | |            `numerical_var_levels` | `Dict[str, int \| None]` | Specifies the number of (evenly spaced) labels on the axis for numerical variables. `None`  means that the label management is ignored and instead each numeric value gets a label (beware of overplotting). Example: {"NumericalVarname": 9, "NumericalVarname2": None}. Default is 7. |
 | Highlighting and Color  | `hi_var` | `str` |  Variable to be highlighted. Default is `None`. |
 | | `hi_value` | `List[str or int] or str or int` | Value(s) of `hi_var` to be highlighted. You can highlighted one or multiple values. You can also pass an expression (e.g. "x>1 and (x>5 or x<4)") in string when you want to specify a range for a numeric `hi_var`.|
@@ -247,32 +247,32 @@ ax = hammock.plot(
 | Manipulating Spacing and Layout |             `unibar`| `bool` | Whether or not to display unibars between the plotting segments |
 | |   `uni_vfill` | `float`  | Fraction of vertical space that should be populated by data. Adjusts the height of the data points. Default is 0.08.|
 | | `connector_fraction` | `float` | Fraction of the `uni_vfill` height used for drawing connectors between unibars. Controls how tall the connectors are relative to the bar height. Default is 1. |
-| |              `uni_hfill` |  `float`  |Fraction of horizontal space allocated to labels/univ. bars rather than to connecting boxes. Default is 0.3. | 
-| |              `height` |  `float`  | Height of the plot in inches. Default is 10. | 
-| |              `width` |  `float`  |  Width of the plot in inches. Default is 15. Caution: Width too narrow may distort the plot. | 
-| Other options |              `shape` |  `str`  | Shape of the boxes. "rectangle" or "parallelogram". Default is "rectangle". | 
-| |              `same_scale` |  `List[str]`  | List of variables that have the same scale. Default is `None`. | 
+| |              `uni_hfill` |  `float`  |Fraction of horizontal space allocated to labels/univ. bars rather than to connecting boxes. Default is 0.3. |
+| |              `height` |  `float`  | Height of the plot in inches. Default is 10. |
+| |              `width` |  `float`  |  Width of the plot in inches. Default is 15. Caution: Width too narrow may distort the plot. |
+| Other options |              `shape` |  `str`  | Shape of the boxes. "rectangle" or "parallelogram". Default is "rectangle". |
+| |              `same_scale` |  `List[str]`  | List of variables that have the same scale. Default is `None`. |
 | |              `min_bar_height` | `float` | Minimal bar height of unibars (connectors are unchanged). Bars representing only a tiny fraction of the data may be so narrow, that they are invisible in a plot. The default value tries to ensure this does not happen.  Default is 0.1.
-| |              `display_figure` |  `bool`  | Whether or not to display the figure. This can be useful if you just want to save the plots. Default is `True`. | 
-| |              `save_path` |  `str`  |   If it is not `None`, the figure will be saved to the given path with given name and format. Default is `None`. | 
+| |              `display_figure` |  `bool`  | Whether or not to display the figure. This can be useful if you just want to save the plots. Default is `True`. |
+| |              `save_path` |  `str`  |   If it is not `None`, the figure will be saved to the given path with given name and format. Default is `None`. |
 | |             `violin_bw_method` | `str` or `float` | Specifies the bw method used to plot a violin plot. See https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.violinplot.html for more details. |
 
 
 ## Historical context
 
-In 1898, Sankey diagrams were developed to visualize flows of energy and materials. 
+In 1898, Sankey diagrams were developed to visualize flows of energy and materials.
 
 In 1985, Inselberg popularized parallel coordinates to visualize continuous variables only. The central contribution is the use of parallel axes.
 
-In 2003, Schonlau proposed the hammock plot. This was the first plot to visualize categorical data (or mixed categorical and numerical data) on parallel axes. 
+In 2003, Schonlau proposed the hammock plot. This was the first plot to visualize categorical data (or mixed categorical and numerical data) on parallel axes.
 
 In 2010, Rosvall proposed alluvial plots to visualize network variables over time. Rather than using bars to connect axes, alluvial plots use rounded curves. Alluvial plots are now also used to visualize categorical data.
 
 There are several additional variations that also visualize categorical data including Parallel Set plots (Bendix et al, 2005), Right Angle plots (Hofmann and Vendettuoli, 2013),
-and generalized parallel coordinate plots (GPCPs) (popularized by VanderPlas et al., 2023). 
+and generalized parallel coordinate plots (GPCPs) (popularized by VanderPlas et al., 2023).
 
-### References 
-Bendix, F., Kosara, R., & Hauser, H. (2005). Parallel sets: visual analysis of categorical data. In IEEE Symposium on Information Visualization, 2005. INFOVIS 2005. 133-140. 
+### References
+Bendix, F., Kosara, R., & Hauser, H. (2005). Parallel sets: visual analysis of categorical data. In IEEE Symposium on Information Visualization, 2005. INFOVIS 2005. 133-140.
 
 Hofmann, H., & Vendettuoli, M. (2013). Common angle plots as perception-true visualizations of categorical associations. IEEE transactions on visualization and computer graphics, 19(12), 2297-2305.
 
@@ -290,15 +290,15 @@ of civil engineers, Volume 134,  278–283.
 
 Schonlau M. Hammock plots: visualizing categorical and numerical variables. Journal of Computational and Graphical Statistics, November 2024. 33(4), 1475-1487.
 
-Schonlau M. 
-*[Visualizing Categorical Data Arising in the Health Sciences Using Hammock Plots.](http://www.schonlau.net/publication/03jsm_hammockplot.pdf)* 
+Schonlau M.
+*[Visualizing Categorical Data Arising in the Health Sciences Using Hammock Plots.](http://www.schonlau.net/publication/03jsm_hammockplot.pdf)*
 In Proceedings of the Section on Statistical Graphics, American Statistical Association; 2003
 
-VanderPlas, S., Ge, Y., Unwin, A., & Hofmann, H. (2023). 
-Penguins Go Parallel: a grammar of graphics framework for generalized parallel coordinate plots. 
+VanderPlas, S., Ge, Y., Unwin, A., & Hofmann, H. (2023).
+Penguins Go Parallel: a grammar of graphics framework for generalized parallel coordinate plots.
 Journal of Computational and Graphical Statistics,  32(4), 1572-1587.
 
-### Other implementations of the hammock plot 
+### Other implementations of the hammock plot
 There is also a Stata implementation `hammock` (available from the Stata archive SSC) and an R implementation (without numerical variables) as part of the package `ggparallel`.
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
@@ -310,5 +310,3 @@ There is also a Stata implementation `hammock` (available from the Stata archive
 - Tiancheng Yang t77yang@uwaterloo.ca
 - Sandra Huang s77huang@uwaterloo.ca
 - Matthias Schonlau schonlau@uwaterloo.ca
-
-

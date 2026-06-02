@@ -40,4 +40,3 @@ hammock.plot(
     height=8,
     save_path=gallery_image_path("penguins_mixed_displays.png"),
 )
-

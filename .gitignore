@@ -4,6 +4,10 @@ __pycache__/
 .pytest_cache/
 .vscode/
 
+build/
+dist/
+*.egg-info/
+
 gallery/_build/
 gallery/gallery/
 gallery/sg_execution_times.rst

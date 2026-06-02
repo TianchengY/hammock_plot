@@ -84,7 +84,7 @@ def validate_expression(expr: str) -> bool:
         return True
     except re.error:
         return False
-    
+
 def safe_numeric(val):
             """Try to convert to float, return float if possible, else return original value."""
             try:
@@ -139,7 +139,7 @@ def resolve_ordering(orders):
 def edge_color_from_face(facecolor, delta=0.3):
     """
     Compute an edge color based on a face color by adjusting brightness.
-    
+
     Parameters:
         facecolor: str or tuple
             Hex string (e.g. '#FFAA00') or RGB tuple (r,g,b) in [0,1].
@@ -147,7 +147,7 @@ def edge_color_from_face(facecolor, delta=0.3):
             How much to increase/decrease brightness.
             If face is light, brightness is reduced by delta.
             If face is dark, brightness is increased by delta.
-    
+
     Returns:
         edgecolor: RGB tuple (r,g,b)
     """
@@ -219,7 +219,7 @@ def assign_color_index(df: pd.DataFrame, var_list: List[str], hi_missing, missin
     """
         Assigns each row in the dataframe with a colour index; calculates which rows are highlighted which colour.
     """
-    
+
     df["color_index"] = 0  # default
 
     # Highlight missing values first

@@ -27,13 +27,12 @@ hammock.plot(
     uni_vfill=.4,
     connector_fraction=.2,
     display_type={
-        "bill_length_mm":"box", 
-        "bill_depth_mm": "rug", 
-        "flipper_length_mm": "violin", 
+        "bill_length_mm":"box",
+        "bill_depth_mm": "rug",
+        "flipper_length_mm": "violin",
         "body_mass_g":"box"
     },
     width=15,
     height=8,
     save_path=gallery_image_path("penguins_numerical_no_highlight.png"),
 )
-

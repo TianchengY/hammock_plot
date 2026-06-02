@@ -2,7 +2,7 @@
 Slope Graph
 ========================
 
-In a slope graph, all variables are on the same scale. In the hammock plot we hide unibars and show connectors only. 
+In a slope graph, all variables are on the same scale. In the hammock plot we hide unibars and show connectors only.
 """
 
 from _gallery_utils import data_path, gallery_image_path
