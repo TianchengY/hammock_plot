@@ -1,0 +1,56 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Build and publish package
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/hammock-plot/
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verify release tag matches package version
+        shell: bash
+        run: |
+          package_version="$(python - <<'PY'
+          import tomllib
+
+          with open("pyproject.toml", "rb") as f:
+              print(tomllib.load(f)["project"]["version"])
+          PY
+          )"
+          release_version="${GITHUB_REF_NAME#v}"
+
+          if [ "$release_version" != "$package_version" ]; then
+            echo "Release tag ${GITHUB_REF_NAME} does not match pyproject.toml version ${package_version}."
+            echo "Use a tag like v${package_version}, or update pyproject.toml before publishing."
+            exit 1
+          fi
+
+      - name: Build distribution files
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade build twine
+          python -m build --sdist --wheel
+          python -m twine check dist/*
+
+      - name: Publish distribution files to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
