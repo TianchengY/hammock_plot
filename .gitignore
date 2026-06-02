@@ -4,6 +4,11 @@ __pycache__/
 .pytest_cache/
 .vscode/
 
+gallery/_build/
+gallery/gallery/
+gallery/sg_execution_times.rst
+
+# Legacy local output from the old Sphinx source directory name.
 docs/_build/
 docs/gallery/
 docs/sg_execution_times.rst
