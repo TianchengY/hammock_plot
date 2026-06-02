@@ -308,5 +308,5 @@ There is also a Stata implementation `hammock` (available from the Stata archive
 ## Authors
 
 - Tiancheng Yang t77yang@uwaterloo.ca
-- Sandra Huang s77huang@uwaterloo.ca
+- Sandra Huang sandra.huang@uwaterloo.ca
 - Matthias Schonlau schonlau@uwaterloo.ca
