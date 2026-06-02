@@ -118,7 +118,11 @@ The three variables represent different ordinal scales for satisfaction. We are 
 ```python
 var = ["sataces","satcomm","satrate"]
 hammock = hammock_plot.Hammock(data_df = df)
-ax = hammock.plot(var=var, missing=True, min_bar_height=0.2,numerical_var_levels={"sataces": None, "satcomm": None, "satrate": None})
+ax = hammock.plot(var=var, 
+        missing=True, 
+        numerical_var_levels={"sataces": None, "satcomm": None, "satrate": None}, 
+        min_bar_height=0.2, 
+        uni_vfill=0.3) 
 ```
 
 <img src="image/diabetes.png" alt="Hammock plot for the Diabetes Data" width="600"/>
