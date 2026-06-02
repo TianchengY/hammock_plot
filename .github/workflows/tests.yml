@@ -2,10 +2,22 @@ name: Tests
 
 on:
   pull_request:
+    paths:
+      - ".github/workflows/tests.yml"
+      - "data/**"
+      - "hammock_plot/**"
+      - "pyproject.toml"
+      - "test_suite/**"
   push:
     branches:
       - main
       - tiancheng/auto_test
+    paths:
+      - ".github/workflows/tests.yml"
+      - "data/**"
+      - "hammock_plot/**"
+      - "pyproject.toml"
+      - "test_suite/**"
 
 jobs:
   integration-tests:
@@ -27,7 +39,7 @@ jobs:
       - name: Run integration tests
         env:
           MPLBACKEND: Agg
-        run: pytest tests/test_notebook_suite.py
+        run: pytest test_suite/test_notebook_suite.py
 
       - name: Upload plot artifacts on failure
         if: failure()

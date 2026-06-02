@@ -91,7 +91,7 @@ def test_existing_notebook_suite(monkeypatch):
     for index, source in iter_code_cells():
         exec(compile(source, f"{NOTEBOOK}:cell-{index}", "exec"), namespace)
 
-        if index == 8:
+        if source.lstrip().startswith("def run_error_check"):
             namespace["run_error_check"] = assert_error_check
-        elif index == 47:
+        elif source.lstrip().startswith("def show_expected_vs_actual"):
             namespace["show_expected_vs_actual"] = assert_expected_vs_actual

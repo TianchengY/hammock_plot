@@ -133,7 +133,7 @@ We import the Shakespeare dataset (Schonlau, 2024):
 ```python
 import hammock_plot
 import pandas as pd
-df = pd.read_csv('./data/data_shakespeare_v4.csv')
+df = pd.read_csv('./data/data_shakespeare_v5.csv')
 ```
 
 We use a dictionary to map the values of the variables `speaker1` and `speaker2` according to the social class hierarchy. We also choose different colors.
@@ -155,7 +155,7 @@ ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,colors=colo
 `speaker1` and `speaker2` should have the same layout, but only `speaker1` has the category Beggars. We can force the same layout using `same_scale`.
 ```python
 hammock = hammock_plot.Hammock(data_df = df)
-ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,color=color_lst, bar_width=0.6,missing=True,
+ax = hammock.plot(var=var_lst,hi_var = "speaker1", hi_value=hi_value,colors=color_lst, bar_width=0.6,missing=True,
                 value_order ={"speaker1":speaker_order}, same_scale=["speaker1", "speaker2"] )
 ```
 <img src="image/shakespeare_scale.png" alt="Hammock plot for the Shakespeare data, with same_scale specified" width="600"/>
@@ -245,7 +245,7 @@ ax = hammock.plot(
 | | `connector_color` | `str` | The color of the connectors. Default matches the default color + highlight colors. Specifying a connector color removes highlighting from the connectors. | |
 | |               `alpha` | `float` | Alpha value for the colours in the plot. Float from 0-1. Default is 0.7. |
 | Manipulating Spacing and Layout |             `unibar`| `bool` | Whether or not to display unibars between the plotting segments |
-| |   `uni_vfill` | `float`  | Fraction of vertical space that should be populated by data. Adjusts the height of the data points. Defaults is 0.08.| 
+| |   `uni_vfill` | `float`  | Fraction of vertical space that should be populated by data. Adjusts the height of the data points. Default is 0.08.|
 | | `connector_fraction` | `float` | Fraction of the `uni_vfill` height used for drawing connectors between unibars. Controls how tall the connectors are relative to the bar height. Default is 1. |
 | |              `uni_hfill` |  `float`  |Fraction of horizontal space allocated to labels/univ. bars rather than to connecting boxes. Default is 0.3. | 
 | |              `height` |  `float`  | Height of the plot in inches. Default is 10. | 
