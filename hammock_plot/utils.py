@@ -1,5 +1,6 @@
 import re
 import colorsys
+import warnings
 import matplotlib.colors as mcolors
 import pandas as pd
 from typing import List, Dict, Any
@@ -91,6 +92,17 @@ def safe_numeric(val):
                 return float(val)
             except (ValueError, TypeError):
                 return val
+
+def clamp_unit(value, name):
+    """Clamp a 0-1 layout fraction, warning (with the parameter's name) when the
+    given value falls outside the range."""
+    if value < 0:
+        warnings.warn(f"{name} < 0. Value has been clamped to 0.")
+        return 0
+    elif value > 1:
+        warnings.warn(f"{name} > 1. Value has been clamped to 1.")
+        return 1
+    return value
 
 def resolve_ordering(orders):
     """
@@ -235,7 +247,39 @@ def assign_color_index(df: pd.DataFrame, var_list: List[str], hi_missing, missin
             if v != hi_var:
                 continue
             mask = df["color_index"] == 0
-            df.loc[mask, "color_index"] = df.loc[mask, v].apply(lambda val: _compute_color_index(val, hi_missing, hi_value))
+            col = df.loc[mask, v]
+            if isinstance(hi_value, list):
+                # Fast path: a list of highlight values is a straight lookup.
+                # Build the same mapping _compute_color_index applies — first
+                # occurrence in hi_value wins (list.index semantics), exact match
+                # first, then a numeric-coercion fallback for non-string values.
+                buffer = 1 if hi_missing else 0
+                exact_map = {}
+                numeric_map = {}
+                for i, hv in enumerate(hi_value):
+                    if hv not in exact_map:
+                        exact_map[hv] = i + 1 + buffer
+                    try:
+                        fk = float(hv)
+                    except (ValueError, TypeError):
+                        continue
+                    if fk not in numeric_map:
+                        numeric_map[fk] = i + 1 + buffer
+
+                def _numeric_index(val):
+                    # numeric fallback only applies to non-string, non-NaN values
+                    if isinstance(val, str) or pd.isna(val):
+                        return np.nan
+                    try:
+                        return numeric_map.get(float(val), np.nan)
+                    except (ValueError, TypeError):
+                        return np.nan
+
+                result = col.map(exact_map).fillna(col.map(_numeric_index))
+                df.loc[mask, "color_index"] = result.fillna(0).astype(int)
+            else:
+                # regex / numeric-range expressions stay on the row-wise path
+                df.loc[mask, "color_index"] = col.apply(lambda val: _compute_color_index(val, hi_missing, hi_value))
     return df
 
 def get_formatted_label(datatype, value):

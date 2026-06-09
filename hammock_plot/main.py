@@ -5,8 +5,9 @@ import matplotlib.pyplot as plt
 from hammock_plot.figure import Figure
 from hammock_plot.utils import Defaults
 import numpy as np
-from hammock_plot.utils import safe_numeric, validate_expression, resolve_ordering, assign_color_index, get_formatted_label
+from hammock_plot.utils import safe_numeric, validate_expression, resolve_ordering, assign_color_index, get_formatted_label, clamp_unit
 import warnings
+
 
 class Hammock:
     """
@@ -94,36 +95,20 @@ class Hammock:
                     f'The weight variable {weights} must be numeric.'
                 )
 
-            for idx, val in self.data_df[weights].items():
-                if val <= 0:
-                    raise ValueError(
-                        f'There is a nonpositive variable in {weights}. This is not allowed.'
-                    )
+            if (self.data_df[weights] <= 0).any():
+                raise ValueError(
+                    f'There is a nonpositive variable in {weights}. This is not allowed.'
+                )
             
             
-        if uni_hfill < 0:
-            warnings.warn("uni_hfill < 0. Value has been clamped to 0.")
-            uni_hfill = 0
-        elif uni_hfill > 1:
-            warnings.warn("uni_hfill > 1. Value has been clamped to 1.")
-            uni_hfill = 1
+        uni_hfill = clamp_unit(uni_hfill, "uni_hfill")
 
         if uni_hfill == 1:
             warnings.warn("Tip: To leave a bit of a gap between the univariate bars, set uni_hfill to something close to 1 but not quite one (ex 0.9)")
-        
-        if uni_vfill < 0:
-            warnings.warn("uni_vfill < 0. Value has been clamped to 0.")
-            uni_vfill = 0
-        elif uni_vfill > 1:
-            warnings.warn("uni_vfill > 1. Value has been clamped to 1.")
-            uni_vfill = 1
 
-        if alpha < 0:
-            warnings.warn("alpha < 0. Value has been clamped to 0.")
-            alpha = 0
-        elif alpha > 1:
-            warnings.warn("alpha > 1. Value has been clamped to 1.")
-            alpha = 1
+        uni_vfill = clamp_unit(uni_vfill, "uni_vfill")
+
+        alpha = clamp_unit(alpha, "alpha")
 
         # drop missing values if missing values should not be plotted
         if not missing:
@@ -144,7 +129,7 @@ class Hammock:
                     var_types[varname] = np.integer
                 else:
                     var_types[varname] = np.floating
-            elif pd.api.types.is_categorical_dtype(dtype) or pd.api.types.is_string_dtype(dtype):
+            elif isinstance(dtype, pd.CategoricalDtype) or pd.api.types.is_string_dtype(dtype):
                 var_types[varname] = np.str_
             else:
                 raise RuntimeError("Invalid dtype detected - logic error in code. dtype: ", dtype)

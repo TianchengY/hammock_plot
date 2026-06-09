@@ -1,11 +1,10 @@
 # unibar.py
-from typing import List, Dict, Tuple, Optional
+from typing import List
 import numpy as np
 import matplotlib.pyplot as plt
 from hammock_plot.value import Value
 from hammock_plot.utils import edge_color_from_face
 from .utils import Defaults, get_formatted_label
-from fractions import Fraction
 from scipy.stats import gaussian_kde
 
 class Unibar:
@@ -65,8 +64,6 @@ class Unibar:
         Create Value objects for this unibar from self.df.
         Each Value has total occurrences and breakdown by colour_index.
         """
-        uni_series = self.df[self.name]
-        counts = uni_series.value_counts()
         values: List[Value] = []
 
         dtype = self.val_type
@@ -77,34 +74,26 @@ class Unibar:
         # Determine order
         order = self.val_order
 
+        # Count occurrences per (value, colour) in one grouped pass rather than
+        # scanning the whole frame once per value. Rows = each value, columns =
+        # each colour index; weighted sums the weight column, else just counts.
+        grouped = self.df.groupby([self.name, "color_index"], observed=True)
+        if self.weights is None:
+            occ_table = grouped.size().unstack("color_index", fill_value=0)
+        else:
+            occ_table = grouped[self.weights].sum().unstack("color_index", fill_value=0)
+        occ_table = occ_table.reindex(columns=all_colors, fill_value=0)
+
         for val in order:
-            # get number of occurrences of the value, and assign to the Value object.
-            if self.weights is None:
-                cnt = int(counts.get(val, 0))
-            else:
-                mask = self.df[self.name] == val
-                cnt = self.df.loc[mask, self.weights].sum()
-
-            # assigns a list of # occurrences which corresponds to each of the highlight colours.
-            if cnt > 0:
-                subset = self.df[self.df[self.name] == val]
-
-                if self.weights is None:
-                    occ_by_colour = (
-                        subset["color_index"]
-                        .value_counts()
-                        .reindex(all_colors, fill_value=0)
-                        .tolist()
-                    )
-                else:
-                    occ_by_colour = (
-                        subset.groupby("color_index")[self.weights]
-                        .sum()
-                        .reindex(all_colors, fill_value=0)
-                        .tolist()
-                    )
+            # look up this value's per-colour occurrences. A value that's in the
+            # order but absent from the data (e.g. an empty same_scale slot) isn't
+            # in the table, so it gets all zeros.
+            if val in occ_table.index:
+                occ_by_colour = occ_table.loc[val].tolist()
+                cnt = sum(occ_by_colour)
             else:
                 occ_by_colour = [0] * len(all_colors)
+                cnt = 0
 
             # puts the constructed Value in a list associated with the Unibar.
             values.append(Value(
@@ -128,6 +117,9 @@ class Unibar:
         # sort values before separating missing and non-missing values
         self._sort_values()
 
+        # id -> Value lookup so get_value_by_id doesn't rescan the list each call
+        self._values_by_id = {v.id: v for v in self.values}
+
         # Separate missing and non-missing values
         self.missing_vals = [v for v in self.values
                             if self.missing_placeholder is not None and str(v.id) == str(self.missing_placeholder)]
@@ -135,7 +127,7 @@ class Unibar:
 
     
     def set_measurements(self, pos_x=None, width=None, bar_unit=None, missing_padding=None,
-                        scale_ypos: Tuple[float, float] = None, hbar_height=None):
+                        hbar_height=None):
         if pos_x is not None:
             self.pos_x = pos_x
         if width is not None:
@@ -144,8 +136,6 @@ class Unibar:
             self.bar_unit = bar_unit
         if missing_padding is not None:
             self.missing_padding = missing_padding
-        if scale_ypos is not None:
-            self.scale_ypos = scale_ypos
         if hbar_height is not None:
             self.hbar_height = hbar_height
 
@@ -300,8 +290,7 @@ class Unibar:
             self.values.sort(key=lambda v: order_map.get(v.id, len(order_map)))
             
 
-    def draw(self, ax, alpha, rectangle_painter=None,
-             color="lightskyblue", y_start: int = None, y_end: int = None):
+    def draw(self, ax, alpha, rectangle_painter=None, color="lightskyblue"):
         """
         Template Method for drawing a unibar:
         1. Draw the background according to display_type
@@ -312,16 +301,16 @@ class Unibar:
 
         # Step 1: Draw background based on display_type
         if self.unibar:
-            self._draw_background(ax, rectangle_painter, y_start, y_end)
+            self._draw_background(ax, rectangle_painter)
 
         # Step 2: Draw labels
         if self.label:
-            self._draw_labels(ax, y_start, y_end)
+            self._draw_labels(ax)
 
         return ax
 
     # ---------- Template Method ----------
-    def _draw_background(self, ax, rectangle_painter, y_start, y_end):
+    def _draw_background(self, ax, rectangle_painter):
         """
         Template Method for drawing the backgrounds in a unibar
         3 types of backgrounds:
@@ -373,64 +362,78 @@ class Unibar:
             right_pts.append((self.pos_x + half_label_space, val.vert_centre))
             weights.append(val.occ_by_colour)
 
-        rectangle_painter.plot(ax, self.alpha, left_pts, right_pts, heights, self.colors, weights, orientation=self.hi_box,zorder=1, 
+        rectangle_painter.plot(ax, self.alpha, left_pts, right_pts, heights, self.colors, weights, orientation=self.hi_box,zorder=1,
                                check_overlap=True, unibar_name=self.name)
-        
+
         if self.draw_white_dividers and len(values) > 1:
-            divider_height = Defaults.WHITE_DIVIDER_HEIGHT
+            # each rectangle's edge is half its own bar height from its centre
+            half_heights = [h / 2 for h in heights]
+            self._draw_white_dividers(ax, values, rectangle_painter, half_heights, width)
 
-            divider_left_pts = []
-            divider_right_pts = []
-            divider_heights = []
-            divider_weights = []
+    def _draw_white_dividers(self, ax, values, rectangle_painter, half_heights, width):
+        """
+        Draw thin white lines dividing adjacent bars (used when uni_vfill == 1).
+        half_heights[i] is the half-height of values[i], so each divider lands
+        midway between the top edge of one bar and the bottom edge of the next.
+        """
+        divider_height = Defaults.WHITE_DIVIDER_HEIGHT
 
-            for i in range(len(values) - 1):
-                top_of_i = values[i].vert_centre + heights[i] / 2
-                bottom_of_next = values[i + 1].vert_centre - heights[i + 1] / 2
-                divider_y = (top_of_i + bottom_of_next) / 2
-                half_label_space = width / 2
+        divider_left_pts = []
+        divider_right_pts = []
+        divider_heights = []
+        divider_weights = []
 
-                divider_left_pts.append((self.pos_x - half_label_space, divider_y))
-                divider_right_pts.append((self.pos_x + half_label_space, divider_y))
-                divider_heights.append(divider_height)
+        half_label_space = width / 2
 
-                # white divider bar (use 2D structure)
-                divider_weights.append([1])
+        for i in range(len(values) - 1):
+            top_of_i = values[i].vert_centre + half_heights[i]
+            bottom_of_next = values[i + 1].vert_centre - half_heights[i + 1]
+            divider_y = (top_of_i + bottom_of_next) / 2
 
-            rectangle_painter.plot(
-                ax, 
-                alpha=1, 
-                left_center_pts=divider_left_pts,
-                right_center_pts=divider_right_pts,
-                heights=divider_heights,
-                colors=["white"],
-                weights=divider_weights,
-                orientation=self.hi_box,
-                zorder=2,  # slightly above bars
-                check_overlap=False
-            )
-        
+            divider_left_pts.append((self.pos_x - half_label_space, divider_y))
+            divider_right_pts.append((self.pos_x + half_label_space, divider_y))
+            divider_heights.append(divider_height)
+
+            # white divider bar (use 2D structure)
+            divider_weights.append([1])
+
+        rectangle_painter.plot(
+            ax,
+            alpha=1,
+            left_center_pts=divider_left_pts,
+            right_center_pts=divider_right_pts,
+            heights=divider_heights,
+            colors=["white"],
+            weights=divider_weights,
+            orientation=self.hi_box,
+            zorder=2,  # slightly above bars
+            check_overlap=False
+        )
+
     def _prepare_scaled_data(self, y_start, y_end):
         """
-        Collect the y-positions for the box/violin plots, split by colour.
+        Collect the y-positions for the box/violin plots, split by colour, along
+        with the frequency sitting at each position.
 
         Each value's number is mapped onto the [y_start, y_end] span, and that
-        position is recorded once per colour it appears in. Repetition by count
-        is left to _prepare_weights, which lines up with this output entry for
-        entry.
+        position is recorded once per colour it appears in. The matching entry in
+        weights_per_color carries how many observations sit there (occurrence
+        count, or weight-sum if a weights column is set), so the KDE and quantile
+        code can zip the two together entry for entry.
 
         Args:
             y_start, y_end: bottom and top of the drawable vertical span.
 
-        Returns (data_per_color, facecolors, edgecolors): the y-positions per
-        colour, the fill colours, and their matching edge colours. Empty lists
-        if there are no non-missing values.
+        Returns (data_per_color, weights_per_color, facecolors, edgecolors): the
+        y-positions and their frequencies per colour, the fill colours, and their
+        matching edge colours. Empty lists if there are no non-missing values.
         """
         if not self.non_missing_vals:
-            return [], [], []
+            return [], [], [], []
 
         n_colors = len(self.colors)
         data_per_color = [[] for _ in range(n_colors)]
+        weights_per_color = [[] for _ in range(n_colors)]
 
         all_numeric_vals = [v.numeric for v in self.non_missing_vals]
         min_val, max_val = self.range if self.range else (min(all_numeric_vals), max(all_numeric_vals))
@@ -448,35 +451,10 @@ class Unibar:
             for i, occ in enumerate(occs):
                 if occ > 0:
                     data_per_color[i].append(scaled)
-
-        return data_per_color, self.colors, [edge_color_from_face(c) for c in self.colors]
-
-    def _prepare_weights(self, n_colors):
-        """
-        Give the frequency of each y-position from _prepare_scaled_data.
-
-        Walks the values the same way that method does, but records the
-        occurrence count (or weight-sum, if a weights column is set) instead of
-        the position. The box/violin code zips the two together so the KDE and
-        quantiles know how many observations sit at each spot.
-
-        Args:
-            n_colors: number of colours to split the weights across.
-
-        Returns weights_per_color: a list of weights per colour, aligned with
-        _prepare_scaled_data's output.
-        """
-        weights_per_color = [[] for _ in range(n_colors)]
-        for v in self.non_missing_vals:
-            occs = v.occ_by_colour
-            if len(occs) < n_colors:
-                occs = occs + [0] * (n_colors - len(occs))
-            for i, occ in enumerate(occs):
-                if occ > 0:
                     # if no weight column, occ is an integer count — use it directly as the weight
                     weights_per_color[i].append(float(occ))
 
-        return weights_per_color
+        return data_per_color, weights_per_color, self.colors, [edge_color_from_face(c) for c in self.colors]
 
     def _weighted_quantile(self, data, weights, quantiles):
         """
@@ -519,8 +497,7 @@ class Unibar:
         its occurrence count or weight-sum.
         """
 
-        data_per_color, facecolors, edgecolors = self._prepare_scaled_data(y_start, y_end)
-        weights_per_color = self._prepare_weights(len(self.colors))
+        data_per_color, weights_per_color, facecolors, edgecolors = self._prepare_scaled_data(y_start, y_end)
 
         # ---- helpers ----
 
@@ -608,8 +585,7 @@ class Unibar:
                 return lst[1:] + lst[:1]
             return lst
 
-        data_per_color, facecolors, edgecolors = self._prepare_scaled_data(y_start, y_end)
-        weights_per_color = self._prepare_weights(len(self.colors))
+        data_per_color, weights_per_color, facecolors, edgecolors = self._prepare_scaled_data(y_start, y_end)
 
         n = len(data_per_color)
         if n == 0:
@@ -699,7 +675,17 @@ class Unibar:
                              self.non_missing_vals,
                              rectangle_painter)
     
-    def _draw_spiky_beanplot(self, ax, y_start, y_end, rectangle_painter, bins=14):
+    def _weighted_centre(self, weight_fn):
+        """
+        Weighted mean of vert_centre across the non-missing values, weighting each
+        value by weight_fn(val). Returns None when the weights sum to zero.
+        """
+        total = sum(weight_fn(val) for val in self.non_missing_vals)
+        if total == 0:
+            return None
+        return sum(val.vert_centre * weight_fn(val) for val in self.non_missing_vals) / total
+
+    def _draw_spiky_beanplot(self, ax, y_start, y_end, rectangle_painter):
         # draw violin
         self._draw_violin(ax, y_start, y_end, draw_boxplot=False)
 
@@ -730,11 +716,7 @@ class Unibar:
                                 zorder=1)
             
             # draw the mean line
-            total_weight = sum(val.occurrences for val in self.non_missing_vals)
-            mean_y = sum(
-                val.vert_centre * val.occurrences
-                for val in self.non_missing_vals
-            ) / total_weight
+            mean_y = self._weighted_centre(lambda val: val.occurrences)
 
             rectangle_painter.plot(ax, alpha=1,
                                    left_center_pts=[(self.pos_x - self.width / 2, mean_y)], 
@@ -798,13 +780,8 @@ class Unibar:
             
             # draw the mean lines
             # LEFT (highlighted)
-            l_total = sum(val.occ_by_colour[1] for val in self.non_missing_vals)
-            if l_total > 0:
-                l_mean_y = sum(
-                    val.vert_centre * val.occ_by_colour[1]
-                    for val in self.non_missing_vals
-                ) / l_total
-
+            l_mean_y = self._weighted_centre(lambda val: val.occ_by_colour[1])
+            if l_mean_y is not None:
                 rectangle_painter.plot(
                     ax,
                     alpha=1,
@@ -817,13 +794,8 @@ class Unibar:
                 )
 
             # RIGHT (non-highlighted)
-            r_total = sum(val.occ_by_colour[0] for val in self.non_missing_vals)
-            if r_total > 0:
-                r_mean_y = sum(
-                    val.vert_centre * val.occ_by_colour[0]
-                    for val in self.non_missing_vals
-                ) / r_total
-
+            r_mean_y = self._weighted_centre(lambda val: val.occ_by_colour[0])
+            if r_mean_y is not None:
                 rectangle_painter.plot(
                     ax,
                     alpha=1,
@@ -866,42 +838,11 @@ class Unibar:
                                zorder=1)
         
         if self.draw_white_dividers and len(values) > 1:
-            divider_height = Defaults.WHITE_DIVIDER_HEIGHT
-
-            divider_left_pts = []
-            divider_right_pts = []
-            divider_heights = []
-            divider_weights = []
-
-            space_between_dividers = self.hbar_height / 2
-
-            for i in range(len(values) - 1):
-                top_of_i = values[i].vert_centre + space_between_dividers
-                bottom_of_next = values[i + 1].vert_centre - space_between_dividers
-                divider_y = (top_of_i + bottom_of_next) / 2
-                half_label_space = self.width / 2
-
-                divider_left_pts.append((self.pos_x - half_label_space, divider_y))
-                divider_right_pts.append((self.pos_x + half_label_space, divider_y))
-                divider_heights.append(divider_height)
-                
-                # white divider bar (use 2D structure)
-                divider_weights.append([1])
-            
-            rectangle_painter.plot(
-                ax, 
-                alpha=1, 
-                left_center_pts=divider_left_pts,
-                right_center_pts=divider_right_pts,
-                heights=divider_heights,
-                colors=["white"],
-                weights=divider_weights,
-                orientation=self.hi_box,
-                zorder=2,  # slightly above bars
-                check_overlap=False
-            )
+            # bar charts draw every value at a constant hbar_height
+            half_heights = [self.hbar_height / 2] * len(values)
+            self._draw_white_dividers(ax, values, rectangle_painter, half_heights, self.width)
     # ---------- Label Drawing ----------
-    def _draw_labels(self, ax, y_start, y_end):
+    def _draw_labels(self, ax):
         """
         Draws labels depending on the display type.
         2 types of labels:
@@ -913,14 +854,14 @@ class Unibar:
         if self.missing:
             for mv in self.missing_vals:
                 # don't draw the labels if there are no missing values
-                if mv.occurrences > 0: 
+                if mv.occurrences > 0:
                     # Place missing labels just above the bottom with missing_padding
                     ax.text(x, mv.vert_centre, self.missing_placeholder, ha='center', va='center', **(self.label_options or {}))
-        
+
         if self.label_type == "values":
             self._draw_value_labels(ax) #draws labels directly according to the values
         elif self.label_type == "levels":
-            self._draw_level_labels(ax, y_start, y_end)
+            self._draw_level_labels(ax)
         else:
             raise ValueError(f"invalid label_type {self.label_type}")
 
@@ -934,7 +875,7 @@ class Unibar:
                 ax.text(self.pos_x, val.vert_centre, self._get_formatted_label(val.dtype, val.id), ha='center', va='center', **(self.label_options or {}))
 
     # -------- Label drawing - levels (starting from y_start and ending at y_end) ------
-    def _draw_level_labels(self, ax, y_start, y_end):
+    def _draw_level_labels(self, ax):
         """
         2 ways to draw levels:
         1. Display type == rug
@@ -995,10 +936,7 @@ class Unibar:
         Returns a Value, given its id
         Assumes that all ids are unique (true)
         """
-        for v in self.values:
-            if v.id == id:
-                return v
-        return None
+        return self._values_by_id.get(id)
 
     def __repr__(self):
         return f"unibar(name={self.name!r}, x={self.pos_x:.2f}, nvals={len(self.values)})"

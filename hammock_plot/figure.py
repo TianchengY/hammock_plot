@@ -260,8 +260,7 @@ class Figure:
                 self.bar_unit = (available_height * self.uni_vfill) / (max_val_occ * max_num_categories)
                 if self.missing:
                     self.bar_unit = self.bar_unit / (1 + max_missing_occ * self.uni_vfill)
-                    max_missing_height = max_missing_occ * self.bar_unit
-                
+
                 nonmissing_height = available_height
                 if self.missing:
                     max_missing_height = max_missing_occ * self.bar_unit
@@ -284,18 +283,20 @@ class Figure:
             # Determine ranges for unibars that should use same_scale
             global_range = None
             if same_scale:
-                # Collect all numeric values across the same_scale group
-                combined_vals = []
+                # Take the min/max across the same_scale group column-by-column
+                # (vectorised) rather than gathering every value into one list.
+                global_min, global_max = None, None
                 for uni_name in same_scale:
-                    uni_series = self.data_df[uni_name]
-                    numeric_vals = pd.to_numeric(uni_series, errors="coerce").dropna()
-                    combined_vals.extend(numeric_vals.tolist())
+                    numeric_vals = pd.to_numeric(self.data_df[uni_name], errors="coerce").dropna()
+                    if numeric_vals.empty:
+                        continue
+                    col_min, col_max = numeric_vals.min(), numeric_vals.max()
+                    global_min = col_min if global_min is None else min(global_min, col_min)
+                    global_max = col_max if global_max is None else max(global_max, col_max)
 
-                if combined_vals:
-                    global_min, global_max = min(combined_vals), max(combined_vals)
+                if global_min is not None:
                     # Assign the same global range to all unibars in same_scale
-                    for uni_name in same_scale:
-                        global_range = (global_min, global_max)
+                    global_range = (global_min, global_max)
                 
                 # set variables so that same_scale variables align with each other.
                 # Only unibars whose display draws a *value-specific bar* at min/max
@@ -406,11 +407,9 @@ class Figure:
             uni.draw(
                 ax,
                 rectangle_painter=rect_painter,
-                y_start=self.y_start,
-                y_end=self.y_end,
                 alpha=alpha,
             )
-        
+
         return ax
 
     def draw_connections(self, alpha, color, ax=None):
