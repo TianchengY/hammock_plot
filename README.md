@@ -265,7 +265,7 @@ ax = hammock.plot(
 | |              `width` |  `float`  |  Width of the plot in inches. Default is 15. Caution: Width too narrow may distort the plot. |
 | Other options |              `shape` |  `str`  | Shape of the boxes. "rectangle" or "parallelogram". Default is "rectangle". |
 | |              `same_scale` |  `List[str]`  | List of variables that have the same scale. Default is `None`. |
-| |              `min_bar_height` | `float` | Minimal bar height of unibars (connectors are unchanged). Bars representing only a tiny fraction of the data may be so narrow, that they are invisible in a plot. The default value tries to ensure this does not happen.  Default is 0.15 (0.15% of the entire plot height).
+| |              `min_bar_height` | `float` | Minimal bar height of unibars and connectors. Bars or connectors representing only a tiny fraction of the data may be so narrow that they are invisible in a plot; this sets an absolute floor on their thickness (for connectors, the perpendicular distance between the two long edges, independent of `connector_fraction`). The default value tries to ensure this does not happen.  Default is 0.15 (0.15% of the entire plot height).
 | |              `display_figure` |  `bool`  | Whether or not to display the figure. This can be useful if you just want to save the plots. Default is `True`. |
 | |              `save_path` |  `str`  |   If it is not `None`, the figure will be saved to the given path with given name and format. Default is `None`. |
 | |             `violin_bw_method` | `str` or `float` | Specifies the bw method used to plot a violin plot. See https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.violinplot.html for more details. |

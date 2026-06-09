@@ -537,7 +537,11 @@ class Figure:
 
                 left_center_pts.append((lx, ly))
                 right_center_pts.append((rx, ry))
-                heights.append(total_cnt * self.bar_unit * self.connector_fraction)
+                # min_bar_height floors the drawn thickness only (not the stacking
+                # math above), so a too-thin connector stays centred but renders
+                # visibly. The floor is absolute - independent of connector_fraction.
+                h = total_cnt * self.bar_unit * self.connector_fraction
+                heights.append(max(h, self.min_bar_height))
                 weights.append(wts)
 
             if left_center_pts:
