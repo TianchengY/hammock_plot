@@ -25,6 +25,7 @@ hammock.plot(
     label=True,
     width=7,
     height=10,
+    min_bar_height_connectors=0.05, # thinner connector lines to avoid overplotting
     uni_hfill=0.1, # allocates less space to labels
     save_path=gallery_image_path("penguins_slope_graph.png"),
 )
