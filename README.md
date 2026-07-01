@@ -121,7 +121,7 @@ hammock = hammock_plot.Hammock(data_df = df)
 ax = hammock.plot(var=var, 
         missing=True, 
         numerical_var_levels={"sataces": None, "satcomm": None, "satrate": None}, 
-        min_bar_height=0.2, 
+        min_bar_height_unibar=0.2, 
         uni_vfill=0.3) 
 ```
 
@@ -265,7 +265,8 @@ ax = hammock.plot(
 | |              `width` |  `float`  |  Width of the plot in inches. Default is 15. Caution: Width too narrow may distort the plot. |
 | Other options |              `shape` |  `str`  | Shape of the boxes. "rectangle" or "parallelogram". Default is "rectangle". |
 | |              `same_scale` |  `List[str]`  | List of variables that have the same scale. Default is `None`. |
-| |              `min_bar_height` | `float` | Minimal bar height of unibars and connectors. Bars or connectors representing only a tiny fraction of the data may be so narrow that they are invisible in a plot; this sets an absolute floor on their thickness (for connectors, the perpendicular distance between the two long edges, independent of `connector_fraction`). The default value tries to ensure this does not happen.  Default is 0.15 (0.15% of the entire plot height).
+| |              `min_bar_height_unibar` | `float` | Minimal drawn height of a unibar. Bars representing only a tiny fraction of the data may be so narrow that they are invisible in a plot; this sets an absolute floor on their thickness. With `hi_box="stacked"`, each colour segment within a unibar is also kept at least this tall (by trading height with the larger segments, so the bar height and layout are unchanged), keeping a colour visible even when it is a tiny share of the bar. The default value tries to ensure this does not happen. Default is 0.15 (0.15% of the entire plot height).
+| |              `min_bar_height_connectors` | `float` | Minimal drawn thickness of a connector (independent of `connector_fraction`). Like `min_bar_height_unibar` but for the connectors between unibars. Default is 0.12.
 | |              `display_figure` |  `bool`  | Whether or not to display the figure. This can be useful if you just want to save the plots. Default is `True`. |
 | |              `save_path` |  `str`  |   If it is not `None`, the figure will be saved to the given path with given name and format. Default is `None`. |
 | |             `violin_bw_method` | `str` or `float` | Specifies the bw method used to plot a violin plot. See https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.violinplot.html for more details. |

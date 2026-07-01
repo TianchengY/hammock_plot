@@ -17,6 +17,45 @@ class FigureBase(ABC):
         order = np.argsort(np.arctan2(y - y.mean(), x - x.mean()))
         return x[order], y[order]
 
+    @staticmethod
+    def _floor_fractions(fracs, min_frac):
+        """
+        Raise every non-zero colour fraction to at least ``min_frac`` by shrinking
+        the larger fractions to compensate, keeping the total at 1 (so the bar's
+        height and position are unchanged). Zero fractions stay zero - a colour
+        absent from this bar is never given a sliver. Used to keep each colour
+        segment at least ``min_bar_height`` tall even when a colour is a tiny
+        share of the bar. If the minimum cannot be met for every colour (the bar
+        is too short to fit them all), the segments are split equally as a best
+        effort.
+        """
+        f = np.array(fracs, dtype=float)
+        nz = f > 0
+        k = int(nz.sum())
+        if k == 0 or min_frac <= 0:
+            return f
+        if min_frac * k >= 1.0:
+            out = np.zeros_like(f)
+            out[nz] = 1.0 / k
+            return out
+        out = f.copy()
+        # Water-filling: lift deficient segments to min_frac, draw the shortfall
+        # from segments still above min_frac in proportion to their surplus.
+        for _ in range(k + 1):
+            deficient = nz & (out < min_frac)
+            if not deficient.any():
+                break
+            out[deficient] = min_frac
+            shortfall = out.sum() - 1.0
+            donors = nz & (out > min_frac)
+            surplus = out[donors] - min_frac
+            total_surplus = surplus.sum()
+            if total_surplus <= 0:
+                out[nz] = 1.0 / k
+                break
+            out[donors] -= shortfall * (surplus / total_surplus)
+        return out
+
     def plot(self, ax,
             alpha: float,
             left_center_pts: List[Tuple[float, float]],
@@ -27,7 +66,8 @@ class FigureBase(ABC):
             orientation: str = "side-by-side",
             zorder: int = 0,
             check_overlap: bool = False,
-            unibar_name: str = None):
+            unibar_name: str = None,
+            min_seg_height: float = 0.0):
         """
         Draw polygons (rectangles or parallelograms) with segmented coloring.
 
@@ -76,6 +116,13 @@ class FigureBase(ABC):
                 left_bot  = np.array([poly_x[1], poly_y[1]])
                 right_top = np.array([poly_x[2], poly_y[2]])
                 right_bot = np.array([poly_x[3], poly_y[3]])
+
+                # Keep each colour segment at least min_seg_height tall (absolute),
+                # by trading height between segments within this fixed-height bar.
+                if min_seg_height > 0:
+                    bar_h = abs(poly_y[1] - poly_y[0])
+                    if bar_h > 0:
+                        fracs = self._floor_fractions(fracs, min_seg_height / bar_h)
 
                 cum = 0.0
                 for f, col in zip(fracs, colors):

@@ -49,8 +49,8 @@ def missing_true():
     ax = hammock.plot(var=var, 
         missing=True, 
         numerical_var_levels={"sataces": None, "satcomm": None, "satrate": None}, 
-        min_bar_height=0.2, 
-        uni_vfill=0.3, 
+        min_bar_height_unibar=0.2,
+        uni_vfill=0.3,
         save_path="image/diabetes.png") 
 
 def speaker_order():

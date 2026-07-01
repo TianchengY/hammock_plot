@@ -18,7 +18,7 @@ hammock.plot(
     var=["sataces", "satcomm", "satrate"],
     missing=True,
     numerical_var_levels={"sataces": None, "satcomm": None, "satrate": None},
-    min_bar_height=0.2,
+    min_bar_height_unibar=0.2,
     uni_vfill=.3,
     save_path=gallery_image_path("diabetes_missing_satisfaction.png"),
 )

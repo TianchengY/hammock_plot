@@ -26,7 +26,7 @@ class Figure:
         var_types:
         - Dict of the types of each variable. Either: np.str_, np.floating, or np.integer
 
-        numerical_var_levels, display_type, missing, missing_placeholder, label, unibar, hi_box, width, height, uni_vfill, connector_fraction, min_bar_height, uni_hfill, label_options, shape_type, same_scale, violin_bw_method: refer to README file
+        numerical_var_levels, display_type, missing, missing_placeholder, label, unibar, hi_box, width, height, uni_vfill, connector_fraction, min_bar_height_unibar, min_bar_height_connectors, uni_hfill, label_options, shape_type, same_scale, violin_bw_method: refer to README file
     """
     def __init__(self,
                 # general
@@ -50,7 +50,8 @@ class Figure:
                 height: float,
                 uni_vfill: float,
                 connector_fraction: float,
-                min_bar_height: float,
+                min_bar_height_unibar: float,
+                min_bar_height_connectors: float,
                 uni_hfill: float,
 
                 # Other
@@ -79,7 +80,8 @@ class Figure:
         self.height = height # height of the entire plot
         self.uni_vfill = uni_vfill
         self.connector_fraction = connector_fraction
-        self.min_bar_height = min_bar_height
+        self.min_bar_height_unibar = min_bar_height_unibar
+        self.min_bar_height_connectors = min_bar_height_connectors
         self.uni_hfill = uni_hfill
         
         self.label_options = label_options
@@ -155,7 +157,7 @@ class Figure:
                 missing=self.missing,
                 missing_placeholder=self.missing_placeholder,
                 val_order=order,
-                min_bar_height=self.min_bar_height,
+                min_bar_height=self.min_bar_height_unibar,
                 colors=self.colors,
                 hi_box=self.hi_box,
                 display_type = uni_display_type,
@@ -235,7 +237,7 @@ class Figure:
 
             max_missing_height = max_missing_occ * self.bar_unit
 
-            missing_padding = (max(self.min_bar_height, max_missing_height) + Defaults.SPACE_ABOVE_MISSING)
+            missing_padding = (max(self.min_bar_height_unibar, max_missing_height) + Defaults.SPACE_ABOVE_MISSING)
 
         # if there are horizontal bar charts, calculate the bar unit differently.
         max_num_categories = 0
@@ -250,7 +252,7 @@ class Figure:
                 max_val_occ = max(max_val_occ, max(val.occurrences for val in uni.values))
                 max_num_categories = max(max_num_categories, len(uni.non_missing_vals))
         if max_num_categories > 0:
-            hbar_height = max(max_val_occ * self.bar_unit, self.min_bar_height)
+            hbar_height = max(max_val_occ * self.bar_unit, self.min_bar_height_unibar)
             # if the horizontal bar charts overlap
             available_height = (self.height - 2 * self.ymargin * self.height) * self.scale
         
@@ -264,10 +266,10 @@ class Figure:
                 nonmissing_height = available_height
                 if self.missing:
                     max_missing_height = max_missing_occ * self.bar_unit
-                    missing_padding = (max(self.min_bar_height, max_missing_height) + Defaults.SPACE_ABOVE_MISSING)
+                    missing_padding = (max(self.min_bar_height_unibar, max_missing_height) + Defaults.SPACE_ABOVE_MISSING)
                     nonmissing_height -= missing_padding
                 
-                hbar_height = max(nonmissing_height * self.uni_vfill / max_num_categories, self.min_bar_height)
+                hbar_height = max(nonmissing_height * self.uni_vfill / max_num_categories, self.min_bar_height_unibar)
 
         # set bar_unit in unibars, set missing_padding in unibars, set hbar heights, set unibar widths
         for uni in self.unibars:
@@ -537,11 +539,11 @@ class Figure:
 
                 left_center_pts.append((lx, ly))
                 right_center_pts.append((rx, ry))
-                # min_bar_height floors the drawn thickness only (not the stacking
-                # math above), so a too-thin connector stays centred but renders
+                # min_bar_height_connectors floors the drawn thickness only (not the
+                # stacking math above), so a too-thin connector stays centred but renders
                 # visibly. The floor is absolute - independent of connector_fraction.
                 h = total_cnt * self.bar_unit * self.connector_fraction
-                heights.append(max(h, self.min_bar_height))
+                heights.append(max(h, self.min_bar_height_connectors))
                 weights.append(wts)
 
             if left_center_pts:

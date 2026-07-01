@@ -46,7 +46,8 @@ class Hammock:
              label_options: dict = None,
              height: float = 10,
              width: float = 15,
-             min_bar_height: float = Defaults.MIN_BAR_HEIGHT,
+             min_bar_height_unibar: float = Defaults.MIN_BAR_HEIGHT_UNIBAR,
+             min_bar_height_connectors: float = Defaults.MIN_BAR_HEIGHT_CONNECTORS,
              alpha: float = Defaults.ALPHA,
 
              # Other
@@ -446,7 +447,8 @@ class Hammock:
             height=height,
             uni_vfill=uni_vfill,
             connector_fraction=connector_fraction,
-            min_bar_height=min_bar_height,
+            min_bar_height_unibar=min_bar_height_unibar,
+            min_bar_height_connectors=min_bar_height_connectors,
             uni_hfill=uni_hfill,
             
             # Other

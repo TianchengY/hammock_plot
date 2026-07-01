@@ -363,7 +363,7 @@ class Unibar:
             weights.append(val.occ_by_colour)
 
         rectangle_painter.plot(ax, self.alpha, left_pts, right_pts, heights, self.colors, weights, orientation=self.hi_box,zorder=1,
-                               check_overlap=True, unibar_name=self.name)
+                               check_overlap=True, unibar_name=self.name, min_seg_height=self.min_bar_height)
 
         if self.draw_white_dividers and len(values) > 1:
             # each rectangle's edge is half its own bar height from its centre

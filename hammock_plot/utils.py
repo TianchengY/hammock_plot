@@ -21,7 +21,8 @@ class Defaults:
     UNI_VFILL: float = 0.08 # default unibar vertical fill
     CONNECTOR_FRACTION: float = 1 # default proportion fraction of connectors : vfill
     UNI_HFILL: float = 0.3 # default horizontal fill
-    MIN_BAR_HEIGHT: float = 0.15 # minimum bar height
+    MIN_BAR_HEIGHT_UNIBAR: float = 0.15 # minimum drawn height of a unibar (and its colour segments)
+    MIN_BAR_HEIGHT_CONNECTORS: float = 0.12 # minimum drawn thickness of a connector; slightly less than the unibar floor
     BAR_UNIT: float = 1.0 # default bar unit (how many pixels/obs.) is recalculated on init.
     XMARGIN: float = 0.02 # margin on x axis
     YMARGIN: float = 0.04 # margin on y axis
