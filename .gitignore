@@ -19,6 +19,7 @@ docs/sg_execution_times.rst
 
 continuous_diff.png
 image/gallery/*.png
+image/gallery/readme.txt
 !image/gallery/penguins_numerical_no_highlight.png
 !image/gallery/shakespeare_box.png
 !image/gallery/penguins_mixed_displays.png
