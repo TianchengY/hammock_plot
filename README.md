@@ -242,7 +242,7 @@ ax = hammock.plot(
 | Category | Parameter | Type     | Description                |
 | --- | :-------- | :------- | :-------------------------  |
 | General |     `var` | `List[str]` | List of variables to display. The order determines the variable order in the graph.   |
-| |             `value_order` | `Dict[str, List[int]]`  |  If specified, the order of the values in the plot follows the order of values in the list supplied in the dictionary. Only applicable to categorical variables. If a value_order is given to a numerical variable, it will behave like categorical data instead. |
+| |             `value_order` | `Dict[str, List[int]]`  |  If specified, the order of the values in the plot follows the order of values in the list supplied in the dictionary. Only applicable to categorical variables. If a value_order is given to  numerical data, it will treated as a categorical variable instead (changing the default "display_type"). |
 | |            `display_type` | `Dict[str, str]` | Specifies the type of plot. "rug", "box", and "violin" are the options for numerical data, and "stacked_bar", "bar" are the options for categorical data. Example: {"NumericalVarname": "rug", "NumericalVarname2": "violin", "NumericalVarname3": "box"}. Default is "rug" for numerical data and "stacked_bar" for categorical data. |
 | |             `missing` | `bool` | Whether or not to add a category for missing values at the bottom of the plot.  If `False`, observations that have a missing value for any variable in the data frame (even those not used in the hammock plot) are removed.  Default is `False`. |
 | |             `weights` | `str` | Weight variable (must be a numeric variable with only positive, nonmissing values. Cannot be a member of `var`). |
