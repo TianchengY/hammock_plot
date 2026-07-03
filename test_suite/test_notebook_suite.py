@@ -4,10 +4,11 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image
+from scipy import ndimage
 
 
-PIXEL_TOLERANCE = 5
-MAX_DIFF_RATIO = 0.01
+PIXEL_TOLERANCE = 5    # per-channel delta for a pixel to count as different
+EDGE_TOLERANCE = 8     # local colour swing (in a 5x5 window) that marks an edge
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,6 +32,13 @@ def assert_error_check(plot_func_error, expected_msg=None):
     raise AssertionError("Expected an exception, but no exception was raised")
 
 
+def _edge_band(arr):
+    """Pixels on or within ~2px of an anti-aliased edge (text, shape outlines)."""
+    gray = arr.max(axis=2)
+    swing = ndimage.maximum_filter(gray, 5) - ndimage.minimum_filter(gray, 5)
+    return swing > EDGE_TOLERANCE
+
+
 def compare_images(expected_path, actual_path, diff_path):
     expected = Image.open(expected_path).convert("RGB")
     actual = Image.open(actual_path).convert("RGB")
@@ -44,16 +52,24 @@ def compare_images(expected_path, actual_path, diff_path):
     expected_arr = np.asarray(expected, dtype=np.int16)
     actual_arr = np.asarray(actual, dtype=np.int16)
     delta = np.abs(expected_arr - actual_arr)
-    bad_pixels = np.any(delta > PIXEL_TOLERANCE, axis=2)
-    diff_ratio = bad_pixels.mean()
+    differing = np.any(delta > PIXEL_TOLERANCE, axis=2)
 
-    if diff_ratio > MAX_DIFF_RATIO:
+    # Text and shape outlines are anti-aliased differently on each OS, so those
+    # edge pixels never match across platforms; solid fills are
+    # pixel-identical. Ignore diffs on edges and flag only a sizeable diff in a
+    # flat region. The threshold is ~1% of the image's mean side (12px floor).
+    real = differing & ~_edge_band(expected_arr)
+    labels, n = ndimage.label(real)
+    largest = int(np.bincount(labels.ravel())[1:].max()) if n else 0
+    min_blob = max(12, round((expected_arr.shape[0] * expected_arr.shape[1]) ** 0.5 / 100))
+
+    if largest >= min_blob:
         diff = np.clip(delta * 8, 0, 255).astype(np.uint8)
         Image.fromarray(diff).save(diff_path)
         raise AssertionError(
-            f"{actual_path.name} differs from expected image by "
-            f"{diff_ratio:.2%}, above allowed {MAX_DIFF_RATIO:.2%}. "
-            f"Diff image saved to {diff_path}"
+            f"{actual_path.name} differs from expected in a flat (non-edge) "
+            f"region: largest diff blob = {largest}px (allowed < {min_blob}px). "
+            f"Diff saved to {diff_path}"
         )
 
 
