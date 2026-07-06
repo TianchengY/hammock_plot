@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hammock-plot"
-version = "1.2.0"
+version = "1.2.1"
 description = "Hammock plot visualization for categorical and mixed categorical-continuous data"
 readme = {text = "For the current project description, documentation, and examples, please see the GitHub repository: https://github.com/TianchengY/hammock_plot", content-type = "text/markdown"}
 license = {text = "MIT"}
