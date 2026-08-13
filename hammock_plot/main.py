@@ -6,6 +6,7 @@ from hammock_plot.figure import Figure
 from hammock_plot.utils import Defaults
 import numpy as np
 from hammock_plot.utils import safe_numeric, validate_expression, resolve_ordering, assign_color_index, get_formatted_label, clamp_unit
+from hammock_plot.summary import HammockSummary, build_variable_summaries
 import warnings
 
 
@@ -17,6 +18,21 @@ class Hammock:
         if data_df is None or data_df.empty:
             raise ValueError("data_df must be provided and non-empty.")
         self.original_data_df = data_df.copy()
+        self.summary = HammockSummary.not_plotted(self.original_data_df)
+
+    def __str__(self):
+        """
+            String representation of a hammock (for print())
+        """
+        return str(self.summary)
+
+    def __repr__(self):
+        """
+            string representation of a hammock plot
+        """
+        if not self.summary.plotted:
+            return f"<Hammock: {self.summary.n_observations} obs x {self.summary.n_variables} vars, not yet plotted>"
+        return f"<Hammock: {self.summary.n_observations} obs, {len(self.summary.var)} vars plotted>"
 
     def plot(self,
              # General
@@ -61,6 +77,13 @@ class Hammock:
             Error catches and setup to initialize a Figure
         """
         self.data_df = self.original_data_df.copy()
+
+        # Which variables the user ordered, recorded before anything below
+        # touches value_order. By the end of this method every variable has an
+        # entry in it (defaults, the missing placeholder, orders propagated
+        # across same_scale siblings), so the final dict can't be asked.
+        user_ordered = set(value_order.keys()) if value_order else set()
+        converted_by_value_order = set()
 
         data_df_columns = self.data_df.columns.tolist()
         
@@ -152,6 +175,9 @@ class Hammock:
                         get_formatted_label(original_var_type, value)
                         for value in value_order[variable]
                     ]
+                    # a numeric variable given an order becomes categorical here,
+                    # which the summary flags so the readback doesn't look wrong
+                    converted_by_value_order.add(variable)
                 var_types[variable] = np.str_
         
             for variable, order in value_order.items():
@@ -470,6 +496,46 @@ class Hammock:
 
         if save_path:
             ax.get_figure().savefig(save_path)
+
+        # build the summary object
+        variable_summaries = build_variable_summaries(
+            fig.unibars, value_order, user_ordered, converted_by_value_order)
+
+        hi_values = None
+        if hi_var:
+            if isinstance(hi_value, list):
+                hi_values = list(hi_value)
+            elif hi_value is not None:
+                # a range expression or regex; it isn't a list of values, so it
+                # goes through as the one thing the user wrote
+                hi_values = [hi_value]
+            else:
+                hi_values = []
+            if hi_missing:
+                hi_values.append(missing_placeholder)
+
+        self.summary = HammockSummary(
+            n_observations=len(self.original_data_df),
+            n_variables=self.original_data_df.shape[1],
+            plotted=True,
+            var=list(var), # the caller's list is theirs to mutate afterwards
+            n_plotted=len(self.data_df),
+            hi_var=hi_var,
+            hi_values=hi_values,
+            hi_box=hi_box,
+            missing=missing,
+            missing_placeholder=missing_placeholder,
+            same_scale=list(same_scale) if same_scale else None,
+            weights=weights,
+            unibar=unibar,
+            label=label,
+            # only meaningful if something was actually drawn as a violin
+            violin_bw_method=violin_bw_method if any(
+                v.display_type == "violin" for v in variable_summaries) else None,
+            save_path=save_path,
+            variables=variable_summaries,
+        )
+
         if display_figure:
             return ax
         else:

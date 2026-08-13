@@ -11,6 +11,7 @@
   - [Example same_scale using Shakespeare data](#example-same_scale-using-shakespeare-data)
   - [Example display_type using penguin data](#example-display_type-using-penguin-data)
 - [API Reference](#api-reference)
+- [Printing a hammock](#printing-a-hammock)
 - [Historical context](#historical-context)
   - [References](#references)
   - [Other implementations of the hammock plot](#other-implementations-of-the-hammock-plot)
@@ -271,6 +272,84 @@ ax = hammock.plot(
 | |              `save_path` |  `str`  |   If it is not `None`, the figure will be saved to the given path with given name and format. Default is `None`. |
 | |             `violin_bw_method` | `str` or `float` | Specifies the bw method used to plot a violin plot. See https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.violinplot.html for more details. |
 
+
+## Printing a hammock
+
+Printing a `Hammock` prints the summary information of your data, and the data from the previous `plot()` called on the hammock, if it exists.
+
+```python
+hammock = hammock_plot.Hammock(data_df=df_penguins)
+ax = hammock.plot(
+    var=["species", "island", "bill_length_mm", "bill_depth_mm",
+         "flipper_length_mm", "body_mass_g"],
+    hi_var="island", hi_value="Torgersen", hi_missing=True, missing=True,
+    value_order={"species": ["Adelie", "Chinstrap", "Gentoo"]},
+    numerical_var_levels={"bill_length_mm": 5},
+    display_type={"bill_length_mm": "box", "flipper_length_mm": "violin"},
+)
+print(hammock)
+```
+
+```
+Hammock object
+
+Data:
+  Observations: 344
+  Num Variables: 8
+
+Plot specification:
+  Variables: species, island, bill_length_mm, bill_depth_mm,
+             flipper_length_mm, body_mass_g
+  Highlight variable: island
+  Highlight values: Torgersen, missing
+  Highlight box layout: side-by-side
+  Missing values shown: yes
+  Missing placeholder: missing
+  Same scale: none
+  Weight variable: none
+  Unibars shown: yes
+  Labels shown: yes
+  Violin bandwidth: scott
+
+Variable specifications:
+  species
+    Data type: categorical
+    Display type: stacked_bar
+    Value order: missing, Adelie, Chinstrap, Gentoo
+
+  island
+    Data type: categorical
+    Display type: stacked_bar
+
+  bill_length_mm
+    Data type: numerical
+    Display type: box
+    Numerical levels: 5
+
+  bill_depth_mm
+    Data type: numerical
+    Display type: rug
+    Numerical levels: 7
+
+  flipper_length_mm
+    Data type: numerical
+    Display type: violin
+    Numerical levels: 7
+
+  body_mass_g
+    Data type: numerical
+    Display type: rug
+    Numerical levels: 7
+```
+
+The same content is available as data on `hammock.summary`, which renders identically to `print(hammock)` but also carries the fields individually:
+
+```python
+hammock.summary.display_types      # {'species': 'stacked_bar', 'bill_length_mm': 'box', ...}
+hammock.summary.data_types         # {'species': 'categorical', 'bill_length_mm': 'numerical', ...}
+hammock.summary.numerical_levels   # {'bill_length_mm': 5, 'bill_depth_mm': 7, ...}
+hammock.summary.value_order        # only the variables user ordered themself
+```
 
 ## Historical context
 
