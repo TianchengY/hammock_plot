@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from hammock_plot.value import Value
 from hammock_plot.utils import edge_color_from_face
-from .utils import Defaults, get_formatted_label
+from .utils import Defaults, get_formatted_label, nice_level_values
 from scipy.stats import gaussian_kde
 
 class Unibar:
@@ -889,16 +889,18 @@ class Unibar:
                                                         max(v.numeric for v in self.non_missing_vals))
         num_levels = self.num_levels
 
-        # Handle integer vs float
+        # Handle integer vs float. In both cases the min and the max keep their
+        # exact values and the levels in between are placed on "nice" numbers
+        # (see nice_level_values).
         if self.val_type == np.floating:
-            level_vals = np.linspace(min_val, max_val, num_levels)
+            level_vals = nice_level_values(min_val, max_val, num_levels)
         elif self.val_type == np.integer:
             possible_vals = np.arange(int(np.floor(min_val)), int(np.ceil(max_val)) + 1)
             if len(possible_vals) <= num_levels:
                 level_vals = possible_vals
             else:
-                indices = np.linspace(0, len(possible_vals) - 1, num_levels, dtype=int)
-                level_vals = possible_vals[indices]
+                level_vals = nice_level_values(int(np.ceil(min_val)), int(np.floor(max_val)),
+                                               num_levels, integer_only=True)
         
         if self.display_type == "rug" or self.display_type == "lumpy beanplot":
             # Compute coordinate range based on first and last non-missing bar centers

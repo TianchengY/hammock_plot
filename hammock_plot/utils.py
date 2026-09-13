@@ -283,6 +283,85 @@ def assign_color_index(df: pd.DataFrame, var_list: List[str], hi_missing, missin
                 df.loc[mask, "color_index"] = col.apply(lambda val: _compute_color_index(val, hi_missing, hi_value))
     return df
 
+# -----------------------------
+# Numeric axis label spacing
+# -----------------------------
+# The "nice" ladder: 1, 2, 2.5, 5 x 10^n. (10 x 10^n is the same number as
+# 1 x 10^(n+1), so it is already covered.)
+_NICE_MANTISSAS = (1.0, 2.0, 2.5, 5.0)
+
+
+def _nice_steps_near(raw_step: float, integer_only: bool = False) -> List[float]:
+    """
+    The 1 / 2 / 2.5 / 5 x 10^n ladder spanning the decades around raw_step,
+    ascending. With integer_only, non-integral rungs (0.5, 2.5, ...) are dropped
+    so an integer variable never gets a fractional step.
+    """
+    exponent = int(np.floor(np.log10(raw_step)))
+    steps = [m * (10.0 ** e)
+             for e in range(exponent - 1, exponent + 4)
+             for m in _NICE_MANTISSAS]
+    if integer_only:
+        steps = [float(round(s)) for s in steps
+                 if s >= 1 and abs(s - round(s)) < 1e-9 * max(1.0, s)]
+    return sorted(steps)
+
+
+def nice_step(raw_step: float, integer_only: bool = False) -> float:
+    """
+    Round a raw label spacing to the nearest step on the 1 / 2 / 2.5 / 5 x 10^n
+    ladder, i.e. one of ... 0.1, 0.2, 0.25, 0.5, 1, 2, 2.5, 5, 10, 20, 25, 50 ...
+    "Nearest" is measured in log space, so the choice doesn't depend on the units.
+    """
+    if not np.isfinite(raw_step) or raw_step <= 0:
+        return raw_step
+    steps = _nice_steps_near(raw_step, integer_only)
+    return min(steps, key=lambda s: abs(np.log10(s / raw_step)))
+
+
+# An interior label closer than this fraction of a step to the min or the max is
+# dropped: the end itself is labelled there, and two labels that close together
+# would collide.
+_END_GAP_FRACTION = 1 / 3
+
+
+def _levels_on_step(min_val: float, max_val: float, step: float) -> List[float]:
+    """
+    Multiples of step strictly inside (min_val, max_val), minus any that crowd
+    the min or max label (see _END_GAP_FRACTION).
+    """
+    gap = step * _END_GAP_FRACTION
+    decimals = max(0, -int(np.floor(np.log10(step))) + 1)
+    levels = []
+    for k in range(int(np.ceil(min_val / step)), int(np.floor(max_val / step)) + 1):
+        v = k * step
+        if (v - min_val) < gap or (max_val - v) < gap:
+            continue
+        levels.append(round(v, decimals))
+    return levels
+
+
+def nice_level_values(min_val: float, max_val: float, num_levels: int,
+                      integer_only: bool = False) -> np.ndarray:
+    """
+    Label values for a numeric axis. The minimum and maximum are always kept as
+    they are; the levels in between land on "nice" numbers: the raw spacing
+    (max - min) / (num_levels - 1) is rounded to the nearest step on the
+    1 / 2 / 2.5 / 5 x 10^n ladder and the interior labels sit on multiples of
+    that step. num_levels is therefore a target, not a hard limit -- rounding the
+    step down can fit in a few more labels than asked for.
+    """
+    min_val, max_val = float(min_val), float(max_val)
+    if not (np.isfinite(min_val) and np.isfinite(max_val)) or max_val <= min_val:
+        return np.array([min_val], dtype=float)
+    if num_levels is None or num_levels < 3:
+        return np.array([min_val, max_val], dtype=float)
+
+    step = nice_step((max_val - min_val) / (num_levels - 1), integer_only)
+    interior = _levels_on_step(min_val, max_val, step)
+    return np.array([min_val] + interior + [max_val], dtype=float)
+
+
 def get_formatted_label(datatype, value):
     """
         Returns the formatted label version (in particular, returns something nicer for numeric vals)
