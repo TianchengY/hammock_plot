@@ -265,6 +265,38 @@ def test_caller_lists_are_copied(asthma):
     assert hammock.summary.same_scale == ["group", "gender"]
 
 
+@pytest.mark.parametrize("same_scale", [
+    {"comorbidities", "hospitalizations"},
+    ("hospitalizations", "comorbidities"),
+])
+def test_same_scale_accepts_set_and_tuple(asthma, same_scale):
+    # a set used to crash with "'set' object is not subscriptable"; it takes
+    # the order of var since a set has none
+    hammock = Hammock(data_df=asthma)
+    hammock.plot(var=["hospitalizations", "comorbidities", "group"],
+                 same_scale=same_scale, display_figure=False)
+    assert hammock.summary.same_scale == ["hospitalizations", "comorbidities"]
+
+
+@pytest.mark.parametrize("missing", [True, False])
+def test_nullable_integer_column(asthma, missing):
+    # an Int64 column with missing values used to crash on fillna
+    nullable = asthma.copy()
+    nullable.loc[:4, "comorbidities"] = None
+    nullable["comorbidities"] = nullable["comorbidities"].astype("Int64")
+    plain = asthma.copy()
+    plain.loc[:4, "comorbidities"] = None
+
+    var = ["comorbidities", "group"]
+    got = Hammock(data_df=nullable)
+    got.plot(var=var, missing=missing, display_figure=False)
+    want = Hammock(data_df=plain)
+    want.plot(var=var, missing=missing, display_figure=False)
+    assert str(got) == str(want)
+    # the caller's frame is left alone
+    assert nullable["comorbidities"].dtype == "Int64"
+
+
 def test_summary_is_independent_of_figure_size(penguins):
     small = plot_penguins(penguins, height=5, width=8)
     large = plot_penguins(penguins, height=20, width=30)

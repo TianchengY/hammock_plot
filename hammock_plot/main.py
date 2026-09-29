@@ -134,6 +134,12 @@ class Hammock:
 
         alpha = clamp_unit(alpha, "alpha")
 
+        # nullable numeric dtypes (Int64, ...) can't hold the missing placeholder
+        for varname in var:
+            col = self.data_df[varname]
+            if isinstance(col.dtype, pd.api.extensions.ExtensionDtype) and pd.api.types.is_numeric_dtype(col.dtype):
+                self.data_df[varname] = col.astype("float64")
+
         # drop missing values if missing values should not be plotted
         if not missing:
             self.data_df = self.data_df.dropna(subset=var)
@@ -256,7 +262,14 @@ class Hammock:
             raise ValueError(
                 f'the variables: {error_values} in same_scale is not in var_lst or value names user given does not match the data '
             )
-        
+
+        # accept any collection of names, including sets
+        if same_scale:
+            if isinstance(same_scale, (set, frozenset)):
+                same_scale = [v for v in var if v in same_scale]
+            else:
+                same_scale = list(same_scale)
+
         same_scale_type = None
 
         if same_scale:
