@@ -116,6 +116,10 @@ class FigureBase(ABC):
                 left_bot  = np.array([poly_x[1], poly_y[1]])
                 right_top = np.array([poly_x[2], poly_y[2]])
                 right_bot = np.array([poly_x[3], poly_y[3]])
+                # make colour 0 always on the top
+                if left_top[1] < left_bot[1]:
+                    left_top, left_bot = left_bot, left_top
+                    right_top, right_bot = right_bot, right_top
 
                 # Keep each colour segment at least min_seg_height tall (absolute),
                 # by trading height between segments within this fixed-height bar.
