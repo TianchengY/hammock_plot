@@ -26,7 +26,7 @@ class Figure:
         var_types:
         - Dict of the types of each variable. Either: np.str_, np.floating, or np.integer
 
-        numerical_var_levels, display_type, missing, missing_placeholder, label, unibar, hi_box, width, height, uni_vfill, connector_fraction, min_bar_height_unibar, min_bar_height_connectors, uni_hfill, label_options, shape_type, same_scale, violin_bw_method: refer to README file
+        numerical_var_levels, display_type, missing, missing_placeholder, label, unibar, hi_box, width, height, uni_vfill, connector_fraction, min_bar_height_unibar, min_bar_height_connectors, uni_hfill, label_options, display_names, shape_type, same_scale, violin_bw_method: refer to README file
     """
     def __init__(self,
                 # general
@@ -56,6 +56,7 @@ class Figure:
 
                 # Other
                 label_options: dict,
+                display_names: dict,
                 shape_type,
                 same_scale,
                 same_scale_type,
@@ -85,6 +86,7 @@ class Figure:
         self.uni_hfill = uni_hfill
         
         self.label_options = label_options
+        self.display_names = display_names or {}
         self.fig_painter: FigureBase = Rectangle() if shape_type == "rectangle" else Parallelogram()
         self.shape = shape_type
 
@@ -390,7 +392,7 @@ class Figure:
         # xticks + labels
         ax.set_xticks([c.pos_x for c in self.unibars])
         ax.tick_params(axis='x', length=0) 
-        ax.set_xticklabels([c.name for c in self.unibars])
+        ax.set_xticklabels([self.display_names.get(c.name, c.name) for c in self.unibars])
 
         # apply per-label formatting
         for label, c in zip(ax.get_xticklabels(), self.unibars):

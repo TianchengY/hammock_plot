@@ -60,6 +60,7 @@ class Hammock:
              connector_fraction: float = Defaults.CONNECTOR_FRACTION, 
              uni_hfill: float = Defaults.UNI_HFILL, 
              label_options: dict = None,
+             display_names: Dict[str, str] = None,
              height: float = 10,
              width: float = 15,
              min_bar_height_unibar: float = Defaults.MIN_BAR_HEIGHT_UNIBAR,
@@ -262,6 +263,18 @@ class Hammock:
             raise ValueError(
                 f'the variables: {error_values} in same_scale is not in var_lst or value names user given does not match the data '
             )
+
+        # display_names's keys must be plotted vars and its values must be text
+        if display_names:
+            if not set(display_names) <= set(var):
+                error_values = set(display_names) - set(var)
+                raise ValueError(
+                    f'the variables: {error_values} in display_names is not in var_lst'
+                )
+            if not all(isinstance(name, str) for name in display_names.values()):
+                raise ValueError(
+                    f'Argument "display_names" must be a dict of str to str.'
+                )
 
         # accept any collection of names, including sets
         if same_scale:
@@ -492,6 +505,7 @@ class Hammock:
             
             # Other
             label_options=label_options,
+            display_names=display_names,
             shape_type=shape,
             same_scale=same_scale,
             same_scale_type=same_scale_type,

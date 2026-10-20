@@ -54,7 +54,7 @@ plot_vars = [
 
 display_names = {
     "medu": "mother\neducation",
-    "fedu": "father\neduction",
+    "fedu": "father\neducation",
     "goout": "go out",
     "walc": "weekly\nalcohol",
 }
@@ -83,11 +83,8 @@ ax = hammock.plot(
     connector_fraction=0.2,
     label=True,
     label_options=label_options,
+    display_names=display_names,
     default_color="#D95F45",
 )
-
-ax.set_xticklabels([display_names.get(var, var) for var in plot_vars])
-for tick_label in ax.get_xticklabels():
-    tick_label.set_color("black")
 
 ax.get_figure().savefig(gallery_image_path("portugal_student_labels.png"))
