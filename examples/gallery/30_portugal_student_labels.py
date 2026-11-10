@@ -59,7 +59,8 @@ display_names = {
     "walc": "weekly\nalcohol",
 }
 
-label_options = {var: {"fontsize": 14, "color": "#006D77"} for var in plot_vars}
+label_options = {var: {"fontsize": 11, "color": "#006D77"} for var in plot_vars}
+name_options = {var: {"fontsize": 15, "color": "#006D77"} for var in plot_vars}
 
 hammock = hammock_plot.Hammock(data_df=df)
 ax = hammock.plot(
@@ -84,6 +85,7 @@ ax = hammock.plot(
     label=True,
     label_options=label_options,
     display_names=display_names,
+    name_options=name_options,
     default_color="#D95F45",
 )
 

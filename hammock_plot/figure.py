@@ -26,7 +26,7 @@ class Figure:
         var_types:
         - Dict of the types of each variable. Either: np.str_, np.floating, or np.integer
 
-        numerical_var_levels, display_type, missing, missing_placeholder, label, unibar, hi_box, width, height, uni_vfill, connector_fraction, min_bar_height_unibar, min_bar_height_connectors, uni_hfill, label_options, display_names, shape_type, same_scale, violin_bw_method: refer to README file
+        numerical_var_levels, display_type, missing, missing_placeholder, label, unibar, hi_box, width, height, uni_vfill, connector_fraction, min_bar_height_unibar, min_bar_height_connectors, uni_hfill, label_options, display_names, name_options, shape_type, same_scale, violin_bw_method: refer to README file
     """
     def __init__(self,
                 # general
@@ -57,6 +57,7 @@ class Figure:
                 # Other
                 label_options: dict,
                 display_names: dict,
+                name_options: dict,
                 shape_type,
                 same_scale,
                 same_scale_type,
@@ -87,6 +88,7 @@ class Figure:
         
         self.label_options = label_options
         self.display_names = display_names or {}
+        self.name_options = name_options or {}
         self.fig_painter: FigureBase = Rectangle() if shape_type == "rectangle" else Parallelogram()
         self.shape = shape_type
 
@@ -394,12 +396,11 @@ class Figure:
         ax.tick_params(axis='x', length=0) 
         ax.set_xticklabels([self.display_names.get(c.name, c.name) for c in self.unibars])
 
-        # apply per-label formatting
+        # style the variable names (label_options only styles the axis value labels)
         for label, c in zip(ax.get_xticklabels(), self.unibars):
-            if self.label_options:
-                opts = self.label_options.get(c.name, {})
-                if opts:
-                    label.set(**opts)
+            opts = self.name_options.get(c.name)
+            if opts:
+                label.set(**opts)
 
         # spacing for x ticks
         ax.tick_params(axis='x', which='major', pad=10)

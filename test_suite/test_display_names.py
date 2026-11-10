@@ -37,12 +37,49 @@ def test_display_names_replace_only_the_given_variables(penguins):
     assert axis_names(ax) == ["species", "island", "bill\nlength", "mass (g)"]
 
 
-def test_label_options_still_keyed_by_column_name(penguins):
+def test_name_options_keyed_by_column_name(penguins):
     ax = Hammock(data_df=penguins).plot(
         var=PENGUIN_VARS,
         display_names={"island": "Island"},
-        label_options={"island": {"fontsize": 17}})
+        name_options={"island": {"fontsize": 17}})
     assert ax.get_xticklabels()[1].get_fontsize() == 17
+
+
+ISLANDS = {"Biscoe", "Dream", "Torgersen"}
+
+
+def value_label_sizes(ax, texts):
+    return {t.get_fontsize() for t in ax.texts if t.get_text() in texts}
+
+
+def test_label_options_and_name_options_are_independent(penguins):
+    ax = Hammock(data_df=penguins).plot(
+        var=PENGUIN_VARS,
+        label_options={"island": {"fontsize": 8}},
+        name_options={"island": {"fontsize": 20}})
+    assert ax.get_xticklabels()[1].get_fontsize() == 20
+    assert value_label_sizes(ax, ISLANDS) == {8}
+
+
+def test_label_options_no_longer_style_variable_names(penguins):
+    default = Hammock(data_df=penguins).plot(var=PENGUIN_VARS)
+    ax = Hammock(data_df=penguins).plot(
+        var=PENGUIN_VARS, label_options={"island": {"fontsize": 25}})
+    assert (ax.get_xticklabels()[1].get_fontsize()
+            == default.get_xticklabels()[1].get_fontsize())
+    assert value_label_sizes(ax, ISLANDS) == {25}
+
+
+def test_name_options_for_unplotted_variable_raises(penguins):
+    with pytest.raises(ValueError, match="name_options"):
+        Hammock(data_df=penguins).plot(var=PENGUIN_VARS,
+                                       name_options={"sex": {"fontsize": 12}})
+
+
+def test_name_options_must_be_dicts(penguins):
+    with pytest.raises(ValueError, match="name_options"):
+        Hammock(data_df=penguins).plot(var=PENGUIN_VARS,
+                                       name_options={"island": 12})
 
 
 def test_display_names_leave_summary_on_column_names(penguins):

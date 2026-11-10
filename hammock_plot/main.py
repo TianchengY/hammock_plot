@@ -61,6 +61,7 @@ class Hammock:
              uni_hfill: float = Defaults.UNI_HFILL, 
              label_options: dict = None,
              display_names: Dict[str, str] = None,
+             name_options: dict = None,
              height: float = 10,
              width: float = 15,
              min_bar_height_unibar: float = Defaults.MIN_BAR_HEIGHT_UNIBAR,
@@ -274,6 +275,18 @@ class Hammock:
             if not all(isinstance(name, str) for name in display_names.values()):
                 raise ValueError(
                     f'Argument "display_names" must be a dict of str to str.'
+                )
+
+        # name_options's keys must be plotted vars and its values must be dicts of text kwargs
+        if name_options:
+            if not set(name_options) <= set(var):
+                error_values = set(name_options) - set(var)
+                raise ValueError(
+                    f'the variables: {error_values} in name_options is not in var_lst'
+                )
+            if not all(isinstance(opts, dict) for opts in name_options.values()):
+                raise ValueError(
+                    f'Argument "name_options" must be a dict of str to dict.'
                 )
 
         # accept any collection of names, including sets
@@ -506,6 +519,7 @@ class Hammock:
             # Other
             label_options=label_options,
             display_names=display_names,
+            name_options=name_options,
             shape_type=shape,
             same_scale=same_scale,
             same_scale_type=same_scale_type,
