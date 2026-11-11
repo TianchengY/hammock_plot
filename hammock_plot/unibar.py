@@ -372,9 +372,11 @@ class Unibar:
 
     def _draw_white_dividers(self, ax, values, rectangle_painter, half_heights, width):
         """
-        Draw thin white lines dividing adjacent bars (used when uni_vfill == 1).
+        Draw thin white lines dividing adjacent bars whose gap is narrower than
+        the divider itself.
         half_heights[i] is the half-height of values[i], so each divider lands
         midway between the top edge of one bar and the bottom edge of the next.
+        Pairs already separated by at least the divider height are skipped.
         """
         divider_height = Defaults.WHITE_DIVIDER_HEIGHT
 
@@ -388,6 +390,8 @@ class Unibar:
         for i in range(len(values) - 1):
             top_of_i = values[i].vert_centre + half_heights[i]
             bottom_of_next = values[i + 1].vert_centre - half_heights[i + 1]
+            if bottom_of_next - top_of_i >= divider_height:
+                continue  # already visibly separated
             divider_y = (top_of_i + bottom_of_next) / 2
 
             divider_left_pts.append((self.pos_x - half_label_space, divider_y))
@@ -396,6 +400,9 @@ class Unibar:
 
             # white divider bar (use 2D structure)
             divider_weights.append([1])
+
+        if not divider_heights:
+            return
 
         rectangle_painter.plot(
             ax,

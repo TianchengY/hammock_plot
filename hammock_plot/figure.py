@@ -148,8 +148,11 @@ class Figure:
                 elif uni_display_type == "rug": # v: None - labels are by value only if display is rugplot
                     label_type = "values"
                 
-            # long boolean expression represents the conditions for drawing small white lines to divide rugplot rectangles
-            draw_white_dividers = (uni_display_type == "stacked_bar" or uni_display_type == "bar") and self.uni_vfill == 1
+            # White lines dividing adjacent bars. Eligible for stacked/horizontal bars at
+            # uni_vfill == 1 (bars touch), and for categorical stacked/horizontal bars at
+            # any vfill: near vfill=1 the leftover gap can be too small.
+            # Draws a divider where the actual gap between two bars is narrower than the divider
+            draw_white_dividers = (uni_display_type == "stacked_bar" or uni_display_type == "bar") and (self.uni_vfill == 1 or dtype == np.str_)
 
             uni = Unibar(
                 df=self.data_df,
